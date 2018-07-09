@@ -1,16 +1,31 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import ABIContract, TransactionFailed
 from pytest import fixture, raises
-from utils import longTo32Bytes, PrintGasUsed, fix
+from utils import longTo32Bytes, PrintGasUsed, fix, bytesToLong, bytesToHexString
 from datetime import timedelta
 from ethereum.utils import ecsign, sha3, normalize_key, int_to_32bytearray, bytearray_to_bytestr, zpad
 
 def test_rep_price_bridge(localFixture, medianizer, feedFactory, repPriceOracle, controller):
-    # Add 2 price feeds
-    # Change price
-    # confirm on medianizer
-    # set price manually
-    # ask price
+    priceFeed1Addr = feedFactory.create()
+    priceFeed2Addr = feedFactory.create()
+
+    medianizer.set(priceFeed1Addr)
+    medianizer.set(priceFeed2Addr)
+
+    priceFeed1 = localFixture.applySignature('PriceFeed', priceFeed1Addr)
+    priceFeed2 = localFixture.applySignature('PriceFeed', priceFeed2Addr)
+
+    expirationTime = controller.getTimestamp() + 10**9
+
+    priceFeed1.post(1, expirationTime, medianizer.address)
+    priceFeed2.post(2, expirationTime, medianizer.address)
+
+    assert bytesToLong(medianizer.read()) == 2
+
+    assert repPriceOracle.setRepPriceInAttoEth(3)
+
+    assert repPriceOracle.getRepPriceInAttoEth() == 3
+
     # create the bridge
     # transfer ownership to the bridge
     # Change price

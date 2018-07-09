@@ -18,11 +18,11 @@ contract Medianizer is DSThing {
     function set(address wat) public auth {
         bytes12 nextId = bytes12(uint96(next) + 1);
         require(nextId != 0x0);
-        this.set(next, wat);
+        this.setInternal(next, wat);
         next = nextId;
     }
 
-    function set(bytes12 pos, address wat) public note auth {
+    function setInternal(bytes12 pos, address wat) public note auth {
         require(pos != 0x0);
         require(wat == 0 || indexes[wat] == 0);
 
@@ -46,11 +46,11 @@ contract Medianizer is DSThing {
     }
 
     function unset(bytes12 pos) public auth {
-        this.set(pos, 0);
+        this.setInternal(pos, 0);
     }
 
     function unset(address wat) public auth {
-        this.set(indexes[wat], 0);
+        this.setInternal(indexes[wat], 0);
     }
 
     function void() external auth {
