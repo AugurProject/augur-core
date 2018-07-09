@@ -16,12 +16,8 @@ RUN wget --quiet https://github.com/Z3Prover/z3/archive/z3-4.5.0.zip \
 	&& cd /tmp/z3-z3-4.5.0 \
 	&& python scripts/mk_make.py --python \
 	&& cd build \
-	&& make \
+	&& make -j8 \
 	&& make install
-
-RUN wget --quiet https://github.com/melonproject/oyente/archive/master.zip \
-	&& unzip master.zip -d /tmp \
-	&& mv /tmp/oyente-master/oyente /usr/local/lib/python2.7/site-packages
 
 RUN wget --quiet https://gethstore.blob.core.windows.net/builds/geth-alltools-linux-amd64-1.8.2-b8b9f7f4.tar.gz \
 	&& tar -xvf geth-alltools-linux-amd64-1.8.2-b8b9f7f4.tar.gz \
@@ -34,11 +30,13 @@ RUN pip install --upgrade pip setuptools \
 	&& pip install --upgrade pip-tools \
 	&& pip install requests
 
+RUN pip install --no-dependencies git+https://github.com/cryptomental/oyente.git@feature/exclude-selected-vulnerabilities
+
 # Copy source
 COPY source/contracts/ /app/source/contracts/
 COPY source/tools/ /app/source/tools/
 
 # Run the oyente test script
-RUN python source/tools/runOyente.py -p
+RUN python source/tools/runOyente.py -p -a -v
 
 ENTRYPOINT ["npm"]
