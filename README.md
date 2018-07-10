@@ -166,7 +166,7 @@ There are no floating-point numbers in the EVM, only integers.  Therefore, Ether
 
 On Augur, each [Universe](https://etherscan.io/address/0xe991247b78f937d7b69cfc00f1a487a293557677) has a [Reputation Token Contract](https://etherscan.io/address/0x1985365e9f78359a9b6ad760e32412f4a445e862) that is created by the Universe, which is uniquely associated with that Universe.  The Reputation token contract is technically a ["Delegator" Contract](https://github.com/AugurProject/augur-core/blob/master/source/contracts/libraries/Delegator.sol), which simply calls through to its delegation target contract, the [Verified Reputation Token Contract](https://etherscan.io/address/0x6c114b96b7a0e679c2594e3884f11526797e43d1).
 
-You can verify that the REP token contract is a `Delegator` by observing that `ReputationTokenFactory` is what created the contract.
+You can verify that the REP token contract is a `Delegator` by verifying the `ReputationTokenFactory` is what created the contract.
 
 To do this, go to the new REP contract [0x1985365e9f78359a9b6ad760e32412f4a445e862](https://etherscan.io/address/0x1985365e9f78359a9b6ad760e32412f4a445e862). Then go to its creator [0x8fee0da3a35f612f88fb58d7028d14c7d99a3643](https://etherscan.io/address/0x8fee0da3a35f612f88fb58d7028d14c7d99a3643). Then click on internal transactions and you'll see this [0x44c09f8eeff886723b79890e14743192a8c8d8a8eac158ed17600c94e502cce8](https://etherscan.io/tx/0x44c09f8eeff886723b79890e14743192a8c8d8a8eac158ed17600c94e502cce8) transaction which creates the initial universe.
 
