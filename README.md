@@ -162,12 +162,14 @@ There are no floating-point numbers in the EVM, only integers.  Therefore, Ether
 
 - [Some notes on worst-case-loss/value-at-risk](https://github.com/AugurProject/augur-core/blob/master/tests/wcl.txt)
 
-### Verifying the rep contract on mainnet
+### Verifying the REP contract on the main Ethereum network
 
-You can verify that the rep token contract contract is a Delegator by verifying the ReputationTokenFactory is what created the contract.
+On Augur, each [Universe](https://etherscan.io/address/0xe991247b78f937d7b69cfc00f1a487a293557677) has a [Reputation Token Contract](https://etherscan.io/address/0x1985365e9f78359a9b6ad760e32412f4a445e862) that is created by the Universe, which is uniquely associated with that Universe.  The Reputation token contract is technically a ["Delegator" Contract](https://github.com/AugurProject/augur-core/blob/master/source/contracts/libraries/Delegator.sol), which simply calls through to its delegation target contract, the [Verified Reputation Token Contract](https://etherscan.io/address/0x6c114b96b7a0e679c2594e3884f11526797e43d1).
 
-To do this go to the new rep contract [https://etherscan.io/address/0x1985365e9f78359a9b6ad760e32412f4a445e862]. Then go to its creator [https://etherscan.io/address/0x8fee0da3a35f612f88fb58d7028d14c7d99a3643]. Then click on internal transactions and you'll see this https://etherscan.io/tx/0x44c09f8eeff886723b79890e14743192a8c8d8a8eac158ed17600c94e502cce8 transaction which creates the initial universe.
+You can verify that the REP token contract contract is a `Delegator` by verifying the `ReputationTokenFactory` is what created the contract.
 
-Then click on internal on that page and you'll see here https://etherscan.io/tx/0x44c09f8eeff886723b79890e14743192a8c8d8a8eac158ed17600c94e502cce8#internal that that contract created the rep token contract.
+To do this, go to the new REP contract [0x1985365e9f78359a9b6ad760e32412f4a445e862](https://etherscan.io/address/0x1985365e9f78359a9b6ad760e32412f4a445e862). Then go to its creator [0x8fee0da3a35f612f88fb58d7028d14c7d99a3643](https://etherscan.io/address/0x8fee0da3a35f612f88fb58d7028d14c7d99a3643). Then click on internal transactions and you'll see this [0x44c09f8eeff886723b79890e14743192a8c8d8a8eac158ed17600c94e502cce8](https://etherscan.io/tx/0x44c09f8eeff886723b79890e14743192a8c8d8a8eac158ed17600c94e502cce8) transaction which creates the initial universe.
 
-You can verify that the Rep Token contract is delegating to the verified Rep Token Contract Target by calling lookup on the Controller https://etherscan.io/address/0xb3337164e91b9f05c87c7662c7ac684e8e0ff3e7#readContract with the string ReputationToken
+Then click on internal on that page and (you'll see here) [https://etherscan.io/tx/0x44c09f8eeff886723b79890e14743192a8c8d8a8eac158ed17600c94e502cce8#internal] that that contract created the REP token contract.
+
+You can verify that the REP Token contract is delegating to the verified REP token contract target by calling lookup on the (Controller)[https://etherscan.io/address/0xb3337164e91b9f05c87c7662c7ac684e8e0ff3e7#readContract] with the string `ReputationToken`. 
