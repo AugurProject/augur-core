@@ -161,3 +161,13 @@ There are no floating-point numbers in the EVM, only integers.  Therefore, Ether
 ### Worst-case-loss escrow for trades
 
 - [Some notes on worst-case-loss/value-at-risk](https://github.com/AugurProject/augur-core/blob/master/tests/wcl.txt)
+
+### Verifying the rep contract on mainnet
+
+You can verify that the rep token contract contract is a Delegator by verifying the ReputationTokenFactory is what created the contract.
+
+To do this go to the new rep contract [https://etherscan.io/address/0x1985365e9f78359a9b6ad760e32412f4a445e862]. Then go to its creator [https://etherscan.io/address/0x8fee0da3a35f612f88fb58d7028d14c7d99a3643]. Then click on internal transactions and you'll see this https://etherscan.io/tx/0x44c09f8eeff886723b79890e14743192a8c8d8a8eac158ed17600c94e502cce8 transaction which creates the initial universe.
+
+Then click on internal on that page and you'll see here https://etherscan.io/tx/0x44c09f8eeff886723b79890e14743192a8c8d8a8eac158ed17600c94e502cce8#internal that that contract created the rep token contract.
+
+You can verify that the Rep Token contract is delegating to the verified Rep Token Contract Target by calling lookup on the Controller https://etherscan.io/address/0xb3337164e91b9f05c87c7662c7ac684e8e0ff3e7#readContract with the string ReputationToken
