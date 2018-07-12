@@ -39,7 +39,7 @@ FILL_ORDER_MAXES    =   [
     2365994,
 ]
 
-#pytestmark = mark.skip(reason="Just for testing gas cost")
+pytestmark = mark.skip(reason="Just for testing gas cost")
 
 tester.STARTGAS = long(6.7 * 10**6)
 
