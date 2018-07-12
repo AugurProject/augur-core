@@ -8,8 +8,26 @@ from trading.test_claimTradingProceeds import acquireLongShares, finalizeMarket
 from reporting_utils import proceedToNextRound, proceedToFork, finalizeFork, proceedToDesignatedReporting
 
 # Trading Max Costs
-CREATE_ORDER_MAX    =   1292814
-CANCEL_ORDER_MAX    =   825440
+
+CREATE_ORDER_MAXES    =   [
+    695034,
+    794664,
+    894294,
+    993924,
+    1093554,
+    1193184,
+    1292814,
+]
+
+CANCEL_ORDER_MAXES    =   [
+    289826,
+    379095,
+    468364,
+    557633,
+    646902,
+    736171,
+    825440,
+]
 
 FILL_ORDER_MAXES    =   [
     933495,
@@ -21,14 +39,16 @@ FILL_ORDER_MAXES    =   [
     2365994,
 ]
 
-pytestmark = mark.skip(reason="Just for testing gas cost")
+#pytestmark = mark.skip(reason="Just for testing gas cost")
 
 tester.STARTGAS = long(6.7 * 10**6)
 
-def test_orderCreationMax(localFixture, markets):
+@mark.parametrize('numOutcomes', range(2,9))
+def test_orderCreationMax(numOutcomes, localFixture, markets):
     createOrder = localFixture.contracts['CreateOrder']
     completeSets = localFixture.contracts['CompleteSets']
-    market = markets[6]
+    marketIndex = numOutcomes - 2
+    market = markets[marketIndex]
 
     maxGas = 0
     cost = fix('1', '5000')
@@ -42,13 +62,15 @@ def test_orderCreationMax(localFixture, markets):
     orderID = createOrder.publicCreateOrder(BID, fix(1), 5000, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), "7", value = fix(1, 5000))
     maxGas = localFixture.chain.head_state.gas_used - startGas
 
-    assert maxGas == CREATE_ORDER_MAX
+    assert maxGas == CREATE_ORDER_MAXES[marketIndex]
 
-def test_orderCancelationMax(localFixture, markets):
+@mark.parametrize('numOutcomes', range(2,9))
+def test_orderCancelationMax(numOutcomes, localFixture, markets):
     createOrder = localFixture.contracts['CreateOrder']
     cancelOrder = localFixture.contracts['CancelOrder']
     completeSets = localFixture.contracts['CompleteSets']
-    market = markets[6]
+    marketIndex = numOutcomes - 2
+    market = markets[marketIndex]
 
     assert completeSets.publicBuyCompleteSets(market.address, 100, value=1000000)
     outcome = 0
@@ -61,7 +83,7 @@ def test_orderCancelationMax(localFixture, markets):
     cancelOrder.cancelOrder(orderID)
     maxGas = localFixture.chain.head_state.gas_used - startGas
 
-    assert maxGas == CANCEL_ORDER_MAX
+    assert maxGas == CANCEL_ORDER_MAXES[marketIndex]
 
 @mark.parametrize('numOutcomes', range(2,9))
 def test_orderFilling(numOutcomes, localFixture, markets):
