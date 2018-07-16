@@ -353,7 +353,7 @@ class ContractsFixture:
             self.contracts['Controller'].addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
-        contractsToInitialize = ['CompleteSets','CreateOrder','FillOrder','CancelOrder','Trade','ClaimTradingProceeds','OrdersFetcher', 'Time']
+        contractsToInitialize = ['CompleteSets','CreateOrder','FillOrder','CancelOrder','Trade','ClaimTradingProceeds','OrdersFetcher', 'Time', 'CreateOrder2', 'Trade2']
         for contractName in contractsToInitialize:
             if getattr(self.contracts[contractName], "setController", None):
                 self.contracts[contractName].setController(self.contracts['Controller'].address)
@@ -490,6 +490,8 @@ def augurInitializedSnapshot(fixture, controllerSnapshot):
     fixture.uploadAllContracts()
     fixture.initializeAllContracts()
     fixture.whitelistTradingContracts()
+    fixture.contracts["CreateOrderOld"] = fixture.contracts["CreateOrder"]
+    fixture.contracts["CreateOrder"] = fixture.contracts["CreateOrder2"]
     fixture.approveCentralAuthority()
     return fixture.createSnapshot()
 

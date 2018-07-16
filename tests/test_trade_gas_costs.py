@@ -7,7 +7,7 @@ from datetime import timedelta
 from trading.test_claimTradingProceeds import acquireLongShares, finalizeMarket
 from reporting_utils import proceedToNextRound, proceedToFork, finalizeFork, proceedToDesignatedReporting
 
-pytestmark = mark.skip(reason="Just for testing gas cost")
+#pytestmark = mark.skip(reason="Just for testing gas cost")
 
 # Trading Max Costs
 
@@ -21,6 +21,16 @@ CREATE_ORDER_BEST_CASE    =   [
     634358,
 ]
 
+CREATE_ORDER_BEST_CASE_2    =   [
+    617678,
+    632122,
+    646566,
+    661010,
+    675454,
+    689898,
+    704342,
+]
+
 CREATE_ORDER_MAXES    =   [
     695034,
     794664,
@@ -29,6 +39,16 @@ CREATE_ORDER_MAXES    =   [
     1093554,
     1193184,
     1292814,
+]
+
+CREATE_ORDER_MAXES_2    =   [
+    765018,
+    864648,
+    964278,
+    1063908,
+    1163538,
+    1263168,
+    1362798,
 ]
 
 CANCEL_ORDER_MAXES    =   [
@@ -95,7 +115,7 @@ tester.STARTGAS = long(6.7 * 10**6)
 
 @mark.parametrize('numOutcomes', range(2,9))
 def test_order_creation_best_case(numOutcomes, localFixture, markets):
-    createOrder = localFixture.contracts['CreateOrder']
+    createOrder = localFixture.contracts['CreateOrder2']
     completeSets = localFixture.contracts['CompleteSets']
     marketIndex = numOutcomes - 2
     market = markets[marketIndex]
@@ -109,11 +129,11 @@ def test_order_creation_best_case(numOutcomes, localFixture, markets):
     orderID = createOrder.publicCreateOrder(BID, fix(1), 5000, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), "7", value = fix(1, 5000))
     maxGas = localFixture.chain.head_state.gas_used - startGas
 
-    assert maxGas == CREATE_ORDER_BEST_CASE[marketIndex]
+    assert maxGas == CREATE_ORDER_BEST_CASE_2[marketIndex]
 
 @mark.parametrize('numOutcomes', range(2,9))
 def test_orderCreationMax(numOutcomes, localFixture, markets):
-    createOrder = localFixture.contracts['CreateOrder']
+    createOrder = localFixture.contracts['CreateOrder2']
     completeSets = localFixture.contracts['CompleteSets']
     marketIndex = numOutcomes - 2
     market = markets[marketIndex]
@@ -130,11 +150,11 @@ def test_orderCreationMax(numOutcomes, localFixture, markets):
     orderID = createOrder.publicCreateOrder(BID, fix(1), 5000, market.address, outcome, longTo32Bytes(0), longTo32Bytes(0), "7", value = fix(1, 5000))
     maxGas = localFixture.chain.head_state.gas_used - startGas
 
-    assert maxGas == CREATE_ORDER_MAXES[marketIndex]
+    assert maxGas == CREATE_ORDER_MAXES_2[marketIndex]
 
 @mark.parametrize('numOutcomes', range(2,9))
 def test_orderCancelationMax(numOutcomes, localFixture, markets):
-    createOrder = localFixture.contracts['CreateOrder']
+    createOrder = localFixture.contracts['CreateOrder2']
     cancelOrder = localFixture.contracts['CancelOrder']
     completeSets = localFixture.contracts['CompleteSets']
     marketIndex = numOutcomes - 2
@@ -155,7 +175,7 @@ def test_orderCancelationMax(numOutcomes, localFixture, markets):
 
 @mark.parametrize('numOutcomes', range(2,9))
 def test_order_filling_take_shares(numOutcomes, localFixture, markets):
-    createOrder = localFixture.contracts['CreateOrder']
+    createOrder = localFixture.contracts['CreateOrder2']
     completeSets = localFixture.contracts['CompleteSets']
     fillOrder = localFixture.contracts['FillOrder']
     tradeGroupID = "42"
@@ -176,7 +196,7 @@ def test_order_filling_take_shares(numOutcomes, localFixture, markets):
 
 @mark.parametrize('numOutcomes', range(2,9))
 def test_order_filling_both_eth(numOutcomes, localFixture, markets):
-    createOrder = localFixture.contracts['CreateOrder']
+    createOrder = localFixture.contracts['CreateOrder2']
     completeSets = localFixture.contracts['CompleteSets']
     fillOrder = localFixture.contracts['FillOrder']
     tradeGroupID = "42"
@@ -196,7 +216,7 @@ def test_order_filling_both_eth(numOutcomes, localFixture, markets):
 
 @mark.parametrize('numOutcomes', range(2,9))
 def test_order_filling_maker_reverse(numOutcomes, localFixture, markets):
-    createOrder = localFixture.contracts['CreateOrder']
+    createOrder = localFixture.contracts['CreateOrder2']
     completeSets = localFixture.contracts['CompleteSets']
     fillOrder = localFixture.contracts['FillOrder']
     tradeGroupID = "42"
@@ -219,7 +239,7 @@ def test_order_filling_maker_reverse(numOutcomes, localFixture, markets):
 
 @mark.parametrize('numOutcomes', range(2,9))
 def test_order_filling_taker_reverse(numOutcomes, localFixture, markets):
-    createOrder = localFixture.contracts['CreateOrder']
+    createOrder = localFixture.contracts['CreateOrder2']
     completeSets = localFixture.contracts['CompleteSets']
     fillOrder = localFixture.contracts['FillOrder']
     tradeGroupID = "42"
@@ -242,7 +262,7 @@ def test_order_filling_taker_reverse(numOutcomes, localFixture, markets):
 
 @mark.parametrize('numOutcomes', range(2,9))
 def test_order_filling_double_reverse(numOutcomes, localFixture, markets):
-    createOrder = localFixture.contracts['CreateOrder']
+    createOrder = localFixture.contracts['CreateOrder2']
     completeSets = localFixture.contracts['CompleteSets']
     fillOrder = localFixture.contracts['FillOrder']
     tradeGroupID = "42"

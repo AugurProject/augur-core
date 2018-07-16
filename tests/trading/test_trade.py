@@ -195,7 +195,7 @@ def test_two_bids_on_books_buy_both(contractsFixture, cash, market, universe):
     # create order 1
     orderID1 = createOrder.publicCreateOrder(BID, fix(4), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('4', '6000'))
     # create order 2
-    orderID2 = createOrder.publicCreateOrder(BID, fix(1), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('1', '6000'))
+    orderID2 = createOrder.publicCreateOrder(BID, fix(1), 6001, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('1', '6001'))
 
     # fill best order
     with PrintGasUsed(contractsFixture, "Fill two", 0):
@@ -229,21 +229,21 @@ def test_two_bids_on_books_buy_one_with_limit(contractsFixture, cash, market, un
     # create order 1
     orderID1 = createOrder.publicCreateOrder(BID, fix(4), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('4', '6000'))
     # create order 2
-    orderID2 = createOrder.publicCreateOrder(BID, fix(1), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('1', '6000'))
+    orderID2 = createOrder.publicCreateOrder(BID, fix(1), 6001, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('1', '6001'))
 
     # fill best order
     with PrintGasUsed(contractsFixture, "Fill two", 0):
         fillOrderID = trade.publicSellWithLimit(market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, 1, sender = tester.k2, value=fix('5', '4000'))
 
-    assert orders.getAmount(orderID1) == 0
-    assert orders.getPrice(orderID1) == 0
-    assert orders.getOrderCreator(orderID1) == longToHexString(0)
-    assert orders.getOrderMoneyEscrowed(orderID1) == 0
-    assert orders.getOrderSharesEscrowed(orderID1) == 0
-    assert orders.getBetterOrderId(orderID1) == longTo32Bytes(0)
-    assert orders.getWorseOrderId(orderID1) == longTo32Bytes(0)
+    assert orders.getAmount(orderID2) == 0
+    assert orders.getPrice(orderID2) == 0
+    assert orders.getOrderCreator(orderID2) == longToHexString(0)
+    assert orders.getOrderMoneyEscrowed(orderID2) == 0
+    assert orders.getOrderSharesEscrowed(orderID2) == 0
+    assert orders.getBetterOrderId(orderID2) == longTo32Bytes(0)
+    assert orders.getWorseOrderId(orderID2) == longTo32Bytes(0)
 
-    assert orders.getAmount(orderID2) == fix(1)
+    assert orders.getAmount(orderID1) == fix(4)
 
     # We dont create an order since an existing match is on the books
     assert fillOrderID == longTo32Bytes(1)
@@ -256,7 +256,7 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     tradeGroupID = "42"
 
     # create order 1
-    orderID1 = createOrder.publicCreateOrder(BID, fix(12), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '6000'))
+    orderID1 = createOrder.publicCreateOrder(BID, fix(12), 6001, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '6001'))
     # create order 2
     orderID2 = createOrder.publicCreateOrder(BID, fix(7), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('7', '6000'))
 
@@ -413,10 +413,10 @@ def test_two_asks_on_books_buy_both(contractsFixture, cash, market, universe):
     # create order 1
     orderID1 = createOrder.publicCreateOrder(ASK, fix(12), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '4000'))
     # create order 2
-    orderID2 = createOrder.publicCreateOrder(ASK, fix(3), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('3', '4000'))
+    orderID2 = createOrder.publicCreateOrder(ASK, fix(3), 6001, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('3', '3999'))
 
     # fill best order
-    fillOrderID = trade.publicBuy(market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('15', '6000'))
+    fillOrderID = trade.publicBuy(market.address, YES, fix(15), 6001, "0", "0", tradeGroupID, sender = tester.k2, value=fix('15', '6001'))
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0
@@ -445,10 +445,10 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     # create order 1
     orderID1 = createOrder.publicCreateOrder(ASK, fix(12), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '4000'))
     # create order 2
-    orderID2 = createOrder.publicCreateOrder(ASK, fix(7), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('7', '4000'))
+    orderID2 = createOrder.publicCreateOrder(ASK, fix(7), 6001, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('7', '3999'))
 
     # fill best order
-    fillOrderID = trade.publicBuy(market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, sender = tester.k2, value=fix('15', '6000'))
+    fillOrderID = trade.publicBuy(market.address, YES, fix(15), 6001, "0", "0", tradeGroupID, sender = tester.k2, value=fix('15', '6001'))
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0
@@ -459,9 +459,9 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     assert orders.getWorseOrderId(orderID1) == longTo32Bytes(0)
 
     assert orders.getAmount(orderID2) == fix(4)
-    assert orders.getPrice(orderID2) == 6000
+    assert orders.getPrice(orderID2) == 6001
     assert orders.getOrderCreator(orderID2) == bytesToHexString(tester.a3)
-    assert orders.getOrderMoneyEscrowed(orderID2) == fix('4', '4000')
+    assert orders.getOrderMoneyEscrowed(orderID2) == fix('4', '3999')
     assert orders.getOrderSharesEscrowed(orderID2) == 0
     assert orders.getBetterOrderId(orderID2) == longTo32Bytes(0)
     assert orders.getWorseOrderId(orderID2) == longTo32Bytes(0)

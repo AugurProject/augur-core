@@ -255,7 +255,7 @@ Deploying to: ${networkConfiguration.networkName}
 
     private async initializeAllContracts(): Promise<void> {
         console.log('Initializing contracts...');
-        const contractsToInitialize = ["CompleteSets","CreateOrder","FillOrder","CancelOrder","Trade","ClaimTradingProceeds","OrdersFetcher","Time"];
+        const contractsToInitialize = ["CompleteSets","CreateOrder","FillOrder","CancelOrder","Trade","ClaimTradingProceeds","OrdersFetcher","Time","CreateOrder2","Trade2"];
         const promises: Array<Promise<any>> = [];
         for (let contractName of contractsToInitialize) {
             promises.push(this.initializeContract(contractName));
