@@ -84,4 +84,3 @@ env:
     - TESTS="security:oyente"
     - TESTS="security:mythril"
     - TESTS="security:maian"
-    - TESTS="security:smt"
