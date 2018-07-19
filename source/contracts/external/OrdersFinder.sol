@@ -7,7 +7,7 @@ import 'reporting/IMarket.sol';
 contract OrdersFinder {
     IOrders public orders;
 
-    function OrdersFinder(IOrders _orders) {
+    function OrdersFinder(IOrders _orders) public {
         orders = _orders;
     }
 
