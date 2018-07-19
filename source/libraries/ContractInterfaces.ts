@@ -1610,6 +1610,76 @@
     }
 
 
+    export class OrdersFinder extends Contract {
+        public constructor(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN) {
+            super(connector, accountManager, address, defaultGasPrice);
+        }
+
+        public getExistingOrders5_ = async(type: BN, market: string, outcome: BN, options?: { sender?: string }): Promise<Array<string>> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"}],"name":"getExistingOrders5","outputs":[{"name":"_results","type":"bytes32[5]"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [type, market, outcome], options.sender);
+            return <Array<string>>result[0];
+        }
+
+        public getExistingOrders20_ = async(type: BN, market: string, outcome: BN, options?: { sender?: string }): Promise<Array<string>> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"}],"name":"getExistingOrders20","outputs":[{"name":"_results","type":"bytes32[20]"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [type, market, outcome], options.sender);
+            return <Array<string>>result[0];
+        }
+
+        public orders_ = async( options?: { sender?: string }): Promise<string> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"orders","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
+            return <string>result[0];
+        }
+
+        public getExistingOrders1000_ = async(type: BN, market: string, outcome: BN, options?: { sender?: string }): Promise<Array<string>> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"}],"name":"getExistingOrders1000","outputs":[{"name":"_results","type":"bytes32[1000]"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [type, market, outcome], options.sender);
+            return <Array<string>>result[0];
+        }
+
+        public getExistingOrders50_ = async(type: BN, market: string, outcome: BN, options?: { sender?: string }): Promise<Array<string>> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"}],"name":"getExistingOrders50","outputs":[{"name":"_results","type":"bytes32[50]"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [type, market, outcome], options.sender);
+            return <Array<string>>result[0];
+        }
+
+        public getExistingOrders500_ = async(type: BN, market: string, outcome: BN, options?: { sender?: string }): Promise<Array<string>> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"}],"name":"getExistingOrders500","outputs":[{"name":"_results","type":"bytes32[500]"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [type, market, outcome], options.sender);
+            return <Array<string>>result[0];
+        }
+
+        public getExistingOrders200_ = async(type: BN, market: string, outcome: BN, options?: { sender?: string }): Promise<Array<string>> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"}],"name":"getExistingOrders200","outputs":[{"name":"_results","type":"bytes32[200]"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [type, market, outcome], options.sender);
+            return <Array<string>>result[0];
+        }
+
+        public getExistingOrders100_ = async(type: BN, market: string, outcome: BN, options?: { sender?: string }): Promise<Array<string>> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"}],"name":"getExistingOrders100","outputs":[{"name":"_results","type":"bytes32[100]"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [type, market, outcome], options.sender);
+            return <Array<string>>result[0];
+        }
+
+        public getExistingOrders10_ = async(type: BN, market: string, outcome: BN, options?: { sender?: string }): Promise<Array<string>> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_type","type":"uint8"},{"name":"_market","type":"address"},{"name":"_outcome","type":"uint256"}],"name":"getExistingOrders10","outputs":[{"name":"_results","type":"bytes32[10]"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [type, market, outcome], options.sender);
+            return <Array<string>>result[0];
+        }
+    }
+
+
     export class DisputeCrowdsourcerFactory extends Contract {
         public constructor(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN) {
             super(connector, accountManager, address, defaultGasPrice);

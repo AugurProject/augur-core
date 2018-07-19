@@ -176,6 +176,14 @@ ${contractMethods.join("\n\n")}
             case 'uint256[]': {
                 return 'Array<BN>';
             }
+            case 'bytes32[5]':
+            case 'bytes32[10]':
+            case 'bytes32[20]':
+            case 'bytes32[50]':
+            case 'bytes32[100]':
+            case 'bytes32[200]':
+            case 'bytes32[500]':
+            case 'bytes32[1000]':
             case 'bytes32[]': {
                 return 'Array<string>';
             }
