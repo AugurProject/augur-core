@@ -214,12 +214,14 @@ class ContractsFixture:
             remove_file('./allFiredEvents')
         self.relativeContractsPath = '../source/contracts'
         self.relativeTestContractsPath = 'solidity_test_helpers'
+        self.externalContractsPath = '../source/contracts/external'
         self.coverageMode = pytest.config.option.cover
         self.subFork = pytest.config.option.subFork
         if self.coverageMode:
             self.chain.head_state.log_listeners.append(self.writeLogToFile)
             self.relativeContractsPath = '../coverageEnv/contracts'
             self.relativeTestContractsPath = '../coverageEnv/solidity_test_helpers'
+            self.externalContractsPath = '../coverageEnv/contracts/external'
 
 
     def writeLogToFile(self, message):
@@ -306,6 +308,7 @@ class ContractsFixture:
         for directory, _, filenames in walk(resolveRelativePath(self.relativeContractsPath)):
             # skip the legacy reputation directory since it is unnecessary and we don't support uploads of contracts with constructors yet
             if 'legacy_reputation' in directory: continue
+            if 'external' in directory: continue
             for filename in filenames:
                 name = path.splitext(filename)[0]
                 extension = path.splitext(filename)[1]
@@ -342,6 +345,15 @@ class ContractsFixture:
                 else:
                     self.uploadAndAddToController(path.join(directory, filename))
 
+    def uploadExternalContracts(self):
+        for directory, _, filenames in walk(resolveRelativePath(self.externalContractsPath)):
+            for filename in filenames:
+                name = path.splitext(filename)[0]
+                extension = path.splitext(filename)[1]
+                if extension != '.sol': continue
+                constructorArgs = []
+                if name == "OrdersFinder": constructorArgs = [self.contracts["Orders"].address]
+                self.upload(path.join(directory, filename), constructorArgs=constructorArgs)
 
     def whitelistTradingContracts(self):
         for filename in listdir(resolveRelativePath('../source/contracts/trading')):
@@ -491,6 +503,7 @@ def augurInitializedSnapshot(fixture, controllerSnapshot):
     fixture.initializeAllContracts()
     fixture.whitelistTradingContracts()
     fixture.approveCentralAuthority()
+    fixture.uploadExternalContracts()
     return fixture.createSnapshot()
 
 @pytest.fixture(scope="session")

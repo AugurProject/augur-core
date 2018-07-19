@@ -9,7 +9,7 @@ import { CompilerOutput } from "solc";
 import { Abi, AbiFunction } from 'ethereum';
 import { DeployerConfiguration } from './DeployerConfiguration';
 import { Connector } from './Connector';
-import { Augur, ContractFactory, Controller, Controlled, Universe, ReputationToken, LegacyReputationToken, TimeControlled } from './ContractInterfaces';
+import { Augur, ContractFactory, Controller, Controlled, Universe, ReputationToken, LegacyReputationToken, TimeControlled, OrdersFinder } from './ContractInterfaces';
 import { NetworkConfiguration } from './NetworkConfiguration';
 import { AccountManager } from './AccountManager';
 import { Contracts, Contract } from './Contracts';
@@ -54,6 +54,7 @@ Deploying to: ${networkConfiguration.networkName}
         this.controller = await this.uploadController();
         await this.uploadAugur();
         await this.uploadAllContracts();
+        await this.uploadOrdersFinder();
 
         if (this.configuration.isProduction) {
             console.log(`Registering Legacy Rep Contract at ${this.configuration.legacyRepAddress}`);
@@ -153,6 +154,14 @@ Deploying to: ${networkConfiguration.networkName}
         contract.address = address;
         await augur.setController(this.controller.address);
         await this.controller.registerContract(stringTo32ByteHex("Augur"), address, commitHash, bytecodeHash);
+    }
+
+    private async uploadOrdersFinder(): Promise<void> {
+        const contract = await this.contracts.get("OrdersFinder");
+        const ordersAddress = this.contracts.get("Orders").address;
+        if (ordersAddress === undefined) throw new Error("Orders contract not uploaded");
+        const address = await this.construct(contract, [ordersAddress], `Uploading ${contract.contractName}`);
+        contract.address = address;
     }
 
     private async uploadAllContracts(): Promise<void> {
@@ -329,6 +338,7 @@ Deploying to: ${networkConfiguration.networkName}
         if (this.universe) mapping['Universe'] = this.universe.address;
         if (this.contracts.get('Augur').address === undefined) throw new Error(`Augur not uploaded.`);
         mapping['Augur'] = this.contracts.get('Augur').address!;
+        mapping['OrdersFinder'] = this.contracts.get('OrdersFinder').address!;
         mapping['LegacyReputationToken'] = this.contracts.get('LegacyReputationToken').address!;
         for (let contract of this.contracts) {
             if (!contract.relativeFilePath.startsWith('trading/')) continue;
