@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.4.24;
 
 import 'libraries/DelegationTarget.sol';
 import 'libraries/Ownable.sol';
@@ -26,7 +26,7 @@ contract Map is DelegationTarget, Ownable, Initializable {
     }
 
     function add(bytes32 _key, address _value) public onlyOwner returns (bool) {
-        return add(_key, bytes32(_value));
+        return add(_key, _value);
     }
 
     function remove(bytes32 _key) public onlyOwner returns (bool) {
@@ -49,11 +49,11 @@ contract Map is DelegationTarget, Ownable, Initializable {
     }
 
     function getAsAddressOrZero(bytes32 _key) public view returns (address) {
-        return address(getValueOrZero(_key));
+        return address(uint160(uint256(getValueOrZero(_key))));
     }
 
     function getAsAddress(bytes32 _key) public view returns (address) {
-        return address(get(_key));
+        return address(uint160(uint256(get(_key))));
     }
 
     function contains(bytes32 _key) public view returns (bool) {

@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.4.24;
 
 
 import 'trading/ITradingEscapeHatch.sol';
@@ -71,9 +71,10 @@ contract TradingEscapeHatch is DelegationTarget, CashAutoConverter, MarketValida
         uint256[] memory _shiftedPrices = new uint256[](_numOutcomes);
         uint256 _sumOfBids = 0;
         IOrders _orders = IOrders(controller.lookup("Orders"));
+        uint256 _tempOutcome;
 
         // fill in any outcome prices that have an order history
-        for (uint256 _tempOutcome = 0; _tempOutcome < _numOutcomes; ++_tempOutcome) {
+        for (_tempOutcome = 0; _tempOutcome < _numOutcomes; ++_tempOutcome) {
             uint256 _lastTradePrice = uint256(_orders.getLastOutcomePrice(_market, _tempOutcome));
             uint256 _lastTradePriceShifted = _lastTradePrice;
             if (_lastTradePriceShifted > 0) {

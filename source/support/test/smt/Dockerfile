@@ -11,8 +11,8 @@ RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
 
 RUN apt-get update && apt-get install -y unzip libz3-dev
 
-RUN wget --quiet --output-document /usr/local/bin/solc https://github.com/ethereum/solidity/releases/download/v0.4.24/solc-static-linux \
-	&& chmod a+x /usr/local/bin/solc
+RUN wget --quiet https://github.com/cryptomental/solidity/releases/download/v0.4.25-develop.2018.7.4-smt/solc.zip \
+	&& unzip solc.zip -d /usr/local/bin && chmod a+x /usr/local/bin/solc
 
 COPY requirements.txt /app/requirements.txt
 WORKDIR /app

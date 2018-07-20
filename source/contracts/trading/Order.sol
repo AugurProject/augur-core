@@ -5,7 +5,7 @@
 // amount is the number of attoshares the order is for (either to buy or to sell).
 // price is the exact price you want to buy/sell at [which may not be the cost, for example to short a yesNo market it'll cost numTicks-price, to go long it'll cost price]
 
-pragma solidity 0.4.24;
+pragma solidity ^0.4.24;
 
 
 import 'IAugur.sol';
@@ -120,7 +120,8 @@ library Order {
 
         // Figure out how many almost-complete-sets (just missing `outcome` share) the creator has
         uint256 _attosharesHeld = 2**254;
-        for (uint256 _i = 0; _i < _numberOfOutcomes; _i++) {
+        uint256 _i;
+        for (_i = 0; _i < _numberOfOutcomes; _i++) {
             if (_i != _orderData.outcome) {
                 uint256 _creatorShareTokenBalance = _orderData.market.getShareToken(_i).balanceOf(_orderData.creator);
                 _attosharesHeld = SafeMathUint256.min(_creatorShareTokenBalance, _attosharesHeld);
