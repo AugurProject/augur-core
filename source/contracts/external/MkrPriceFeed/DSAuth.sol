@@ -1,7 +1,7 @@
 pragma solidity 0.4.20;
 
-import 'TEST/MkrPriceFeed/DSAuthEvents.sol';
-import 'TEST/MkrPriceFeed/DSAuthority.sol';
+import 'external/MkrPriceFeed/DSAuthEvents.sol';
+import 'external/MkrPriceFeed/DSAuthority.sol';
 
 
 contract DSAuth is DSAuthEvents {

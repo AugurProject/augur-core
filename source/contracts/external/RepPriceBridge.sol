@@ -2,14 +2,14 @@ pragma solidity 0.4.20;
 
 import 'libraries/Ownable.sol';
 import 'reporting/IRepPriceOracle.sol';
-import 'TEST/MkrPriceFeed/Medianizer.sol';
+import 'external/MkrPriceFeed/Medianizer.sol';
 
 
 contract RepPriceBridge is Ownable {
     IRepPriceOracle public repPriceOracle;
     Medianizer public medianizer;
 
-    function RepPriceBridge(address _repPriceOracle, address _medianizer) public {
+    function RepPriceBridge(IRepPriceOracle _repPriceOracle, Medianizer _medianizer) public {
         repPriceOracle = _repPriceOracle;
         medianizer = _medianizer;
     }
@@ -24,7 +24,7 @@ contract RepPriceBridge is Ownable {
         return isValid;
     }
 
-    function setMedianizer(address _medianizer) public onlyOwner returns (bool) {
+    function setMedianizer(Medianizer _medianizer) public onlyOwner returns (bool) {
         medianizer = _medianizer;
         return true;
     }

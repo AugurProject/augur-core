@@ -1,6 +1,6 @@
 pragma solidity 0.4.20;
 
-import 'TEST/MkrPriceFeed/DSThing.sol';
+import 'external/MkrPriceFeed/DSThing.sol';
 
 
 contract PriceFeed is DSThing {

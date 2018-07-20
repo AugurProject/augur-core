@@ -4,7 +4,7 @@ from utils import captureFilteredLogs, bytesToHexString, AssertLog, TokenDelta
 from pytest import raises, fixture
 
 def test_escape_hatch_controller(contractsFixture, universe, controller):
-    escapeHatchController = contractsFixture.upload('external/EscapeHatchController.sol')
+    escapeHatchController = contractsFixture.upload('../source/contracts/external/EscapeHatchController.sol')
     assert escapeHatchController.setController(controller.address)
     assert escapeHatchController.controller() == controller.address
     assert escapeHatchController.getOwner() == bytesToHexString(tester.a0)

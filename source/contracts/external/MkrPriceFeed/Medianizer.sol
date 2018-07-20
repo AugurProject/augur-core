@@ -1,7 +1,7 @@
 pragma solidity 0.4.20;
 
-import 'TEST/MkrPriceFeed/DSThing.sol';
-import 'TEST/MkrPriceFeed/DSValue.sol';
+import 'external/MkrPriceFeed/DSThing.sol';
+import 'external/MkrPriceFeed/DSValue.sol';
 
 
 contract Medianizer is DSThing {

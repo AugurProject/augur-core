@@ -352,6 +352,7 @@ class ContractsFixture:
                 extension = path.splitext(filename)[1]
                 if extension != '.sol': continue
                 constructorArgs = []
+                if name != "OrdersFinder": continue
                 if name == "OrdersFinder": constructorArgs = [self.contracts["Orders"].address]
                 self.upload(path.join(directory, filename), constructorArgs=constructorArgs)
 

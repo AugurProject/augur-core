@@ -46,9 +46,9 @@ def test_price_feed_wrapper(localFixture, medianizer, feedFactory, repPriceOracl
 def localSnapshot(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)
     augur = fixture.contracts["Augur"]
-    kitchenSinkSnapshot['Medianizer'] = fixture.upload('solidity_test_helpers/MkrPriceFeed/Medianizer.sol', "Medianizer")
-    kitchenSinkSnapshot['FeedFactory'] = fixture.upload('solidity_test_helpers/MkrPriceFeed/FeedFactory.sol', "FeedFactory")
-    kitchenSinkSnapshot['PriceFeed'] = fixture.upload('solidity_test_helpers/MkrPriceFeed/PriceFeed.sol', "PriceFeed")
+    kitchenSinkSnapshot['Medianizer'] = fixture.upload('../source/contracts/external/MkrPriceFeed/Medianizer.sol', "Medianizer")
+    kitchenSinkSnapshot['FeedFactory'] = fixture.upload('../source/contracts/external/MkrPriceFeed/FeedFactory.sol', "FeedFactory")
+    kitchenSinkSnapshot['PriceFeed'] = fixture.upload('../source/contracts/external/MkrPriceFeed/PriceFeed.sol', "PriceFeed")
 
     return fixture.createSnapshot()
 
@@ -72,4 +72,3 @@ def repPriceOracle(localFixture, kitchenSinkSnapshot):
 @fixture
 def controller(localFixture, kitchenSinkSnapshot):
     return localFixture.contracts['Controller']
-

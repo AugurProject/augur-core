@@ -1,8 +1,8 @@
 pragma solidity 0.4.20;
 
-import 'TEST/MkrPriceFeed/DSAuth.sol';
-import 'TEST/MkrPriceFeed/DSNote.sol';
-import 'TEST/MkrPriceFeed/DSMath.sol';
+import 'external/MkrPriceFeed/DSAuth.sol';
+import 'external/MkrPriceFeed/DSNote.sol';
+import 'external/MkrPriceFeed/DSMath.sol';
 
 
 contract DSThing is DSAuth, DSNote, DSMath {

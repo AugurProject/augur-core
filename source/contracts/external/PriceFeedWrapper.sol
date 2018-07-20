@@ -1,15 +1,15 @@
 pragma solidity 0.4.20;
 
 import 'libraries/Ownable.sol';
-import 'TEST/MkrPriceFeed/PriceFeed.sol';
-import 'TEST/MkrPriceFeed/RepPriceBridge.sol';
+import 'external/MkrPriceFeed/PriceFeed.sol';
+import 'external/RepPriceBridge.sol';
 
 
 contract PriceFeedWrapper is Ownable {
     PriceFeed public priceFeed;
     RepPriceBridge public repPriceBridge;
 
-    function PriceFeedWrapper(PriceFeed _priceFreed, RepPriceBridge _repPriceBridge) public {
+    function PriceFeedWrapper(PriceFeed _priceFeed, RepPriceBridge _repPriceBridge) public {
         priceFeed = _priceFeed;
         repPriceBridge = _repPriceBridge;
     }
@@ -20,13 +20,17 @@ contract PriceFeedWrapper is Ownable {
         return true;
     }
 
-    function setRepPriceBridge(address _repPriceBridge) public onlyOwner returns (bool) {
+    function setRepPriceBridge(RepPriceBridge _repPriceBridge) public onlyOwner returns (bool) {
         repPriceBridge = _repPriceBridge;
         return true;
     }
 
-    function transferPriceFeedOwnership(address _newOwner) public onlyOwner returns (bool) {
-        priceFeed.transferOwnership(_newOwner);
+    function setOwner(address _newOwner) public onlyOwner returns (bool) {
+        priceFeed.setOwner(_newOwner);
+        return true;
+    }
+
+    function onTransferOwnership(address, address) internal returns (bool) {
         return true;
     }
 }
