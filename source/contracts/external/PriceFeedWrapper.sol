@@ -20,13 +20,13 @@ contract PriceFeedWrapper is Ownable {
         return true;
     }
 
-    function setRepPriceBridge(RepPriceBridge _repPriceBridge) public onlyOwner returns (bool) {
-        repPriceBridge = _repPriceBridge;
+    function setPriceFeed(PriceFeed _priceFeed) public onlyOwner returns (bool) {
+        priceFeed = _priceFeed;
         return true;
     }
 
-    function setOwner(address _newOwner) public onlyOwner returns (bool) {
-        priceFeed.setOwner(_newOwner);
+    function setRepPriceBridge(RepPriceBridge _repPriceBridge) public onlyOwner returns (bool) {
+        repPriceBridge = _repPriceBridge;
         return true;
     }
 

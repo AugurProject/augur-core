@@ -24,6 +24,11 @@ contract RepPriceBridge is Ownable {
         return isValid;
     }
 
+    function setRepPriceOracle(IRepPriceOracle _repPriceOracle) public onlyOwner returns (bool) {
+        repPriceOracle = _repPriceOracle;
+        return true;
+    }
+
     function setMedianizer(Medianizer _medianizer) public onlyOwner returns (bool) {
         medianizer = _medianizer;
         return true;
