@@ -257,7 +257,7 @@ class ContractsFixture:
         compiledCode = self.getCompiledCode(resolvedPath)
         # abstract contracts have a 0-length array for bytecode
         if len(compiledCode) == 0:
-            if ("libraries" in relativeFilePath or lookupKey.startswith("I") or lookupKey.startswith("Base")):
+            if ("libraries" in relativeFilePath or lookupKey.startswith("I") or lookupKey.startswith("Base") or lookupKey.startswith("DS")):
                 pass#print "Skipping upload of " + lookupKey + " because it had no bytecode (likely a abstract class/interface)."
             else:
                 raise Exception("Contract: " + lookupKey + " has no bytecode, but this is not expected. It probably doesn't implement all its abstract methods")
