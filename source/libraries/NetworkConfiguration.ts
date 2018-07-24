@@ -1,4 +1,5 @@
 import BN = require('bn.js');
+const path = require("path");
 
 type NetworkOptions = {
     isProduction: boolean;
@@ -49,7 +50,7 @@ const networks: Networks = {
         isProduction: process.env.PRODUCTION === "true" || false,
         http: process.env.ETHEREUM_HTTP || "http://localhost:8545",
         ws: process.env.ETHEREUM_WS || "http://localhost:8546",
-        ipc: process.env.ETHEREUM_IPC,
+        ipc: process.env.ETHEREUM_IPC || path.join(process.env.HOME, ".ethereum", "geth.ipc"),
         privateKey: process.env.ETHEREUM_PRIVATE_KEY || "fae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a",
         gasPrice: ((typeof process.env.ETHEREUM_GAS_PRICE_IN_NANOETH === "undefined") ? new BN(20) : new BN(process.env.ETHEREUM_GAS_PRICE_IN_NANOETH!)).mul(new BN(1000000000))
     },
