@@ -1,5 +1,4 @@
 import BN = require('bn.js');
-const path = require("path");
 
 type NetworkOptions = {
     isProduction: boolean;
