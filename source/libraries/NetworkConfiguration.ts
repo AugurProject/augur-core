@@ -4,6 +4,7 @@ type NetworkOptions = {
     isProduction: boolean;
     http: string;
     ws?: string;
+    ipc?: string;
     privateKey?: string;
     gasPrice: BN;
 }
@@ -48,6 +49,7 @@ const networks: Networks = {
         isProduction: process.env.PRODUCTION === "true" || false,
         http: process.env.ETHEREUM_HTTP || "http://localhost:8545",
         ws: process.env.ETHEREUM_WS || "http://localhost:8546",
+        ipc: process.env.ETHEREUM_IPC,
         privateKey: process.env.ETHEREUM_PRIVATE_KEY || "fae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a",
         gasPrice: ((typeof process.env.ETHEREUM_GAS_PRICE_IN_NANOETH === "undefined") ? new BN(20) : new BN(process.env.ETHEREUM_GAS_PRICE_IN_NANOETH!)).mul(new BN(1000000000))
     },
@@ -62,14 +64,16 @@ export class NetworkConfiguration {
     public readonly networkName: string;
     public readonly http: string;
     public readonly ws?: string;
+    public readonly ipc?: string;
     public readonly privateKey?: string;
     public readonly gasPrice: BN;
     public readonly isProduction: boolean;
 
-    public constructor(networkName: string, http: string, ws: string | undefined, gasPrice: BN, privateKey: string | undefined, isProduction: boolean) {
+    public constructor(networkName: string, http: string, ws: string | undefined, ipc: string | undefined, gasPrice: BN, privateKey: string | undefined, isProduction: boolean) {
         this.networkName = networkName;
         this.http = http;
         this.ws = ws;
+        this.ipc = ipc;
         this.gasPrice = gasPrice;
         this.privateKey = privateKey;
         this.isProduction = isProduction;
@@ -81,7 +85,6 @@ export class NetworkConfiguration {
         if (network === undefined || network === null) throw new Error(`Network configuration ${networkName} not found`);
         if (validatePrivateKey && (network.privateKey === undefined || network.privateKey === null)) throw new Error(`Network configuration for ${networkName} has no private key available. Check that this key is in the environment ${networkName == "environment" ? "ETHEREUM" : networkName.toUpperCase()}_PRIVATE_KEY`);
 
-        return new NetworkConfiguration(networkName, network.http, network.ws, network.gasPrice, network.privateKey, network.isProduction);
+        return new NetworkConfiguration(networkName, network.http, network.ws, network.ipc, network.gasPrice, network.privateKey, network.isProduction);
     }
 }
-
