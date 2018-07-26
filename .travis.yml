@@ -81,6 +81,5 @@ env:
     - TESTS="tests/unit" --subFork
     - TESTS="integration:geth"
     - TESTS="integration:parity"
-    - TESTS="security:oyente"
     - TESTS="security:mythril"
     - TESTS="security:maian"
