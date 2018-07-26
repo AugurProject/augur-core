@@ -10,9 +10,7 @@ contract DSGuard is DSAuth, DSAuthority, DSGuardEvents {
 
     mapping (bytes32 => mapping (bytes32 => mapping (bytes32 => bool))) acl;
 
-    function canCall(
-        address src_, address dst_, bytes4 sig
-    ) public view returns (bool) {
+    function canCall(address src_, address dst_, bytes4 sig) public view returns (bool) {
         bytes32 src = bytes32(src_);
         bytes32 dst = bytes32(dst_);
 

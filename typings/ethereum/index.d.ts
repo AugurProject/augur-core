@@ -1,4 +1,4 @@
-export type Primitive = 'uint8' | 'uint64' | 'uint256' | 'bool' | 'string' | 'address' | 'bytes20' | 'bytes32' | 'bytes' | 'int256' | 'address[]' | 'uint256[]' | 'bytes32[]' | 'bytes32[5]' | 'bytes32[10]' | 'bytes32[20]' | 'bytes32[50]' | 'bytes32[100]' | 'bytes32[200]' | 'bytes32[500]' | 'bytes32[1000]';
+export type Primitive = 'uint8' | 'uint32' | 'uint64' | 'uint96' | 'uint128' |'uint256' | 'bool' | 'string' | 'address' | 'bytes12' | 'bytes20' | 'bytes32' | 'bytes' | 'int256' | 'address[]' | 'uint256[]' | 'bytes32[]' | 'bytes32[5]' | 'bytes32[10]' | 'bytes32[20]' | 'bytes32[50]' | 'bytes32[100]' | 'bytes32[200]' | 'bytes32[500]' | 'bytes32[1000]';
 
 export interface AbiParameter {
     name: string,

@@ -155,13 +155,17 @@ ${contractMethods.join("\n\n")}
     private getTsTypeFromPrimitive(abiType: Primitive) {
         switch(abiType) {
             case 'uint8':
+            case 'uint32':
             case 'uint64':
+            case 'uint96':
+            case 'uint128':
             case 'uint256':
             case 'int256': {
                 return 'BN';
             }
             case 'string':
             case 'address':
+            case 'bytes12':
             case 'bytes20':
             case 'bytes32':
             case 'bytes': {
