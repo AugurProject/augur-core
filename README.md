@@ -1,4 +1,7 @@
-# augur-core
+# augur-core-LIGHT
+
+Augur Light is implementing augur-core back-end (Ethereum contracts), with additional protocols to prevent nefarious use cases. 
+
 
 [![Build Status](https://travis-ci.com/AugurProject/augur-core.svg)](https://travis-ci.com/AugurProject/augur-core)
 
