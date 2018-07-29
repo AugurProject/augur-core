@@ -14,6 +14,12 @@ type Networks = {
 }
 
 const networks: Networks = {
+    thunder: {
+        isProduction: false,
+        http: "http://testnet-rpc.thundercore.com:8545",
+        privateKey: process.env.THUNDER_PRIVATE_KEY,
+        gasPrice: new BN(20*1000000000)
+    },
     ropsten: {
         isProduction: false,
         http: "http://ropsten.ethereum.nodes.augur.net",
