@@ -11,10 +11,8 @@ RUN apt-get update \
 	&& apt-get install -y software-properties-common \
 	&& apt-get install -y unzip
 
-RUN wget --quiet https://github.com/Z3Prover/z3/archive/z3-4.5.0.zip \
-	&& unzip z3-4.5.0.zip -d /tmp \
-	&& cd /tmp/z3-z3-4.5.0 \
-	&& python scripts/mk_make.py --python \
+RUN cd /tmp && git clone https://github.com/Z3Prover/z3.git && cd z3 \
+	&& python scripts/mk_make.py --python --debug --trace \
 	&& cd build \
 	&& make -j8 \
 	&& make install
