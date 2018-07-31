@@ -184,6 +184,7 @@ Deploying to: ${networkConfiguration.networkName}
         if (contractName === 'Time') contract = this.configuration.useNormalTime ? contract : this.contracts.get('TimeControlled');
         if (contractName === 'ReputationToken') contract = this.configuration.isProduction ? contract : this.contracts.get('TestNetReputationToken');
         if (contract.relativeFilePath.startsWith('legacy_reputation/')) return;
+        if (contractName !== 'OrdersFinder' && contract.relativeFilePath.startsWith('external/')) return;
         if (this.configuration.isProduction && contractName === 'LegacyReputationToken') return;
         if (contractName !== 'Map' && contract.relativeFilePath.startsWith('libraries/')) return;
         // Check to see if we have already uploded this version of the contract

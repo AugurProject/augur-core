@@ -154,7 +154,7 @@ export class ContractCompiler {
                 const bytecode = compilerOutput.contracts[relativeFilePath][contractName].evm.bytecode.object;
                 if (bytecode === undefined) continue;
                 // don't include interfaces or Abstract contracts
-                if (/^(?:I|Base)[A-Z].*/.test(contractName)) continue;
+                if (/^(?:I|Base|DS)[A-Z].*/.test(contractName)) continue;
                 if (bytecode.length === 0) throw new Error("Contract: " + contractName + " has no bytecode, but this is not expected. It probably doesn't implement all its abstract methods");
 
                 result.contracts[relativeFilePath] = {

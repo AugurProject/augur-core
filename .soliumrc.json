@@ -16,7 +16,7 @@
     "semicolon-whitespace": "error",
     "function-whitespace": "error",
     "lbrace": "error",
-    "mixedcase": "warning",
+    "mixedcase": "off",
     "camelcase": "warning",
     "no-unused-vars": "error",
     "blank-lines": "warning",
