@@ -93,7 +93,6 @@ export class NetworkConfiguration {
                 ws: process.env.ETHEREUM_WS,
                 ipc: process.env.ETHEREUM_IPC,
             });
-            console.log(network);
         }
         if (network === undefined || network === null) throw new Error(`Network configuration ${networkName} not found`);
         if (validatePrivateKey && (network.privateKey === undefined || network.privateKey === null)) throw new Error(`Network configuration for ${networkName} has no private key available. Check that this key is in the environment ${networkName == "environment" ? "ETHEREUM" : networkName.toUpperCase()}_PRIVATE_KEY`);
