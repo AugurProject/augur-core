@@ -53,9 +53,8 @@ const networks: Networks = {
     },
     environment: {
         isProduction: process.env.PRODUCTION === "true" || false,
-        http: process.env.ETHEREUM_HTTP || "http://localhost:8545",
-        ws: process.env.ETHEREUM_WS || "http://localhost:8546",
-        ipc: process.env.ETHEREUM_IPC,
+        http: "http://localhost:8545",
+        ws: "ws://localhost:8546",
         privateKey: process.env.ETHEREUM_PRIVATE_KEY || "fae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a",
         gasPrice: ((typeof process.env.ETHEREUM_GAS_PRICE_IN_NANOETH === "undefined") ? new BN(20) : new BN(process.env.ETHEREUM_GAS_PRICE_IN_NANOETH!)).mul(new BN(1000000000))
     },
@@ -87,7 +86,14 @@ export class NetworkConfiguration {
 
     public static create(networkName: string="environment", validatePrivateKey: boolean=true): NetworkConfiguration {
         const network = networks[networkName];
-
+        if (networkName === "environment" &&
+            (process.env.ETHEREUM_HTTP || process.env.ETHEREUM_WS || process.env.ETHEREUM_IPC)) {
+            Object.assign(network, {
+                http: process.env.ETHEREUM_HTTP,
+                ws: process.env.ETHEREUM_WS,
+                ipc: process.env.ETHEREUM_IPC,
+            });
+        }
         if (network === undefined || network === null) throw new Error(`Network configuration ${networkName} not found`);
         if (validatePrivateKey && (network.privateKey === undefined || network.privateKey === null)) throw new Error(`Network configuration for ${networkName} has no private key available. Check that this key is in the environment ${networkName == "environment" ? "ETHEREUM" : networkName.toUpperCase()}_PRIVATE_KEY`);
 
