@@ -99,9 +99,9 @@ contract Orders is DelegationTarget, IOrders {
 
     function isWorsePrice(Order.Types _type, uint256 _price, bytes32 _orderId) public view returns (bool) {
         if (_type == Order.Types.Bid) {
-            return (_price < orders[_orderId].price);
+            return (_price <= orders[_orderId].price);
         } else {
-            return (_price > orders[_orderId].price);
+            return (_price >= orders[_orderId].price);
         }
     }
 
@@ -255,7 +255,7 @@ contract Orders is DelegationTarget, IOrders {
      */
     function updateWorstBidOrder(bytes32 _orderId, IMarket _market, uint256 _price, uint256 _outcome) private returns (bytes32) {
         bytes32 _worstBidOrderId = worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.Types.Bid)];
-        if (_worstBidOrderId == bytes32(0) || _price < orders[_worstBidOrderId].price) {
+        if (_worstBidOrderId == bytes32(0) || _price <= orders[_worstBidOrderId].price) {
             worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.Types.Bid)] = _orderId;
         }
         return worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.Types.Bid)];
@@ -277,7 +277,7 @@ contract Orders is DelegationTarget, IOrders {
      */
     function updateWorstAskOrder(bytes32 _orderId, IMarket _market, uint256 _price, uint256 _outcome) private returns (bytes32) {
         bytes32 _worstAskOrderId = worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.Types.Ask)];
-        if (_worstAskOrderId == bytes32(0) || _price > orders[_worstAskOrderId].price) {
+        if (_worstAskOrderId == bytes32(0) || _price >= orders[_worstAskOrderId].price) {
             worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.Types.Ask)] = _orderId;
         }
         return worstOrder[getBestOrderWorstOrderHash(_market, _outcome, Order.Types.Ask)];

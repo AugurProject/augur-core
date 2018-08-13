@@ -52,9 +52,6 @@ contract OrdersFetcher is Controlled, IOrdersFetcher {
         if (_isBestPrice) {
             return (0, _betterOrderId);
         }
-        if (_price == _orders.getPrice(_betterOrderId)) {
-            return (_betterOrderId, _orders.getWorseOrderId(_betterOrderId));
-        }
         bool _isWorsePrice = _orders.isWorsePrice(_type, _price, _betterOrderId);
         while (_isWorsePrice && _orders.getWorseOrderId(_betterOrderId) != 0) {
             _worseOrderId = _orders.getWorseOrderId(_betterOrderId);
