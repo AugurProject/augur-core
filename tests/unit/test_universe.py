@@ -116,7 +116,7 @@ def test_universe_rep_price_oracle(localFixture, populatedUniverse, mockReputati
     mockReputationToken.setTotalSupply(0)
     assert populatedUniverse.getRepMarketCapInAttoeth() == 0
     mockReputationToken.setTotalSupply(1)
-    assert repPriceOracle.setRepPriceInAttoEth(100)
+    assert repPriceOracle.setRepPriceInAttoEth(100 * 10**18)
     assert populatedUniverse.getRepMarketCapInAttoeth() == 100
     mockReputationToken.setTotalSupply(12)
     assert populatedUniverse.getRepMarketCapInAttoeth() == 1200
@@ -242,7 +242,7 @@ def test_universe_reporting_fee_divisor(localFixture, chain, populatedUniverse, 
     localFixture.contracts["Time"].incrementTimestamp(populatedUniverse.getDisputeRoundDurationInSeconds())
 
     mockReputationToken.setTotalSupply(105)
-    assert repPriceOracle.setRepPriceInAttoEth(10)
+    assert repPriceOracle.setRepPriceInAttoEth(10 * 10**18)
     populatedUniverse.incrementOpenInterest(10)
     assert populatedUniverse.getRepMarketCapInAttoeth() == 105 * 10
     assert populatedUniverse.getTargetRepMarketCapInAttoeth() == 20 * multiplier

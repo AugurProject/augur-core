@@ -298,8 +298,8 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     }
 
     function getRepMarketCapInAttoeth() public view returns (uint256) {
-        uint256 _attorepPerEth = IRepPriceOracle(controller.lookup("RepPriceOracle")).getRepPriceInAttoEth();
-        uint256 _repMarketCapInAttoeth = getReputationToken().totalSupply().mul(_attorepPerEth);
+        uint256 _attoEthPerRep = IRepPriceOracle(controller.lookup("RepPriceOracle")).getRepPriceInAttoEth();
+        uint256 _repMarketCapInAttoeth = getReputationToken().totalSupply().mul(_attoEthPerRep).div(10 ** 18);
         return _repMarketCapInAttoeth;
     }
 
