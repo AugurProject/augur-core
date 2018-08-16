@@ -25,6 +25,8 @@
     "whitespace": "warning",
     "pragma-on-top": "warning",
     "function-order": "off",
+    "error-reason": "off",
+    "linebreak-style": "off",
     "security/no-low-level-calls": "off",
     "security/no-inline-assembly": "off",
     "security/no-call-value": "off",

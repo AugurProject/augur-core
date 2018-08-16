@@ -24,7 +24,7 @@ contract LegacyRepToken is Initializable, PausableToken {
      * @dev Creates a new RepToken instance
      * @param _legacyReputationToken Address of the legacy ERC20Basic REP contract to migrate balances from
      */
-    function LegacyRepToken(address _legacyReputationToken, uint256 _amountUsedToFreeze, address _accountToSendFrozenRepTo) {
+    function LegacyRepToken(address _legacyReputationToken, uint256 _amountUsedToFreeze, address _accountToSendFrozenRepTo) public {
         require(_legacyReputationToken != 0);
         legacyReputationToken = ERC20Basic(_legacyReputationToken);
         targetSupply = legacyReputationToken.totalSupply();
@@ -38,7 +38,7 @@ contract LegacyRepToken is Initializable, PausableToken {
      * @param _holders Array of addresses to migrate balance
      * @return True if operation was completed
      */
-    function migrateBalances(address[] _holders) onlyOwner beforeInitialized returns (bool) {
+    function migrateBalances(address[] _holders) public onlyOwner beforeInitialized returns (bool) {
         for (uint256 i = 0; i < _holders.length; i++) {
             migrateBalance(_holders[i]);
         }
@@ -50,7 +50,7 @@ contract LegacyRepToken is Initializable, PausableToken {
      * @param _holder Address to migrate balance
      * @return True if balance was copied, false if was already copied or address had no balance
      */
-    function migrateBalance(address _holder) onlyOwner beforeInitialized returns (bool) {
+    function migrateBalance(address _holder) public onlyOwner beforeInitialized returns (bool) {
         if (balances[_holder] > 0) {
             return false; // Already copied, move on
         }
@@ -73,7 +73,7 @@ contract LegacyRepToken is Initializable, PausableToken {
     /**
      * @dev Unpauses the contract with the caveat added that it can only happen after initialization.
      */
-    function unpause() onlyOwner whenPaused afterInitialized returns (bool) {
+    function unpause() public onlyOwner whenPaused afterInitialized returns (bool) {
         super.unpause();
         return true;
     }
