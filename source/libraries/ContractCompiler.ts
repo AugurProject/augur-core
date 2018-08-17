@@ -1,4 +1,5 @@
 import * as fs from "async-file";
+import readFile = require('fs-readfile-promise');
 import * as path from "path";
 import * as recursiveReadDir from "recursive-readdir";
 import asyncMkdirp = require('async-mkdirp');
@@ -106,9 +107,9 @@ export class ContractCompiler {
         const relativeFilePath = filePath.replace(this.configuration.contractSourceRoot, "").replace(/\\/g, "/");
 
         const childProcess = exec(format(this.flattenerCommand, relativeFilePath), {
-                encoding: "buffer",
-                cwd: this.configuration.contractSourceRoot
-            });
+            encoding: "buffer",
+            cwd: this.configuration.contractSourceRoot
+        });
         return await this.getCommandOutputFromInput(childProcess, "");
     }
 
@@ -117,7 +118,12 @@ export class ContractCompiler {
             return file.indexOf("legacy_reputation") > -1 || (stats.isFile() && path.extname(file) !== ".sol");
         }
         const filePaths = await recursiveReadDir(this.configuration.contractSourceRoot, [ignoreFile]);
-        const filesPromises = filePaths.map(async filePath => (await this.generateFlattenedSolidity(filePath)));
+        let filesPromises;
+        if (this.configuration.useFlattener) {
+            filesPromises = filePaths.map(async filePath => (await this.generateFlattenedSolidity(filePath)));
+        } else {
+            filesPromises = filePaths.map(async filePath => (await readFile(filePath)).toString('utf8'));
+        }
         const files = await Promise.all(filesPromises);
 
         let inputJson: CompilerInput = {

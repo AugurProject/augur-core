@@ -61,7 +61,10 @@ export class TestFixture {
             await testRpc.linkDebugSymbols(compiledContracts, addressMapping);
         }
 
-        return new TestFixture(connector, accountManager, contractDeployer, testRpc, compilerConfiguration.enableSdb);
+        const testFixture = new TestFixture(connector, accountManager, contractDeployer, testRpc, compilerConfiguration.enableSdb);
+        await testFixture.linkDebugSymbolsForContract('Universe', testFixture.contractDeployer.universe.address);
+
+        return testFixture;
     }
 
     public async linkDebugSymbolsForContract(contractName: string, contractAddress: string): Promise<void> {
