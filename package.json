@@ -35,7 +35,6 @@
     "deploy:ropsten": "npm run deploy:net -- ropsten",
     "deploy:foundation": "npm run deploy:net -- foundation",
     "deploy": "npm run deploy:net -- aura clique rinkeby",
-    "artifacts": "bash support/artifacts/run.sh",
     "docker:build": "npm run docker:build:python2-and-3 && docker build --cache-from augurproject/augur-core:latest --tag augurproject/augur-core:latest -f ./source/support/Dockerfile .",
     "docker:build:python2-and-3": "docker build --tag augurproject/python2-and-3:latest -f ./source/support/python2-and-3/Dockerfile .",
     "docker:push": "docker push augurproject/augur-core:latest",
