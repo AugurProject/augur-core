@@ -51,7 +51,7 @@
     "docker:run:test:security:oyente": "docker build --tag augurproject/augur-core-oyente:latest -f ./source/support/test/oyente/Dockerfile .",
     "docker:run:test:geth": "npm run docker:run:test:unit:all && npm run docker:run:test:integration:geth",
     "docker:run:test:parity": "npm run docker:run:test:unit:all && npm run docker:run:test:integration:parity",
-    "docker:run:deploy:net": "bash support/deploy/run.sh docker",
+    "docker:run:deploy:net": "bash ./source/support/deploy/run.sh docker",
     "docker:run:deploy:rinkeby": "npm run docker:run:deploy:net -- rinkeby",
     "docker:run:deploy:ropsten": "npm run docker:run:deploy:net -- ropsten",
     "docker:run:deploy:foundation": "npm run docker:run:deploy:net -- foundation",
