@@ -59,13 +59,11 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     function initialize(IUniverse _universe, uint256 _endTime, uint256 _feePerEthInAttoeth, ICash _cash, address _designatedReporterAddress, address _creator, uint256 _numOutcomes, uint256 _numTicks) public onlyInGoodTimes payable beforeInitialized returns (bool _success) {
         endInitialization();
         require(MIN_OUTCOMES <= _numOutcomes && _numOutcomes <= MAX_OUTCOMES);
-        require(_numTicks > 0);
         require(_designatedReporterAddress != NULL_ADDRESS);
         require((_numTicks >= _numOutcomes));
         require(_feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
         require(controller.getTimestamp() < _endTime);
-        require(address(_cash) == controller.lookup("Cash"));
         universe = _universe;
         require(!universe.isForking());
         owner = _creator;
@@ -216,7 +214,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         for (uint256 j = 0; j < participants.length; j++) {
             _reportingParticipant = participants[j];
             if (_reportingParticipant.getPayoutDistributionHash() == winningPayoutDistributionHash) {
-                require(_reputationToken.transfer(_reportingParticipant, _reportingParticipant.getSize().div(2)));
+                require(_reputationToken.transfer(_reportingParticipant, _reportingParticipant.getSize() / 2));
             }
         }
         return true;
@@ -322,16 +320,6 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         participants.push(_initialParticipant);
         crowdsourcers = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
         controller.getAugur().logMarketParticipantsDisavowed(universe);
-        return true;
-    }
-
-    function withdrawInEmergency() public onlyInBadTimes onlyOwner returns (bool) {
-        IReputationToken _reputationToken = getReputationToken();
-        uint256 _repBalance = _reputationToken.balanceOf(this);
-        require(_reputationToken.transfer(msg.sender, _repBalance));
-        if (address(this).balance > 0) {
-            msg.sender.transfer(address(this).balance);
-        }
         return true;
     }
 
