@@ -5,7 +5,7 @@
 # that this image's build will fail earlier for compiling contracts than
 # for other pieces
 FROM augurproject/python2-and-3:latest
-ARG SOLC_VERSION=v0.4.20
+ARG SOLC_VERSION=v0.4.24
 
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
 	&& apt-get install -y nodejs

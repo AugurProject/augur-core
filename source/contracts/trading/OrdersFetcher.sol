@@ -2,7 +2,7 @@
  * Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
  */
 
-pragma solidity 0.4.20;
+pragma solidity 0.4.24;
 
 
 import 'trading/IOrdersFetcher.sol';

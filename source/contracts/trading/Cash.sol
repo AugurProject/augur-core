@@ -1,4 +1,4 @@
-pragma solidity 0.4.20;
+pragma solidity 0.4.24;
 
 import 'trading/ICash.sol';
 import 'Controlled.sol';
@@ -19,13 +19,13 @@ contract Cash is DelegationTarget, ITyped, VariableSupplyToken, ICash {
 
     function depositEther() external payable onlyInGoodTimes returns(bool) {
         mint(msg.sender, msg.value);
-        assert(this.balance >= totalSupply());
+        assert(address(this).balance >= totalSupply());
         return true;
     }
 
     function depositEtherFor(address _to) external payable onlyInGoodTimes returns(bool) {
         mint(_to, msg.value);
-        assert(this.balance >= totalSupply());
+        assert(address(this).balance >= totalSupply());
         return true;
     }
 
@@ -43,7 +43,7 @@ contract Cash is DelegationTarget, ITyped, VariableSupplyToken, ICash {
         require(_amount > 0 && _amount <= balances[_from]);
         burn(_from, _amount);
         _to.transfer(_amount);
-        assert(this.balance >= totalSupply());
+        assert(address(this).balance >= totalSupply());
         return true;
     }
 
@@ -54,7 +54,7 @@ contract Cash is DelegationTarget, ITyped, VariableSupplyToken, ICash {
         } else {
             internalTransfer(msg.sender, _to, _amount);
         }
-        assert(this.balance >= totalSupply());
+        assert(address(this).balance >= totalSupply());
         return true;
     }
 
