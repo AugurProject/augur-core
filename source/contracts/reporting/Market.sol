@@ -119,17 +119,27 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         bool _isDesignatedReporter = msg.sender == _initialReporter.getDesignatedReporter();
         bool _designatedReportingExpired = _timestamp > getDesignatedReportingEndTime();
         require(_designatedReportingExpired || _isDesignatedReporter);
-        distributeNoShowBond(_initialReporter, msg.sender);
-        // The designated reporter must actually pay the required REP stake to report
-        if (msg.sender == _initialReporter.getDesignatedReporter()) {
-            IReputationToken _reputationToken = getReputationToken();
-            _reputationToken.trustedMarketTransfer(msg.sender, _initialReporter, universe.getOrCacheDesignatedReportStake());
-        }
+        uint256 _initialReportStake = distributeInitialReportingRep(msg.sender, _initialReporter);
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
         feeWindow = universe.getOrCreateNextFeeWindow();
-        _initialReporter.report(msg.sender, _payoutDistributionHash, _payoutNumerators, _invalid);
-        controller.getAugur().logInitialReportSubmitted(universe, msg.sender, this, _initialReporter.getStake(), _isDesignatedReporter, _payoutNumerators, _invalid);
+        _initialReporter.report(msg.sender, _payoutDistributionHash, _payoutNumerators, _invalid, _initialReportStake);
+        controller.getAugur().logInitialReportSubmitted(universe, msg.sender, this, _initialReportStake, _isDesignatedReporter, _payoutNumerators, _invalid);
         return true;
+    }
+
+    function distributeInitialReportingRep(address _reporter, IInitialReporter _initialReporter) private returns (uint256) {
+        IReputationToken _reputationToken = getReputationToken();
+        uint256 _repBalance = _reputationToken.balanceOf(this);
+        uint256 _initialReportStake = _repBalance;
+        // If the designated reporter showed up return the no show bond to the market creator. Otherwise it will be used as stake in the first report.
+        if (_reporter == _initialReporter.getDesignatedReporter()) {
+            require(_reputationToken.transfer(owner, _repBalance));
+            _initialReportStake = universe.getOrCacheDesignatedReportStake();
+            _reputationToken.trustedMarketTransfer(_reporter, _initialReporter, _initialReportStake);
+        } else {
+            require(_reputationToken.transfer(_initialReporter, _initialReportStake));
+        }
+        return _initialReportStake;
     }
 
     function contribute(uint256[] _payoutNumerators, bool _invalid, uint256 _amount) public onlyInGoodTimes returns (bool) {
@@ -216,18 +226,6 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
             if (_reportingParticipant.getPayoutDistributionHash() == winningPayoutDistributionHash) {
                 require(_reputationToken.transfer(_reportingParticipant, _reportingParticipant.getSize() / 2));
             }
-        }
-        return true;
-    }
-
-    function distributeNoShowBond(IInitialReporter _initialReporter, address _reporter) private returns (bool) {
-        IReputationToken _reputationToken = getReputationToken();
-        uint256 _repBalance = _reputationToken.balanceOf(this);
-        // If the designated reporter showed up return the no show bond to the market creator. Otherwise it will be used as stake in the first report.
-        if (_reporter == _initialReporter.getDesignatedReporter()) {
-            require(_reputationToken.transfer(owner, _repBalance));
-        } else {
-            require(_reputationToken.transfer(_initialReporter, _repBalance));
         }
         return true;
     }
