@@ -1,4 +1,4 @@
-pragma solidity 0.4.20;
+pragma solidity 0.4.24;
 
 
 import 'libraries/token/ERC20Basic.sol';
@@ -32,7 +32,7 @@ contract BasicToken is ERC20Basic {
     function internalTransfer(address _from, address _to, uint256 _value) internal returns (bool) {
         balances[_from] = balances[_from].sub(_value);
         balances[_to] = balances[_to].add(_value);
-        Transfer(_from, _to, _value);
+        emit Transfer(_from, _to, _value);
         onTokenTransfer(_from, _to, _value);
         return true;
     }

@@ -1,4 +1,4 @@
-pragma solidity 0.4.20;
+pragma solidity 0.4.24;
 
 
 import 'trading/IOrders.sol';
@@ -86,7 +86,7 @@ contract Orders is DelegationTarget, IOrders {
     }
 
     function getOrderId(Order.Types _type, IMarket _market, uint256 _amount, uint256 _price, address _sender, uint256 _blockNumber, uint256 _outcome, uint256 _moneyEscrowed, uint256 _sharesEscrowed) public pure returns (bytes32) {
-        return sha256(_type, _market, _amount, _price, _sender, _blockNumber, _outcome, _moneyEscrowed, _sharesEscrowed);
+        return sha256(abi.encodePacked(_type, _market, _amount, _price, _sender, _blockNumber, _outcome, _moneyEscrowed, _sharesEscrowed));
     }
 
     function isBetterPrice(Order.Types _type, uint256 _price, bytes32 _orderId) public view returns (bool) {
@@ -284,6 +284,6 @@ contract Orders is DelegationTarget, IOrders {
     }
 
     function getBestOrderWorstOrderHash(IMarket _market, uint256 _outcome, Order.Types _type) private pure returns (bytes32) {
-        return sha256(_market, _outcome, _type);
+        return sha256(abi.encodePacked(_market, _outcome, _type));
     }
 }

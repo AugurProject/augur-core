@@ -1,4 +1,4 @@
-pragma solidity 0.4.20;
+pragma solidity 0.4.24;
 
 
 import 'trading/IClaimTradingProceeds.sol';
@@ -20,7 +20,7 @@ contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, MarketValid
     using SafeMathUint256 for uint256;
 
     function claimTradingProceeds(IMarket _market, address _shareHolder) external marketIsLegit(_market) onlyInGoodTimes nonReentrant returns(bool) {
-        // NOTE: this requirement does _not_ enforce market finalization. That requirement occurs later on in this function when calling getWinningPayoutNumerator. When this requirement is removed we may want to consider explicitly requiring it here (or modifying this comment and keeping the gas savings)
+        require(_market.isFinalized());
         require(controller.getTimestamp() > _market.getFinalizationTime().add(Reporting.getClaimTradingProceedsWaitTime()));
 
         ICash _denominationToken = _market.getDenominationToken();

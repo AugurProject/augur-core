@@ -1,4 +1,4 @@
-pragma solidity 0.4.20;
+pragma solidity 0.4.24;
 
 
 import 'libraries/token/StandardToken.sol';
@@ -18,7 +18,7 @@ contract VariableSupplyToken is StandardToken {
     function mint(address _target, uint256 _amount) internal returns (bool) {
         balances[_target] = balances[_target].add(_amount);
         supply = supply.add(_amount);
-        Mint(_target, _amount);
+        emit Mint(_target, _amount);
         onMint(_target, _amount);
         return true;
     }
@@ -31,7 +31,7 @@ contract VariableSupplyToken is StandardToken {
     function burn(address _target, uint256 _amount) internal returns (bool) {
         balances[_target] = balances[_target].sub(_amount);
         supply = supply.sub(_amount);
-        Burn(_target, _amount);
+        emit Burn(_target, _amount);
         onBurn(_target, _amount);
         return true;
     }

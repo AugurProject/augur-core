@@ -1,4 +1,4 @@
-pragma solidity 0.4.20;
+pragma solidity 0.4.24;
 
 import 'libraries/Delegator.sol';
 import 'reporting/IDisputeCrowdsourcer.sol';

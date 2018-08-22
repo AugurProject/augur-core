@@ -1,4 +1,4 @@
-pragma solidity 0.4.20;
+pragma solidity 0.4.24;
 
 
 import 'IController.sol';
@@ -6,7 +6,7 @@ import 'libraries/DelegationTarget.sol';
 
 
 contract Delegator is DelegationTarget {
-    function Delegator(IController _controller, bytes32 _controllerLookupName) public {
+    constructor(IController _controller, bytes32 _controllerLookupName) public {
         controller = _controller;
         controllerLookupName = _controllerLookupName;
     }

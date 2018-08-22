@@ -1,6 +1,6 @@
 // Copyright (C) 2015 Forecast Foundation OU, full GPL notice in LICENSE
 
-pragma solidity 0.4.20;
+pragma solidity 0.4.24;
 
 
 import 'Controlled.sol';
@@ -47,7 +47,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
         if (_bestFxpAmount == 0) {
             return bytes32(1);
         }
-        if (msg.gas < getCreateOrderMinGasNeeded()) {
+        if (gasleft() < getCreateOrderMinGasNeeded()) {
             return bytes32(1);
         }
         Order.Types _type = Order.getOrderTradingTypeFromMakerDirection(_direction);
@@ -61,7 +61,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
         bytes32 _orderId = _orders.getBestOrderId(_type, _market, _outcome);
         _bestFxpAmount = _fxpAmount;
 
-        while (_orderId != 0 && _bestFxpAmount > 0 && msg.gas >= getFillOrderMinGasNeeded()) {
+        while (_orderId != 0 && _bestFxpAmount > 0 && gasleft() >= getFillOrderMinGasNeeded()) {
             uint256 _orderPrice = _orders.getPrice(_orderId);
             // If the price is acceptable relative to the trade type
             if (_type == Order.Types.Bid ? _orderPrice >= _price : _orderPrice <= _price) {

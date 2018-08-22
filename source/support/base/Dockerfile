@@ -9,7 +9,7 @@ FROM augurproject/python2-and-3:latest
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
 	&& apt-get install -y nodejs
 
-RUN wget --quiet --output-document /usr/local/bin/solc https://github.com/ethereum/solidity/releases/download/v0.4.20/solc-static-linux \
+RUN wget --quiet --output-document /usr/local/bin/solc https://github.com/ethereum/solidity/releases/download/v0.4.24/solc-static-linux \
 	&& chmod a+x /usr/local/bin/solc
 
 COPY requirements.txt /app/requirements.txt
@@ -22,4 +22,3 @@ RUN npm install
 RUN pip2 install --upgrade pip setuptools \
 	&& pip2 install --upgrade pip-tools \
 	&& pip2 install -r requirements.txt
-

@@ -1,4 +1,4 @@
-pragma solidity 0.4.20;
+pragma solidity 0.4.24;
 
 
 import 'legacy_reputation/Initializable.sol';
@@ -24,13 +24,13 @@ contract LegacyRepToken is Initializable, PausableToken {
      * @dev Creates a new RepToken instance
      * @param _legacyReputationToken Address of the legacy ERC20Basic REP contract to migrate balances from
      */
-    function LegacyRepToken(address _legacyReputationToken, uint256 _amountUsedToFreeze, address _accountToSendFrozenRepTo) public {
+    constructor(address _legacyReputationToken, uint256 _amountUsedToFreeze, address _accountToSendFrozenRepTo) public {
         require(_legacyReputationToken != 0);
         legacyReputationToken = ERC20Basic(_legacyReputationToken);
         targetSupply = legacyReputationToken.totalSupply();
         balances[_accountToSendFrozenRepTo] = _amountUsedToFreeze;
         totalSupply = _amountUsedToFreeze;
-        pause();
+        emit pause();
     }
 
     /**
@@ -62,7 +62,7 @@ contract LegacyRepToken is Initializable, PausableToken {
 
         balances[_holder] = amount;
         totalSupply = totalSupply.add(amount);
-        Migrated(_holder, amount);
+        emit Migrated(_holder, amount);
 
         if (targetSupply == totalSupply) {
             endInitialization();

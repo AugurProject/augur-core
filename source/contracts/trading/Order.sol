@@ -5,7 +5,7 @@
 // amount is the number of attoshares the order is for (either to buy or to sell).
 // price is the exact price you want to buy/sell at [which may not be the cost, for example to short a yesNo market it'll cost numTicks-price, to go long it'll cost price]
 
-pragma solidity 0.4.20;
+pragma solidity 0.4.24;
 
 
 import 'IAugur.sol';

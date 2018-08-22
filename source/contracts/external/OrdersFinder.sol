@@ -1,4 +1,4 @@
-pragma solidity 0.4.20;
+pragma solidity 0.4.24;
 
 import 'trading/IOrders.sol';
 import 'reporting/IMarket.sol';
@@ -7,7 +7,7 @@ import 'reporting/IMarket.sol';
 contract OrdersFinder {
     IOrders public orders;
 
-    function OrdersFinder(IOrders _orders) public {
+    constructor(IOrders _orders) public {
         orders = _orders;
     }
 

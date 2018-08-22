@@ -1,4 +1,4 @@
-pragma solidity 0.4.20;
+pragma solidity 0.4.24;
 
 import 'libraries/ContractExists.sol';
 import 'libraries/Ownable.sol';
@@ -36,7 +36,7 @@ contract LegacyReputationToken is VariableSupplyToken, Ownable {
         _;
     }
 
-    function LegacyReputationToken() public {
+    constructor() public {
         // This is to confirm we are not on foundation network
         require(!FOUNDATION_REP_ADDRESS.exists());
     }
@@ -47,7 +47,7 @@ contract LegacyReputationToken is VariableSupplyToken, Ownable {
         }
         require(_amount < 2 ** 128);
         mint(msg.sender, _amount);
-        FundedAccount(this, msg.sender, _amount, block.timestamp);
+        emit FundedAccount(this, msg.sender, _amount, block.timestamp);
         return true;
     }
 
@@ -68,7 +68,7 @@ contract LegacyReputationToken is VariableSupplyToken, Ownable {
      */
     function pause() public onlyOwner whenNotPaused returns (bool) {
         paused = true;
-        Pause();
+        emit Pause();
         return true;
     }
 
@@ -77,7 +77,7 @@ contract LegacyReputationToken is VariableSupplyToken, Ownable {
      */
     function unpause() public onlyOwner whenPaused returns (bool) {
         paused = false;
-        Unpause();
+        emit Unpause();
         return true;
     }
 

@@ -17,7 +17,7 @@ docker-compose -f source/support/test/integration/docker-compose-[geth/parity].y
 
 ## Installation
 
-You need system-wide installations of Python 2.7.6+, Node.js 8+, and [Solidity 0.4.20](https://github.com/ethereum/solidity/releases/tag/v0.4.20).  (Or Docker; see below.)  Install the dependencies:
+You need system-wide installations of Python 2.7.6+, Node.js 8+, and [Solidity 0.4.24](https://github.com/ethereum/solidity/releases/tag/v0.4.24).  (Or Docker; see below.)  Install the dependencies:
 
 ```bash
 npm install npx
@@ -172,4 +172,4 @@ To do this, go to the new REP contract [0x1985365e9f78359a9b6ad760e32412f4a445e8
 
 Then click on internal on that page and [you'll see here](https://etherscan.io/tx/0x44c09f8eeff886723b79890e14743192a8c8d8a8eac158ed17600c94e502cce8#internal) that that contract created the REP token contract.
 
-You can verify that the REP Token contract is delegating to the verified REP token contract target by calling lookup on the [Controller](https://etherscan.io/address/0xb3337164e91b9f05c87c7662c7ac684e8e0ff3e7#readContract) with the string `ReputationToken`. 
+You can verify that the REP Token contract is delegating to the verified REP token contract target by calling lookup on the [Controller](https://etherscan.io/address/0xb3337164e91b9f05c87c7662c7ac684e8e0ff3e7#readContract) with the string `ReputationToken`.

@@ -1,4 +1,4 @@
-pragma solidity 0.4.20;
+pragma solidity 0.4.24;
 
 
 import 'libraries/IOwnable.sol';
@@ -16,7 +16,7 @@ contract Ownable is IOwnable {
      * @dev The Ownable constructor sets the original `owner` of the contract to the sender
      * account.
      */
-    function Ownable() public {
+    constructor() public {
         owner = msg.sender;
     }
 
