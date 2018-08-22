@@ -59,18 +59,6 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseRepor
         return _amount;
     }
 
-    function withdrawInEmergency() public onlyInBadTimes returns (bool) {
-        uint256 _reputationSupply = reputationToken.balanceOf(this);
-        uint256 _attotokens = balances[msg.sender];
-        uint256 _supply = totalSupply();
-        uint256 _reputationShare = _reputationSupply.mul(_attotokens).div(_supply);
-        burn(msg.sender, _attotokens);
-        if (_reputationShare != 0) {
-            require(reputationToken.transfer(msg.sender, _reputationShare));
-        }
-        return true;
-    }
-
     function forkAndRedeem() public onlyInGoodTimes returns (bool) {
         fork();
         redeem(msg.sender);

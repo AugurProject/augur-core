@@ -33,7 +33,7 @@ contract MockInitialReporter is IInitialReporter {
 
     function reportWasCalled() public returns(bool) { return reportWasCalledValue; }
 
-    function report(address _reporter, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) public returns (bool) {
+    function report(address _reporter, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid, uint256 _initialReportStake) public returns (bool) {
         reportWasCalledValue = true;
         return true;
     }
