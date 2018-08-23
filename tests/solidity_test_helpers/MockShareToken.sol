@@ -96,7 +96,7 @@ contract MockShareToken is DelegationTarget, ITyped, Initializable, MockVariable
         return true;
     }
 
-    function trustedCancelOrderTransfer(address _source, address _destination, uint256 _attotokens) public onlyCaller("CancelOrder") onlyInGoodTimes afterInitialized returns (bool) {
+    function trustedCancelOrderTransfer(address _source, address _destination, uint256 _attotokens) public onlyCaller("CancelOrder") afterInitialized returns (bool) {
         return true;
     }
 }

@@ -46,7 +46,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         _;
     }
 
-    function initialize(IUniverse _universe) public onlyInGoodTimes beforeInitialized returns (bool) {
+    function initialize(IUniverse _universe) public beforeInitialized returns (bool) {
         endInitialization();
         require(_universe != address(0));
         universe = _universe;
@@ -58,7 +58,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    function migrateOutByPayout(uint256[] _payoutNumerators, bool _invalid, uint256 _attotokens) public onlyInGoodTimes whenNotMigratingFromLegacy afterInitialized returns (bool) {
+    function migrateOutByPayout(uint256[] _payoutNumerators, bool _invalid, uint256 _attotokens) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
         require(_attotokens > 0);
         IUniverse _destinationUniverse = universe.createChildUniverse(_payoutNumerators, _invalid);
         IReputationToken _destination = _destinationUniverse.getReputationToken();
@@ -67,7 +67,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    function migrateOut(IReputationToken _destination, uint256 _attotokens) public onlyInGoodTimes whenNotMigratingFromLegacy afterInitialized returns (bool) {
+    function migrateOut(IReputationToken _destination, uint256 _attotokens) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
         require(_attotokens > 0);
         assertReputationTokenIsLegitSibling(_destination);
         burn(msg.sender, _attotokens);
@@ -75,7 +75,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    function migrateIn(address _reporter, uint256 _attotokens) public onlyInGoodTimes whenNotMigratingFromLegacy afterInitialized returns (bool) {
+    function migrateIn(address _reporter, uint256 _attotokens) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
         require(ReputationToken(msg.sender) == _parentUniverse.getReputationToken());
         mint(_reporter, _attotokens);
@@ -93,7 +93,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    function mintForReportingParticipant(uint256 _amountMigrated) public onlyInGoodTimes whenNotMigratingFromLegacy afterInitialized returns (bool) {
+    function mintForReportingParticipant(uint256 _amountMigrated) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
         IReportingParticipant _reportingParticipant = IReportingParticipant(msg.sender);
         require(_parentUniverse.isContainerForReportingParticipant(_reportingParticipant));
@@ -111,22 +111,22 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return super.transferFrom(_from, _to, _value);
     }
 
-    function trustedUniverseTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes whenNotMigratingFromLegacy afterInitialized returns (bool) {
+    function trustedUniverseTransfer(address _source, address _destination, uint256 _attotokens) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
         require(IUniverse(msg.sender) == universe);
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes whenNotMigratingFromLegacy afterInitialized returns (bool) {
+    function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
         require(universe.isContainerForMarket(IMarket(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    function trustedReportingParticipantTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes whenNotMigratingFromLegacy afterInitialized returns (bool) {
+    function trustedReportingParticipantTransfer(address _source, address _destination, uint256 _attotokens) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
         require(universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes whenNotMigratingFromLegacy afterInitialized returns (bool) {
+    function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
         require(universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
@@ -201,7 +201,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
      * @param _holders Array of addresses to migrate balance
      * @return True if operation was completed
      */
-    function migrateBalancesFromLegacyRep(address[] _holders) public onlyInGoodTimes whenMigratingFromLegacy afterInitialized returns (bool) {
+    function migrateBalancesFromLegacyRep(address[] _holders) public whenMigratingFromLegacy afterInitialized returns (bool) {
         ERC20 _legacyRepToken = getLegacyRepToken();
         for (uint256 i = 0; i < _holders.length; i++) {
             migrateBalanceFromLegacyRep(_holders[i], _legacyRepToken);
@@ -214,7 +214,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
      * @param _holder Address to migrate balance
      * @return True if balance was copied, false if was already copied or address had no balance
      */
-    function migrateBalanceFromLegacyRep(address _holder, ERC20 _legacyRepToken) private onlyInGoodTimes whenMigratingFromLegacy afterInitialized returns (bool) {
+    function migrateBalanceFromLegacyRep(address _holder, ERC20 _legacyRepToken) private whenMigratingFromLegacy afterInitialized returns (bool) {
         if (balances[_holder] > 0) {
             return false; // Already copied, move on
         }
@@ -238,7 +238,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
      * @param _spenders Array of spender addresses to migrate allowances
      * @return True if operation was completed
      */
-    function migrateAllowancesFromLegacyRep(address[] _owners, address[] _spenders) public onlyInGoodTimes whenMigratingFromLegacy afterInitialized returns (bool) {
+    function migrateAllowancesFromLegacyRep(address[] _owners, address[] _spenders) public whenMigratingFromLegacy afterInitialized returns (bool) {
         ERC20 _legacyRepToken = getLegacyRepToken();
         for (uint256 i = 0; i < _owners.length; i++) {
             address _owner = _owners[i];

@@ -18,25 +18,25 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
     uint256 internal constant FILL_ORDER_MINIMUM_GAS_NEEDED = 2000000;
     uint256 internal constant CREATE_ORDER_MINIMUM_GAS_NEEDED = 700000;
 
-    function publicBuy(IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes returns (bytes32) {
+    function publicBuy(IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash returns (bytes32) {
         bytes32 _result = trade(msg.sender, Order.TradeDirections.Long, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId);
         _market.assertBalances();
         return _result;
     }
 
-    function publicSell(IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes returns (bytes32) {
+    function publicSell(IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash returns (bytes32) {
         bytes32 _result = trade(msg.sender, Order.TradeDirections.Short, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId);
         _market.assertBalances();
         return _result;
     }
 
-    function publicTrade(Order.TradeDirections _direction, IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes returns (bytes32) {
+    function publicTrade(Order.TradeDirections _direction, IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash returns (bytes32) {
         bytes32 _result = trade(msg.sender, _direction, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId);
         _market.assertBalances();
         return _result;
     }
 
-    function publicFillBestOrder(Order.TradeDirections _direction, IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes returns (uint256) {
+    function publicFillBestOrder(Order.TradeDirections _direction, IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _tradeGroupId) external payable marketIsLegit(_market) convertToAndFromCash returns (uint256) {
         uint256 _result = fillBestOrder(msg.sender, _direction, _market, _outcome, _fxpAmount, _price, _tradeGroupId);
         _market.assertBalances();
         return _result;
@@ -79,25 +79,25 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
         return _bestFxpAmount;
     }
 
-    function publicBuyWithLimit(IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId, uint256 _loopLimit) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes returns (bytes32) {
+    function publicBuyWithLimit(IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId, uint256 _loopLimit) external payable marketIsLegit(_market) convertToAndFromCash returns (bytes32) {
         bytes32 _result = tradeWithLimit(msg.sender, Order.TradeDirections.Long, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId, _loopLimit);
         _market.assertBalances();
         return _result;
     }
 
-    function publicSellWithLimit(IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId, uint256 _loopLimit) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes returns (bytes32) {
+    function publicSellWithLimit(IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId, uint256 _loopLimit) external payable marketIsLegit(_market) convertToAndFromCash returns (bytes32) {
         bytes32 _result = tradeWithLimit(msg.sender, Order.TradeDirections.Short, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId, _loopLimit);
         _market.assertBalances();
         return _result;
     }
 
-    function publicTradeWithLimit(Order.TradeDirections _direction, IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId, uint256 _loopLimit) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes returns (bytes32) {
+    function publicTradeWithLimit(Order.TradeDirections _direction, IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId, uint256 _loopLimit) external payable marketIsLegit(_market) convertToAndFromCash returns (bytes32) {
         bytes32 _result = tradeWithLimit(msg.sender, _direction, _market, _outcome, _fxpAmount, _price, _betterOrderId, _worseOrderId, _tradeGroupId, _loopLimit);
         _market.assertBalances();
         return _result;
     }
 
-    function publicFillBestOrderWithLimit(Order.TradeDirections _direction, IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _tradeGroupId, uint256 _loopLimit) external payable marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes returns (uint256) {
+    function publicFillBestOrderWithLimit(Order.TradeDirections _direction, IMarket _market, uint256 _outcome, uint256 _fxpAmount, uint256 _price, bytes32 _tradeGroupId, uint256 _loopLimit) external payable marketIsLegit(_market) convertToAndFromCash returns (uint256) {
         uint256 _result = fillBestOrderWithLimit(msg.sender, _direction, _market, _outcome, _fxpAmount, _price, _tradeGroupId, _loopLimit);
         _market.assertBalances();
         return _result;

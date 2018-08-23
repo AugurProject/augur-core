@@ -13,7 +13,7 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
     address private actualReporter;
     uint256 private reportTimestamp;
 
-    function initialize(IMarket _market, address _designatedReporter) public onlyInGoodTimes beforeInitialized returns (bool) {
+    function initialize(IMarket _market, address _designatedReporter) public beforeInitialized returns (bool) {
         endInitialization();
         market = _market;
         reputationToken = market.getUniverse().getReputationToken();
@@ -40,7 +40,7 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         return true;
     }
 
-    function report(address _reporter, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid, uint256 _initialReportStake) public onlyInGoodTimes returns (bool) {
+    function report(address _reporter, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid, uint256 _initialReportStake) public returns (bool) {
         require(IMarket(msg.sender) == market);
         actualReporter = _reporter;
         owner = _reporter;
@@ -54,7 +54,7 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         return true;
     }
 
-    function resetReportTimestamp() public onlyInGoodTimes returns (bool) {
+    function resetReportTimestamp() public returns (bool) {
         require(IMarket(msg.sender) == market);
         if (reportTimestamp == 0) {
             return;
@@ -75,7 +75,7 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         return true;
     }
 
-    function forkAndRedeem() public onlyInGoodTimes returns (bool) {
+    function forkAndRedeem() public returns (bool) {
         if (!isDisavowed()) {
             controller.getAugur().logInitialReporterRedeemed(market.getUniverse(), owner, market, size, reputationToken.balanceOf(this), cash.balanceOf(this), payoutNumerators);
         }

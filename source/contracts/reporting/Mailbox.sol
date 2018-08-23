@@ -12,7 +12,7 @@ import 'trading/ICash.sol';
 contract Mailbox is DelegationTarget, Ownable, Initializable, IMailbox {
     IMarket private market;
 
-    function initialize(address _owner, IMarket _market) public onlyInGoodTimes beforeInitialized returns (bool) {
+    function initialize(address _owner, IMarket _market) public beforeInitialized returns (bool) {
         endInitialization();
         owner = _owner;
         market = _market;
@@ -20,7 +20,7 @@ contract Mailbox is DelegationTarget, Ownable, Initializable, IMailbox {
     }
 
     //As a delegation target we cannot override the fallback, so we provide a specific method to deposit ETH
-    function depositEther() public payable onlyInGoodTimes returns (bool) {
+    function depositEther() public payable returns (bool) {
         return true;
     }
 

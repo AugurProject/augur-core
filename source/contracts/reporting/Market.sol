@@ -57,7 +57,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     Map public crowdsourcers;
     IShareToken[] private shareTokens;
 
-    function initialize(IUniverse _universe, uint256 _endTime, uint256 _feePerEthInAttoeth, ICash _cash, address _designatedReporterAddress, address _creator, uint256 _numOutcomes, uint256 _numTicks) public onlyInGoodTimes payable beforeInitialized returns (bool _success) {
+    function initialize(IUniverse _universe, uint256 _endTime, uint256 _feePerEthInAttoeth, ICash _cash, address _designatedReporterAddress, address _creator, uint256 _numOutcomes, uint256 _numTicks) public payable beforeInitialized returns (bool _success) {
         endInitialization();
         require(MIN_OUTCOMES <= _numOutcomes && _numOutcomes <= MAX_OUTCOMES);
         require(_designatedReporterAddress != NULL_ADDRESS);
@@ -90,19 +90,19 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function assessFees() private onlyInGoodTimes returns (bool) {
+    function assessFees() private returns (bool) {
         noShowBond = universe.getOrCacheDesignatedReportNoShowBond();
         require(getReputationToken().balanceOf(this) >= noShowBond);
         validityBondAttoeth = universe.getOrCacheValidityBond();
         return true;
     }
 
-    function createShareToken(uint256 _outcome) private onlyInGoodTimes returns (IShareToken) {
+    function createShareToken(uint256 _outcome) private returns (IShareToken) {
         return ShareTokenFactory(controller.lookup("ShareTokenFactory")).createShareToken(controller, this, _outcome);
     }
 
     // This will need to be called manually for each open market if a spender contract is updated
-    function approveSpenders() public onlyInGoodTimes returns (bool) {
+    function approveSpenders() public returns (bool) {
         bytes32[4] memory _names = [bytes32("CancelOrder"), bytes32("CompleteSets"), bytes32("FillOrder"), bytes32("ClaimTradingProceeds")];
         for (uint256 i = 0; i < _names.length; i++) {
             require(cash.approve(controller.lookup(_names[i]), APPROVAL_AMOUNT));
@@ -113,7 +113,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function doInitialReport(uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes returns (bool) {
+    function doInitialReport(uint256[] _payoutNumerators, bool _invalid) public returns (bool) {
         IInitialReporter _initialReporter = getInitialReporter();
         uint256 _timestamp = controller.getTimestamp();
         require(_initialReporter.getReportTimestamp() == 0);
@@ -143,7 +143,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return _initialReportStake;
     }
 
-    function contribute(uint256[] _payoutNumerators, bool _invalid, uint256 _amount) public onlyInGoodTimes returns (bool) {
+    function contribute(uint256[] _payoutNumerators, bool _invalid, uint256 _amount) public returns (bool) {
         require(feeWindow.isActive());
         require(!universe.isForking());
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
@@ -173,7 +173,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function finalize() public onlyInGoodTimes returns (bool) {
+    function finalize() public returns (bool) {
         if (universe.getForkingMarket() == this) {
             return finalizeFork();
         }
@@ -193,7 +193,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function finalizeFork() public onlyInGoodTimes returns (bool) {
+    function finalizeFork() public returns (bool) {
         require(universe.getForkingMarket() == this);
         require(winningPayoutDistributionHash == bytes32(0));
         IUniverse _winningUniverse = universe.getWinningChildUniverse();
@@ -264,7 +264,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return _crowdsourcer;
     }
 
-    function migrateThroughOneFork() public onlyInGoodTimes returns (bool) {
+    function migrateThroughOneFork() public returns (bool) {
         // only proceed if the forking market is finalized
         IMarket _forkingMarket = universe.getForkingMarket();
         require(_forkingMarket.isFinalized());
@@ -309,7 +309,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function disavowCrowdsourcers() public onlyInGoodTimes returns (bool) {
+    function disavowCrowdsourcers() public returns (bool) {
         require(universe.isForking());
         IMarket _forkingMarket = getForkingMarket();
         require(_forkingMarket != this);

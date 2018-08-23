@@ -11,7 +11,7 @@ import 'reporting/IUniverse.sol';
 contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseReportingParticipant, IDisputeCrowdsourcer, Initializable {
     IUniverse internal universe;
 
-    function initialize(IMarket _market, uint256 _size, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes beforeInitialized returns (bool) {
+    function initialize(IMarket _market, uint256 _size, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) public beforeInitialized returns (bool) {
         endInitialization();
         market = _market;
         universe = market.getUniverse();
@@ -25,7 +25,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseRepor
         return true;
     }
 
-    function redeem(address _redeemer) public onlyInGoodTimes returns (bool) {
+    function redeem(address _redeemer) public returns (bool) {
         bool _isDisavowed = isDisavowed();
         if (!_isDisavowed && !market.isFinalized()) {
             market.finalize();
@@ -46,7 +46,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseRepor
         return true;
     }
 
-    function contribute(address _participant, uint256 _amount) public onlyInGoodTimes returns (uint256) {
+    function contribute(address _participant, uint256 _amount) public returns (uint256) {
         require(IMarket(msg.sender) == market);
         _amount = _amount.min(size.sub(totalSupply()));
         if (_amount == 0) {
@@ -59,7 +59,7 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseRepor
         return _amount;
     }
 
-    function forkAndRedeem() public onlyInGoodTimes returns (bool) {
+    function forkAndRedeem() public returns (bool) {
         fork();
         redeem(msg.sender);
         return true;

@@ -26,7 +26,7 @@ contract NewReputationToken is DelegationTarget, ITyped, Initializable, Variable
     uint256 private parentTotalTheoreticalSupply;
     uint256 private totalTheoreticalSupply;
 
-    function initialize(IUniverse _universe) public onlyInGoodTimes beforeInitialized returns (bool) {
+    function initialize(IUniverse _universe) public beforeInitialized returns (bool) {
         endInitialization();
         require(_universe != address(0));
         universe = _universe;
@@ -34,7 +34,7 @@ contract NewReputationToken is DelegationTarget, ITyped, Initializable, Variable
         return true;
     }
 
-    function migrateOutByPayout(uint256[] _payoutNumerators, bool _invalid, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+    function migrateOutByPayout(uint256[] _payoutNumerators, bool _invalid, uint256 _attotokens) public afterInitialized returns (bool) {
         require(_attotokens > 0);
         IUniverse _destinationUniverse = universe.createChildUniverse(_payoutNumerators, _invalid);
         IReputationToken _destination = _destinationUniverse.getReputationToken();
@@ -43,7 +43,7 @@ contract NewReputationToken is DelegationTarget, ITyped, Initializable, Variable
         return true;
     }
 
-    function migrateOut(IReputationToken _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+    function migrateOut(IReputationToken _destination, uint256 _attotokens) public afterInitialized returns (bool) {
         require(_attotokens > 0);
         assertReputationTokenIsLegitSibling(_destination);
         burn(msg.sender, _attotokens);
@@ -51,7 +51,7 @@ contract NewReputationToken is DelegationTarget, ITyped, Initializable, Variable
         return true;
     }
 
-    function migrateIn(address _reporter, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+    function migrateIn(address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
         require(ReputationToken(msg.sender) == _parentUniverse.getReputationToken());
         mint(_reporter, _attotokens);
@@ -69,7 +69,7 @@ contract NewReputationToken is DelegationTarget, ITyped, Initializable, Variable
         return true;
     }
 
-    function mintForReportingParticipant(uint256 _amountMigrated) public onlyInGoodTimes afterInitialized returns (bool) {
+    function mintForReportingParticipant(uint256 _amountMigrated) public afterInitialized returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
         IReportingParticipant _reportingParticipant = IReportingParticipant(msg.sender);
         require(_parentUniverse.isContainerForReportingParticipant(_reportingParticipant));
@@ -87,22 +87,22 @@ contract NewReputationToken is DelegationTarget, ITyped, Initializable, Variable
         return super.transferFrom(_from, _to, _value);
     }
 
-    function trustedUniverseTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+    function trustedUniverseTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
         require(IUniverse(msg.sender) == universe);
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+    function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
         require(universe.isContainerForMarket(IMarket(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    function trustedReportingParticipantTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+    function trustedReportingParticipantTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
         require(universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+    function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
         require(universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
@@ -172,7 +172,7 @@ contract NewReputationToken is DelegationTarget, ITyped, Initializable, Variable
         return true;
     }
 
-    function migrateFromLegacyReputationToken() public onlyInGoodTimes afterInitialized returns (bool) {
+    function migrateFromLegacyReputationToken() public afterInitialized returns (bool) {
         ERC20 _legacyRepToken = ERC20(controller.lookup("LegacyReputationToken"));
         uint256 _legacyBalance = _legacyRepToken.balanceOf(msg.sender);
         require(_legacyRepToken.transferFrom(msg.sender, address(0), _legacyBalance));

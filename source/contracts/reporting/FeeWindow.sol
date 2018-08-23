@@ -36,7 +36,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Initializable, IFee
     uint256 private totalStake;
     IFeeToken private feeToken;
 
-    function initialize(IUniverse _universe, uint256 _feeWindowId) public onlyInGoodTimes beforeInitialized returns (bool) {
+    function initialize(IUniverse _universe, uint256 _feeWindowId) public beforeInitialized returns (bool) {
         endInitialization();
         universe = _universe;
         startTime = _feeWindowId.mul(universe.getDisputeRoundDurationInSeconds());
@@ -44,7 +44,7 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Initializable, IFee
         return true;
     }
 
-    function onMarketFinalized() public onlyInGoodTimes afterInitialized returns (bool) {
+    function onMarketFinalized() public afterInitialized returns (bool) {
         IMarket _market = IMarket(msg.sender);
         require(universe.isContainerForMarket(_market));
         numMarkets += 1;
@@ -60,18 +60,18 @@ contract FeeWindow is DelegationTarget, VariableSupplyToken, Initializable, IFee
         return true;
     }
 
-    function buy(uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+    function buy(uint256 _attotokens) public afterInitialized returns (bool) {
         buyInternal(msg.sender, _attotokens);
         return true;
     }
 
-    function trustedUniverseBuy(address _buyer, uint256 _attotokens) public onlyInGoodTimes afterInitialized returns (bool) {
+    function trustedUniverseBuy(address _buyer, uint256 _attotokens) public afterInitialized returns (bool) {
         require(IUniverse(msg.sender) == universe);
         buyInternal(_buyer, _attotokens);
         return true;
     }
 
-    function buyInternal(address _buyer, uint256 _attotokens) private onlyInGoodTimes afterInitialized returns (bool) {
+    function buyInternal(address _buyer, uint256 _attotokens) private afterInitialized returns (bool) {
         require(_attotokens > 0);
         require(isActive());
         require(!universe.isForking());

@@ -17,7 +17,7 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
     IReputationToken internal reputationToken;
     ICash internal cash;
 
-    function migrate() public onlyInGoodTimes returns (bool) {
+    function migrate() public returns (bool) {
         require(IMarket(msg.sender) == market);
         uint256 _balance = feeWindow.getFeeToken().balanceOf(this);
         feeWindow = market.getFeeWindow();
@@ -25,7 +25,7 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
         return true;
     }
 
-    function liquidateLosing() public onlyInGoodTimes returns (bool) {
+    function liquidateLosing() public returns (bool) {
         require(IMarket(msg.sender) == market);
         require(market.getWinningPayoutDistributionHash() != getPayoutDistributionHash() && market.getWinningPayoutDistributionHash() != bytes32(0));
         IReputationToken _reputationToken = market.getReputationToken();
@@ -33,7 +33,7 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
         return true;
     }
 
-    function fork() internal onlyInGoodTimes returns (bool) {
+    function fork() internal returns (bool) {
         require(market == market.getUniverse().getForkingMarket());
         IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutNumerators, invalid);
         IReputationToken _newReputationToken = _newUniverse.getReputationToken();
