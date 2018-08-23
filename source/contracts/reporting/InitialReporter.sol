@@ -40,7 +40,7 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         return true;
     }
 
-    function report(address _reporter, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) public onlyInGoodTimes returns (bool) {
+    function report(address _reporter, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid, uint256 _initialReportStake) public onlyInGoodTimes returns (bool) {
         require(IMarket(msg.sender) == market);
         actualReporter = _reporter;
         owner = _reporter;
@@ -48,18 +48,9 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         reportTimestamp = controller.getTimestamp();
         invalid = _invalid;
         payoutNumerators = _payoutNumerators;
-        size = reputationToken.balanceOf(this);
+        size = _initialReportStake;
         feeWindow = market.getFeeWindow();
         feeWindow.mintFeeTokens(size);
-        return true;
-    }
-
-    function withdrawInEmergency() public onlyInBadTimes returns (bool) {
-        require(reputationToken.transfer(owner, reputationToken.balanceOf(this)));
-        uint256 _cashBalance = cash.balanceOf(this);
-        if (_cashBalance > 0) {
-            cash.withdrawEtherTo(owner, _cashBalance);
-        }
         return true;
     }
 

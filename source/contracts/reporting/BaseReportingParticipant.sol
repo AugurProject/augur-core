@@ -40,7 +40,7 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
         redeemForAllFeeWindows();
         uint256 _balance = reputationToken.balanceOf(this);
         reputationToken.migrateOut(_newReputationToken, _balance);
-        _newReputationToken.mintForReportingParticipant(_balance);
+        _newReputationToken.mintForReportingParticipant(size);
         reputationToken = _newReputationToken;
         controller.getAugur().logReportingParticipantDisavowed(market.getUniverse(), market);
         market = IMarket(0);

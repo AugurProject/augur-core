@@ -86,7 +86,7 @@ def test_initial_report(localFixture, initializedMarket, mockReputationToken, mo
     mockReputationToken.setBalanceOf(repBalance)
     assert initializedMarket.doInitialReport([initializedMarket.getNumTicks(), 0, 0, 0, 0], False, sender=tester.k1)
     # verify creator gets back rep bond
-    assert mockReputationToken.getTransferValueFor(tester.a2) == repBalance
+    assert mockReputationToken.getTransferValueFor(tester.a2) == mockUniverse.getOrCacheDesignatedReportNoShowBond()
     # verify init reporter pays init rep bond
     assert mockReputationToken.getTrustedTransferSourceValue() == bytesToHexString(tester.a1)
     assert mockReputationToken.getTrustedTransferAttotokensValue() == initBond
@@ -203,8 +203,6 @@ def test_approve_spenders(localFixture, initializedMarket, mockCash, mockShareTo
     assert mockCash.getApproveValueFor(cancelOrder.address) == approvalAmount
     CompleteSets = localFixture.contracts['CompleteSets']
     assert mockCash.getApproveValueFor(CompleteSets.address) == approvalAmount
-    TradingEscapeHatch = localFixture.contracts['TradingEscapeHatch']
-    assert mockCash.getApproveValueFor(TradingEscapeHatch.address) == approvalAmount
     ClaimTradingProceeds = localFixture.contracts['ClaimTradingProceeds']
     assert mockCash.getApproveValueFor(ClaimTradingProceeds.address) == approvalAmount
 
