@@ -31,16 +31,6 @@ contract Controller is IController {
         _;
     }
 
-    modifier onlyInBadTimes {
-        require(stopped);
-        _;
-    }
-
-    modifier onlyInGoodTimes {
-        require(!stopped);
-        _;
-    }
-
     constructor() public {
         owner = msg.sender;
         whitelist[msg.sender] = true;
@@ -82,20 +72,6 @@ contract Controller is IController {
 
     function transferOwnership(address _newOwner) public onlyOwnerCaller returns (bool) {
         owner = _newOwner;
-        return true;
-    }
-
-    function emergencyStop() public onlyOwnerCaller onlyInGoodTimes returns (bool) {
-        getAugur().logEscapeHatchChanged(true);
-        stopped = true;
-        return true;
-    }
-
-    function stopInEmergency() public view onlyInGoodTimes returns (bool) {
-        return true;
-    }
-
-    function onlyInEmergency() public view onlyInBadTimes returns (bool) {
         return true;
     }
 

@@ -19,7 +19,7 @@ import 'reporting/Reporting.sol';
 contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, MarketValidator, IClaimTradingProceeds {
     using SafeMathUint256 for uint256;
 
-    function claimTradingProceeds(IMarket _market, address _shareHolder) external marketIsLegit(_market) onlyInGoodTimes nonReentrant returns(bool) {
+    function claimTradingProceeds(IMarket _market, address _shareHolder) external marketIsLegit(_market) nonReentrant returns(bool) {
         require(_market.isFinalized());
         require(controller.getTimestamp() > _market.getFinalizationTime().add(Reporting.getClaimTradingProceedsWaitTime()));
 

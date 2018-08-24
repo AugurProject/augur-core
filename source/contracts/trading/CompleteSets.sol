@@ -20,14 +20,14 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, MarketV
     /**
      * Buys `_amount` shares of every outcome in the specified market.
     **/
-    function publicBuyCompleteSets(IMarket _market, uint256 _amount) external marketIsLegit(_market) payable convertToAndFromCash onlyInGoodTimes returns (bool) {
+    function publicBuyCompleteSets(IMarket _market, uint256 _amount) external marketIsLegit(_market) payable convertToAndFromCash returns (bool) {
         this.buyCompleteSets(msg.sender, _market, _amount);
         controller.getAugur().logCompleteSetsPurchased(_market.getUniverse(), _market, msg.sender, _amount);
         _market.assertBalances();
         return true;
     }
 
-    function publicBuyCompleteSetsWithCash(IMarket _market, uint256 _amount) external marketIsLegit(_market) onlyInGoodTimes returns (bool) {
+    function publicBuyCompleteSetsWithCash(IMarket _market, uint256 _amount) external marketIsLegit(_market) returns (bool) {
         this.buyCompleteSets(msg.sender, _market, _amount);
         controller.getAugur().logCompleteSetsPurchased(_market.getUniverse(), _market, msg.sender, _amount);
         _market.assertBalances();
@@ -54,14 +54,14 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, MarketV
         return true;
     }
 
-    function publicSellCompleteSets(IMarket _market, uint256 _amount) external marketIsLegit(_market) convertToAndFromCash onlyInGoodTimes returns (bool) {
+    function publicSellCompleteSets(IMarket _market, uint256 _amount) external marketIsLegit(_market) convertToAndFromCash returns (bool) {
         this.sellCompleteSets(msg.sender, _market, _amount);
         controller.getAugur().logCompleteSetsSold(_market.getUniverse(), _market, msg.sender, _amount);
         _market.assertBalances();
         return true;
     }
 
-    function publicSellCompleteSetsWithCash(IMarket _market, uint256 _amount) external marketIsLegit(_market) onlyInGoodTimes returns (bool) {
+    function publicSellCompleteSetsWithCash(IMarket _market, uint256 _amount) external marketIsLegit(_market) returns (bool) {
         this.sellCompleteSets(msg.sender, _market, _amount);
         controller.getAugur().logCompleteSetsSold(_market.getUniverse(), _market, msg.sender, _amount);
         _market.assertBalances();

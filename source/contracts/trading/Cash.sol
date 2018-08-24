@@ -17,13 +17,13 @@ contract Cash is DelegationTarget, ITyped, VariableSupplyToken, ICash {
     string constant public symbol = "CASH";
     uint8 constant public decimals = 18;
 
-    function depositEther() external payable onlyInGoodTimes returns(bool) {
+    function depositEther() external payable returns(bool) {
         mint(msg.sender, msg.value);
         assert(address(this).balance >= totalSupply());
         return true;
     }
 
-    function depositEtherFor(address _to) external payable onlyInGoodTimes returns(bool) {
+    function depositEtherFor(address _to) external payable returns(bool) {
         mint(_to, msg.value);
         assert(address(this).balance >= totalSupply());
         return true;

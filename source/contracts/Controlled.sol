@@ -24,16 +24,6 @@ contract Controlled is IControlled {
         _;
     }
 
-    modifier onlyInGoodTimes {
-        require(controller.stopInEmergency());
-        _;
-    }
-
-    modifier onlyInBadTimes {
-        require(controller.onlyInEmergency());
-        _;
-    }
-
     constructor() public {
         controller = IController(msg.sender);
     }

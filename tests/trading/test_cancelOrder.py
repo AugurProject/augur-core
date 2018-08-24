@@ -8,11 +8,7 @@ from constants import BID, ASK, YES, NO
 
 tester.STARTGAS = long(6.7 * 10**6)
 
-@mark.parametrize('escapeHatch', [
-    True,
-    False
-])
-def test_cancelBid(escapeHatch, contractsFixture, cash, market, universe):
+def test_cancelBid(contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']
     orders = contractsFixture.contracts['Orders']
@@ -35,10 +31,6 @@ def test_cancelBid(escapeHatch, contractsFixture, cash, market, universe):
     assert orders.getOrderCreator(orderID), "Order should have an owner"
 
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == creatorInitialETH - fix('1', '6000'), "ETH should be deducted from the creator balance"
-
-    if (escapeHatch):
-        controller = contractsFixture.contracts['Controller']
-        controller.emergencyStop()
 
     orderCanceledLog = {
         'orderId': orderID,
@@ -64,11 +56,7 @@ def test_cancelBid(escapeHatch, contractsFixture, cash, market, universe):
     assert(marketInitialYesShares == yesShareToken.totalSupply()), "Market's yes shares should be unchanged"
     assert marketInitialNoShares == noShareToken.totalSupply(), "Market's no shares should be unchanged"
 
-@mark.parametrize('escapeHatch', [
-    True,
-    False
-])
-def test_cancelAsk(escapeHatch, contractsFixture, cash, market):
+def test_cancelAsk(contractsFixture, cash, market):
     createOrder = contractsFixture.contracts['CreateOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']
     orders = contractsFixture.contracts['Orders']
@@ -91,10 +79,6 @@ def test_cancelAsk(escapeHatch, contractsFixture, cash, market):
 
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == creatorInitialETH - fix('1', '4000'), "ETH should be deducted from the creator balance"
 
-    if (escapeHatch):
-        controller = contractsFixture.contracts['Controller']
-        controller.emergencyStop()
-
     assert(cancelOrder.cancelOrder(orderID, sender=tester.k1) == 1), "cancelOrder should succeed"
 
     assert orders.getAmount(orderID) == 0
@@ -110,11 +94,7 @@ def test_cancelAsk(escapeHatch, contractsFixture, cash, market):
     assert(marketInitialYesShares == yesShareToken.totalSupply()), "Market's yes shares should be unchanged"
     assert marketInitialNoShares == noShareToken.totalSupply(), "Market's no shares should be unchanged"
 
-@mark.parametrize('escapeHatch', [
-    True,
-    False
-])
-def test_cancelWithSharesInEscrow(escapeHatch, contractsFixture, cash, market, universe):
+def test_cancelWithSharesInEscrow(contractsFixture, cash, market, universe):
     completeSets = contractsFixture.contracts['CompleteSets']
     createOrder = contractsFixture.contracts['CreateOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']
@@ -147,10 +127,6 @@ def test_cancelWithSharesInEscrow(escapeHatch, contractsFixture, cash, market, u
     assert yesShareToken.balanceOf(tester.a1) == fix(12)
     assert noShareToken.balanceOf(tester.a1) == 0
 
-    if (escapeHatch):
-        controller = contractsFixture.contracts['Controller']
-        controller.emergencyStop()
-
     # now cancel the order
     assert(cancelOrder.cancelOrder(orderID, sender=tester.k1) == 1), "cancelOrder should succeed"
 
@@ -167,11 +143,7 @@ def test_cancelWithSharesInEscrow(escapeHatch, contractsFixture, cash, market, u
     assert(marketInitialYesShares == yesShareToken.totalSupply()), "Market's yes shares should be unchanged"
     assert marketInitialNoShares == noShareToken.totalSupply(), "Market's no shares should be unchanged"
 
-@mark.parametrize('escapeHatch', [
-    True,
-    False
-])
-def test_cancelWithSharesInEscrowAsk(escapeHatch, contractsFixture, cash, market, universe):
+def test_cancelWithSharesInEscrowAsk(contractsFixture, cash, market, universe):
     completeSets = contractsFixture.contracts['CompleteSets']
     createOrder = contractsFixture.contracts['CreateOrder']
     cancelOrder = contractsFixture.contracts['CancelOrder']
@@ -203,10 +175,6 @@ def test_cancelWithSharesInEscrowAsk(escapeHatch, contractsFixture, cash, market
     assert cash.balanceOf(tester.a1) == fix('0')
     assert yesShareToken.balanceOf(tester.a1) == 0
     assert noShareToken.balanceOf(tester.a1) == fix(12)
-
-    if (escapeHatch):
-        controller = contractsFixture.contracts['Controller']
-        controller.emergencyStop()
 
     # now cancel the order
     assert(cancelOrder.cancelOrder(orderID, sender=tester.k1) == 1), "cancelOrder should succeed"

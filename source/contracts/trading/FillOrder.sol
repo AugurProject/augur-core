@@ -99,7 +99,7 @@ library Trade {
 
         // distribute payout proportionately (fees will have been deducted)
         uint256 _payout = _data.contracts.denominationToken.balanceOf(this);
-        uint256 _longShare = _payout.mul(_data.order.sharePriceLong).div(_data.order.sharePriceRange);
+        uint256 _longShare = _payout.mul(_data.order.sharePriceLong) / _data.order.sharePriceRange;
         uint256 _shortShare = _payout.sub(_longShare);
         _data.contracts.denominationToken.transfer(getLongShareSellerDestination(_data), _longShare);
         _data.contracts.denominationToken.transfer(getShortShareSellerDestination(_data), _shortShare);
@@ -358,7 +358,7 @@ contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
     using Trade for Trade.Data;
 
     // CONSIDER: Do we want the API to be in terms of shares as it is now, or would the desired amount of ETH to place be preferable? Would both be useful?
-    function publicFillOrder(bytes32 _orderId, uint256 _amountFillerWants, bytes32 _tradeGroupId) external payable convertToAndFromCash onlyInGoodTimes returns (uint256) {
+    function publicFillOrder(bytes32 _orderId, uint256 _amountFillerWants, bytes32 _tradeGroupId) external payable convertToAndFromCash returns (uint256) {
         uint256 _result = this.fillOrder(msg.sender, _orderId, _amountFillerWants, _tradeGroupId);
         IMarket _market = IOrders(controller.lookup("Orders")).getMarket(_orderId);
         _market.assertBalances();
@@ -389,7 +389,7 @@ contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
     }
 
     function logOrderFilled(Trade.Data _tradeData, uint256 _marketCreatorFees, uint256 _reporterFees, uint256 _amountFilled, bytes32 _tradeGroupId) private returns (bool) {
-        controller.getAugur().logOrderFilled(_tradeData.contracts.market.getUniverse(), _tradeData.contracts.market.getShareToken(_tradeData.order.outcome), _tradeData.filler.participantAddress, _tradeData.order.orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getFillerSharesDepleted(), _tradeData.getFillerTokensDepleted(), _marketCreatorFees, _reporterFees, _amountFilled, _tradeGroupId);
+        _tradeData.contracts.augur.logOrderFilled(_tradeData.contracts.market.getUniverse(), _tradeData.contracts.longShareToken, _tradeData.filler.participantAddress, _tradeData.order.orderId, _tradeData.getMakerSharesDepleted(), _tradeData.getMakerTokensDepleted(), _tradeData.getFillerSharesDepleted(), _tradeData.getFillerTokensDepleted(), _marketCreatorFees, _reporterFees, _amountFilled, _tradeGroupId);
         return true;
     }
 }
