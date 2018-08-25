@@ -47,38 +47,25 @@ def test_legacy_migration(augurInitializedFixture):
     universe = augurInitializedFixture.createUniverse()
     reputationToken = augurInitializedFixture.applySignature("ReputationToken", universe.getReputationToken())
 
-    assert reputationToken.getTargetSupply() == 11 * 10**6 * 10**18
-
     # We'll only partially migrate right now
-    reputationToken.migrateBalancesFromLegacyRep([tester.a1])
+    legacyReputationToken.approve(reputationToken.address, 100, sender=tester.k1)
+    reputationToken.migrateFromLegacyReputationToken(sender=tester.k1)
     assert reputationToken.balanceOf(tester.a1) == 100
 
     # Doing again is a noop
-    reputationToken.migrateBalancesFromLegacyRep([tester.a1])
+    reputationToken.migrateFromLegacyReputationToken(sender=tester.k1)
     assert reputationToken.balanceOf(tester.a1) == 100
 
     # Doing with an account which has no legacy REP is a noop
-    reputationToken.migrateBalancesFromLegacyRep([tester.a6])
+    legacyReputationToken.approve(reputationToken.address, 100)
+    reputationToken.migrateFromLegacyReputationToken(sender=tester.k6)
     assert reputationToken.balanceOf(tester.a6) == 0
 
-    # Since the migration has not completed we can't transfer or do normal token actions
-    assert reputationToken.getIsMigratingFromLegacy()
-    with raises(TransactionFailed):
-        reputationToken.transfer(tester.a2, 1, sender=tester.k1)
+    # We'll finish the migration now
+    legacyReputationToken.approve(reputationToken.address, 11 * 10**6 * 10**18, sender=tester.k0)
+    reputationToken.migrateFromLegacyReputationToken(sender=tester.k0)
+    assert reputationToken.balanceOf(tester.a0) == 11 * 10**6 * 10**18 - 200
 
-    # Before we finish the migration we'll migrate some allowances
-    assert reputationToken.migrateAllowancesFromLegacyRep([tester.a0, tester.a0], [tester.a1, tester.a2])
-    assert reputationToken.allowance(tester.a0, tester.a1) == 1000
-    assert reputationToken.allowance(tester.a0, tester.a2) == 2000
-
-    # We'll finish the migration now and confirm we can transfer
-    reputationToken.migrateBalancesFromLegacyRep([tester.a0, tester.a2])
-    assert not reputationToken.getIsMigratingFromLegacy()
-    assert reputationToken.transfer(tester.a2, 1, sender=tester.k1)
-
-    # Now that the migration is complete we can no longer migrate balances or allowances from the legacy contract
-    with raises(TransactionFailed):
-        reputationToken.migrateBalancesFromLegacyRep([tester.a2])
-
-    with raises(TransactionFailed):
-        reputationToken.migrateAllowancesFromLegacyRep([tester.a0, tester.a2])
+    legacyReputationToken.approve(reputationToken.address, 100, sender=tester.k2)
+    reputationToken.migrateFromLegacyReputationToken(sender=tester.k2)
+    assert reputationToken.balanceOf(tester.a2) == 100
