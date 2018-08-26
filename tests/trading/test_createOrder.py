@@ -18,6 +18,13 @@ BETTER_ORDER_ID = 5
 WORSE_ORDER_ID = 6
 GAS_PRICE = 7
 
+def test_publicCreateOrder_0_shares(contractsFixture, cash, market):
+    orders = contractsFixture.contracts['Orders']
+    createOrder = contractsFixture.contracts['CreateOrder']
+
+    with raises(TransactionFailed):
+        createOrder.publicCreateOrder(BID, 0, 4000, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), "7")
+
 def test_publicCreateOrder_bid(contractsFixture, cash, market):
     orders = contractsFixture.contracts['Orders']
     createOrder = contractsFixture.contracts['CreateOrder']
