@@ -231,7 +231,7 @@ class ContractsFixture:
     def distributeRep(self, universe):
         # Get the reputation token for this universe and migrate legacy REP to it
         reputationToken = self.applySignature('ReputationToken', universe.getReputationToken())
-        legacyRepToken = self.applySignature('TestLegacyReputationToken', reputationToken.getLegacyRepToken())
+        legacyRepToken = self.applySignature('LegacyReputationToken', reputationToken.getLegacyRepToken())
         totalSupply = legacyRepToken.balanceOf(tester.a0)
         legacyRepToken.approve(reputationToken.address, totalSupply)
         reputationToken.migrateFromLegacyReputationToken()
@@ -329,8 +329,6 @@ class ContractsFixture:
                     self.uploadAndAddToController(path.join(directory, filename), lookupKey = "Time", signatureKey = "TimeControlled")
                 elif name == "Trade":
                     self.uploadAndAddToController("solidity_test_helpers/TestTrade.sol", lookupKey = "Trade", signatureKey = "Trade")
-                elif name == "TestLegacyReputationToken":
-                    self.uploadAndAddToController(path.join(directory, filename), lookupKey = "LegacyReputationToken", signatureKey = "TestLegacyReputationToken")
                 else:
                     self.uploadAndAddToController(path.join(directory, filename))
 

@@ -14,7 +14,7 @@ import 'reporting/IDisputeCrowdsourcer.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
 
-contract LegacyReputationToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IReputationToken {
+contract OldLegacyReputationToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IReputationToken {
     using SafeMathUint256 for uint256;
 
     string constant public name = "Reputation";

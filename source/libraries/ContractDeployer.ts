@@ -71,12 +71,14 @@ Deploying to: ${networkConfiguration.networkName}
 
         if(this.configuration.createGenesisUniverse) {
             if (!this.configuration.isProduction) {
+                console.log("Initializing legacy REP");
                 this.initializeLegacyRep();
             }
 
             this.universe = await this.createGenesisUniverse();
 
             if (!this.configuration.isProduction) {
+                console.log("Migrating from legacy REP");
                 this.migrateFromLegacyRep();
             }
         }
@@ -308,6 +310,7 @@ Deploying to: ${networkConfiguration.networkName}
             throw new Error("Faucet call to Legacy REP failed");
         }
     }
+
     private async resetTimeControlled(): Promise<void> {
       console.log('Resetting Timestamp for false time...');
       const time = new TimeControlled(this.connector, this.accountManager, this.getContract("TimeControlled").address, this.connector.gasPrice);
@@ -335,15 +338,15 @@ Deploying to: ${networkConfiguration.networkName}
     private async migrateFromLegacyRep(): Promise<void> {
         const reputationTokenAddress = await this.universe.getReputationToken_();
         const reputationToken = new ReputationToken(this.connector, this.accountManager, reputationTokenAddress, this.connector.gasPrice);
-        await reputationToken.migrateBalancesFromLegacyRep([this.accountManager.defaultAddress]);
+        const legacyReputationToken = new LegacyReputationToken(this.connector, this.accountManager, this.getContract('LegacyReputationToken').address, this.connector.gasPrice);
+        const legacyBalance = await legacyReputationToken.balanceOf_(this.accountManager.defaultAddress);
+        await legacyReputationToken.approve(reputationTokenAddress, legacyBalance);
+        await reputationToken.migrateFromLegacyReputationToken();
         const balance = await reputationToken.balanceOf_(this.accountManager.defaultAddress);
         if (!balance || balance == new BN(0)) {
             throw new Error("Migration from Legacy REP failed");
         }
-        const migrationOngoing = await reputationToken.getIsMigratingFromLegacy_();
-        if (migrationOngoing) {
-            throw new Error("Still migrating from Legacy REP");
-        }
+        console.log(balance);
     }
 
     private async generateAddressMapping(): Promise<string> {

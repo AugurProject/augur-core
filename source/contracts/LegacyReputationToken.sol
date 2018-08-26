@@ -1,10 +1,10 @@
 pragma solidity 0.4.24;
 
 import 'libraries/ContractExists.sol';
-import 'legacy_reputation/LegacyRepToken.sol';
+import 'legacy_reputation/OldLegacyRepToken.sol';
 
 
-contract TestLegacyReputationToken is LegacyReputationToken {
+contract LegacyReputationToken is OldLegacyReputationToken {
     using ContractExists for address;
     event FundedAccount(address indexed _universe, address indexed _sender, uint256 _repBalance, uint256 _timestamp);
 
