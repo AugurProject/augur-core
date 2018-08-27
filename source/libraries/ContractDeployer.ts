@@ -72,14 +72,14 @@ Deploying to: ${networkConfiguration.networkName}
         if(this.configuration.createGenesisUniverse) {
             if (!this.configuration.isProduction) {
                 console.log("Initializing legacy REP");
-                this.initializeLegacyRep();
+                await this.initializeLegacyRep();
             }
 
             this.universe = await this.createGenesisUniverse();
 
             if (!this.configuration.isProduction) {
                 console.log("Migrating from legacy REP");
-                this.migrateFromLegacyRep();
+                await this.migrateFromLegacyRep();
             }
         }
 
@@ -346,7 +346,6 @@ Deploying to: ${networkConfiguration.networkName}
         if (!balance || balance == new BN(0)) {
             throw new Error("Migration from Legacy REP failed");
         }
-        console.log(balance);
     }
 
     private async generateAddressMapping(): Promise<string> {
