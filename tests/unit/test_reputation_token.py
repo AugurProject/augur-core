@@ -118,10 +118,12 @@ def mockAugur(localFixture):
     return localFixture.contracts['MockAugur']
 
 @fixture
-def initializedReputationToken(localFixture, mockUniverse):
+def initializedReputationToken(localFixture, mockUniverse, mockLegacyReputationToken):
     reputationToken = localFixture.upload('../source/contracts/reporting/ReputationToken.sol', 'reputationToken')
     reputationToken.setController(localFixture.contracts['Controller'].address)
     assert reputationToken.initialize(mockUniverse.address)
-    assert reputationToken.migrateBalancesFromLegacyRep([tester.a0])
-    assert reputationToken.getIsMigratingFromLegacy() == False
+    totalSupply = 11 * 10**6 * 10**18
+    assert mockLegacyReputationToken.faucet(totalSupply)
+    assert mockLegacyReputationToken.approve(reputationToken.address, totalSupply)
+    assert reputationToken.migrateFromLegacyReputationToken()
     return reputationToken

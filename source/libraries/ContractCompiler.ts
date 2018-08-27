@@ -115,7 +115,7 @@ export class ContractCompiler {
 
     public async generateCompilerInput(): Promise<CompilerInput> {
         const ignoreFile = function(file: string, stats: fs.Stats): boolean {
-            return file.indexOf("legacy_reputation") > -1 || (stats.isFile() && path.extname(file) !== ".sol");
+            return stats.isFile() && path.extname(file) !== ".sol";
         }
         const filePaths = await recursiveReadDir(this.configuration.contractSourceRoot, [ignoreFile]);
         let filesPromises;

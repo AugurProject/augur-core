@@ -1,6 +1,5 @@
 pragma solidity 0.4.24;
 
-
 import 'reporting/IReputationToken.sol';
 import 'libraries/DelegationTarget.sol';
 import 'libraries/ITyped.sol';
@@ -26,39 +25,15 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
     uint256 private parentTotalTheoreticalSupply;
     uint256 private totalTheoreticalSupply;
 
-    // Auto migration related state
-    bool private isMigratingFromLegacy;
-    uint256 private targetSupply;
-
-    /**
-     * @dev modifier to allow actions only when the contract IS paused
-     */
-    modifier whenMigratingFromLegacy() {
-        require(isMigratingFromLegacy);
-        _;
-    }
-
-    /**
-     * @dev modifier to allow actions only when the contract IS paused
-     */
-    modifier whenNotMigratingFromLegacy() {
-        require(!isMigratingFromLegacy);
-        _;
-    }
-
     function initialize(IUniverse _universe) public beforeInitialized returns (bool) {
         endInitialization();
         require(_universe != address(0));
         universe = _universe;
         updateParentTotalTheoreticalSupply();
-        ERC20 _legacyRepToken = getLegacyRepToken();
-        // Initialize migration related state. If this is Genesis universe REP the balances from the Legacy contract must be migrated before we enable usage
-        isMigratingFromLegacy = _universe.getParentUniverse() == IUniverse(0);
-        targetSupply = _legacyRepToken.totalSupply();
         return true;
     }
 
-    function migrateOutByPayout(uint256[] _payoutNumerators, bool _invalid, uint256 _attotokens) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
+    function migrateOutByPayout(uint256[] _payoutNumerators, bool _invalid, uint256 _attotokens) public afterInitialized returns (bool) {
         require(_attotokens > 0);
         IUniverse _destinationUniverse = universe.createChildUniverse(_payoutNumerators, _invalid);
         IReputationToken _destination = _destinationUniverse.getReputationToken();
@@ -67,7 +42,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    function migrateOut(IReputationToken _destination, uint256 _attotokens) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
+    function migrateOut(IReputationToken _destination, uint256 _attotokens) public afterInitialized returns (bool) {
         require(_attotokens > 0);
         assertReputationTokenIsLegitSibling(_destination);
         burn(msg.sender, _attotokens);
@@ -75,7 +50,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    function migrateIn(address _reporter, uint256 _attotokens) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
+    function migrateIn(address _reporter, uint256 _attotokens) public afterInitialized returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
         require(ReputationToken(msg.sender) == _parentUniverse.getReputationToken());
         mint(_reporter, _attotokens);
@@ -93,7 +68,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    function mintForReportingParticipant(uint256 _amountMigrated) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
+    function mintForReportingParticipant(uint256 _amountMigrated) public afterInitialized returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
         IReportingParticipant _reportingParticipant = IReportingParticipant(msg.sender);
         require(_parentUniverse.isContainerForReportingParticipant(_reportingParticipant));
@@ -103,30 +78,30 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    function transfer(address _to, uint _value) public whenNotMigratingFromLegacy returns (bool) {
+    function transfer(address _to, uint _value) public returns (bool) {
         return super.transfer(_to, _value);
     }
 
-    function transferFrom(address _from, address _to, uint _value) public whenNotMigratingFromLegacy returns (bool) {
+    function transferFrom(address _from, address _to, uint _value) public returns (bool) {
         return super.transferFrom(_from, _to, _value);
     }
 
-    function trustedUniverseTransfer(address _source, address _destination, uint256 _attotokens) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
+    function trustedUniverseTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
         require(IUniverse(msg.sender) == universe);
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
+    function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
         require(universe.isContainerForMarket(IMarket(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    function trustedReportingParticipantTransfer(address _source, address _destination, uint256 _attotokens) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
+    function trustedReportingParticipantTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
         require(universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
+    function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
         require(universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
@@ -155,7 +130,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return ERC20(controller.lookup("LegacyReputationToken"));
     }
 
-    function updateSiblingMigrationTotal(IReputationToken _token) public whenNotMigratingFromLegacy returns (bool) {
+    function updateSiblingMigrationTotal(IReputationToken _token) public returns (bool) {
         require(_token != this);
         IUniverse _shadyUniverse = _token.getUniverse();
         require(_token == universe.getParentUniverse().getChildUniverse(_shadyUniverse.getParentPayoutDistributionHash()).getReputationToken());
@@ -165,7 +140,7 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    function updateParentTotalTheoreticalSupply() public whenNotMigratingFromLegacy returns (bool) {
+    function updateParentTotalTheoreticalSupply() public returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
         totalTheoreticalSupply -= parentTotalTheoreticalSupply;
         if (_parentUniverse == IUniverse(0)) {
@@ -196,64 +171,11 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-        /**
-     * @dev Copies the balance of a batch of addresses from the legacy contract
-     * @param _holders Array of addresses to migrate balance
-     * @return True if operation was completed
-     */
-    function migrateBalancesFromLegacyRep(address[] _holders) public whenMigratingFromLegacy afterInitialized returns (bool) {
-        ERC20 _legacyRepToken = getLegacyRepToken();
-        for (uint256 i = 0; i < _holders.length; i++) {
-            migrateBalanceFromLegacyRep(_holders[i], _legacyRepToken);
-        }
+    function migrateFromLegacyReputationToken() public afterInitialized returns (bool) {
+        ERC20 _legacyRepToken = ERC20(controller.lookup("LegacyReputationToken"));
+        uint256 _legacyBalance = _legacyRepToken.balanceOf(msg.sender);
+        require(_legacyRepToken.transferFrom(msg.sender, address(0), _legacyBalance));
+        mint(msg.sender, _legacyBalance);
         return true;
-    }
-
-    /**
-     * @dev Copies the balance of a single addresses from the legacy contract
-     * @param _holder Address to migrate balance
-     * @return True if balance was copied, false if was already copied or address had no balance
-     */
-    function migrateBalanceFromLegacyRep(address _holder, ERC20 _legacyRepToken) private whenMigratingFromLegacy afterInitialized returns (bool) {
-        if (balances[_holder] > 0) {
-            return false; // Already copied, move on
-        }
-
-        uint256 amount = _legacyRepToken.balanceOf(_holder);
-        if (amount == 0) {
-            return false; // Has no balance in legacy contract, move on
-        }
-
-        mint(_holder, amount);
-
-        if (targetSupply == supply) {
-            isMigratingFromLegacy = false;
-        }
-        return true;
-    }
-
-    /**
-     * @dev Copies the allowances of a batch of addresses from the legacy contract. This is an optional step which may only be done before the migration is complete but is not required to complete it.
-     * @param _owners Array of owner addresses to migrate allowances
-     * @param _spenders Array of spender addresses to migrate allowances
-     * @return True if operation was completed
-     */
-    function migrateAllowancesFromLegacyRep(address[] _owners, address[] _spenders) public whenMigratingFromLegacy afterInitialized returns (bool) {
-        ERC20 _legacyRepToken = getLegacyRepToken();
-        for (uint256 i = 0; i < _owners.length; i++) {
-            address _owner = _owners[i];
-            address _spender = _spenders[i];
-            uint256 _allowance = _legacyRepToken.allowance(_owner, _spender);
-            approveInternal(_owner, _spender, _allowance);
-        }
-        return true;
-    }
-
-    function getIsMigratingFromLegacy() public view returns (bool) {
-        return isMigratingFromLegacy;
-    }
-
-    function getTargetSupply() public view returns (uint256) {
-        return targetSupply;
     }
 }

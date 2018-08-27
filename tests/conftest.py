@@ -231,7 +231,10 @@ class ContractsFixture:
     def distributeRep(self, universe):
         # Get the reputation token for this universe and migrate legacy REP to it
         reputationToken = self.applySignature('ReputationToken', universe.getReputationToken())
-        reputationToken.migrateBalancesFromLegacyRep([tester.a0])
+        legacyRepToken = self.applySignature('LegacyReputationToken', reputationToken.getLegacyRepToken())
+        totalSupply = legacyRepToken.balanceOf(tester.a0)
+        legacyRepToken.approve(reputationToken.address, totalSupply)
+        reputationToken.migrateFromLegacyReputationToken()
 
     def generateTesterMap(self, ch):
         testers = {}
@@ -304,7 +307,7 @@ class ContractsFixture:
     #### Bulk Operations
     ####
 
-    def uploadAllContracts(self, legacyRepForRedeployTest=None):
+    def uploadAllContracts(self):
         for directory, _, filenames in walk(resolveRelativePath(self.relativeContractsPath)):
             # skip the legacy reputation directory since it is unnecessary and we don't support uploads of contracts with constructors yet
             if 'legacy_reputation' in directory: continue
@@ -326,10 +329,6 @@ class ContractsFixture:
                     self.uploadAndAddToController(path.join(directory, filename), lookupKey = "Time", signatureKey = "TimeControlled")
                 elif name == "Trade":
                     self.uploadAndAddToController("solidity_test_helpers/TestTrade.sol", lookupKey = "Trade", signatureKey = "Trade")
-                elif legacyRepForRedeployTest and name == "LegacyReputationToken":
-                    self.contracts['Controller'].registerContract("LegacyReputationToken".ljust(32, '\x00'), legacyRepForRedeployTest, garbageBytes20, garbageBytes32)
-                elif legacyRepForRedeployTest and name == "ReputationToken":
-                    self.uploadAndAddToController("solidity_test_helpers/Redeploy/NewReputationToken.sol", lookupKey = "ReputationToken", signatureKey = "NewReputationToken")
                 else:
                     self.uploadAndAddToController(path.join(directory, filename))
 

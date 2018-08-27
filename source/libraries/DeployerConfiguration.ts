@@ -2,7 +2,7 @@ import * as path from 'path';
 
 const ARTIFACT_OUTPUT_ROOT  = (typeof process.env.ARTIFACT_OUTPUT_ROOT === 'undefined') ? path.join(__dirname, '../../output/contracts') : path.normalize(<string> process.env.ARTIFACT_OUTPUT_ROOT);
 
-const PRODUCTION_LEGACY_REP_CONTRACT_ADDRESS = "0xe94327d07fc17907b4db788e5adf2ed424addff6";
+const PRODUCTION_LEGACY_REP_CONTRACT_ADDRESS = "0x1985365e9f78359a9B6AD760e32412f4a445E862";
 
 export class DeployerConfiguration {
     public readonly contractInputPath: string;
