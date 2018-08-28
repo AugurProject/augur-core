@@ -231,8 +231,8 @@ def test_multiple_round_crowdsourcer_fees(localFixture, universe, market, cash, 
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     assert market.finalize()
 
-    # The initial reporter locked in REP for 5 rounds.
-    expectedInitialReporterFees = getExpectedFees(localFixture, cash, initialReporter, 5)
+    # The initial reporter locked in REP for 4 rounds.
+    expectedInitialReporterFees = getExpectedFees(localFixture, cash, initialReporter, 4)
     expectedRep = long(initialReporter.getStake() + initialReporter.getStake() / 2)
     with TokenDelta(reputationToken, expectedRep, tester.a0, "Redeeming didn't refund REP"):
         with EtherDelta(expectedInitialReporterFees, tester.a0, localFixture.chain, "Redeeming didn't increase ETH correctly"):
@@ -253,8 +253,8 @@ def test_multiple_round_crowdsourcer_fees(localFixture, universe, market, cash, 
             assert winningDisputeCrowdsourcer2.redeem(tester.a3)
 
     # The losing reports get fees as well but no REP
-    # The first losing bond has fees from 5 rounds
-    expectedLosingDisputeCrowdsourcer1Fees = getExpectedFees(localFixture, cash, losingDisputeCrowdsourcer1, 5)
+    # The first losing bond has fees from 4 rounds
+    expectedLosingDisputeCrowdsourcer1Fees = getExpectedFees(localFixture, cash, losingDisputeCrowdsourcer1, 4)
     with TokenDelta(reputationToken, 0, tester.a1, "Redeeming refunded REP"):
         with EtherDelta(expectedLosingDisputeCrowdsourcer1Fees, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
             assert losingDisputeCrowdsourcer1.redeem(tester.a1)
@@ -332,7 +332,7 @@ def test_forkAndRedeem(localFixture, universe, market, categoricalMarket, cash, 
     assert categoricalMarket.migrateThroughOneFork()
 
     expectedRep = categoricalDisputeCrowdsourcer.getStake()
-    expectedEth = getExpectedFees(localFixture, cash, categoricalDisputeCrowdsourcer, 2)
+    expectedEth = getExpectedFees(localFixture, cash, categoricalDisputeCrowdsourcer, 1)
     with EtherDelta(expectedEth, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
         with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't increase REP correctly"):
             categoricalDisputeCrowdsourcer.redeem(tester.a1)

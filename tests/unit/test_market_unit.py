@@ -103,10 +103,6 @@ def test_contribute(localFixture, initializedMarket, mockNextFeeWindow, mockInit
 
     assert initializedMarket.doInitialReport([initializedMarket.getNumTicks(), 0, 0, 0, 0], False, sender=tester.k1)
 
-    # We can't contribute till the window begins
-    with raises(TransactionFailed, message="can't contribute until the window begins"):
-        initializedMarket.contribute([0, 0, 0, 0, initializedMarket.getNumTicks()], False, 1)
-
     mockNextFeeWindow.setIsActive(True)
     winningPayoutHash = initializedMarket.derivePayoutDistributionHash([initializedMarket.getNumTicks(), 0, 0, 0, 0], False)
     mockInitialReporter.setPayoutDistributionHash(winningPayoutHash)

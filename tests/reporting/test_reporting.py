@@ -139,10 +139,6 @@ def test_roundsOfReporting(rounds, localFixture, market, universe):
     # Do the initial report
     proceedToNextRound(localFixture, market, moveTimeForward = False)
 
-    # We can't contribute to a crowdsourcer now since the new fee window is not yet active
-    with raises(TransactionFailed):
-        market.contribute([0, market.getNumTicks()], False)
-
     # Do the first round outside of the loop and test logging
     crowdsourcerCreatedLog = {
         "universe": universe.address,
@@ -290,7 +286,7 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
     categoricalMarketFeeWindowAddress = categoricalMarket.getFeeWindow()
     categoricalMarketFeeWindow = localFixture.applySignature("FeeWindow", categoricalMarketFeeWindowAddress)
 
-    proceedToNextRound(localFixture, categoricalMarket, moveTimeForward = False)
+    proceedToNextRound(localFixture, categoricalMarket)
 
     # We can also purchase Participation Tokens in this fee window
     assert categoricalMarketFeeWindow.buy(1)

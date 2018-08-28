@@ -2,7 +2,7 @@ pragma solidity 0.4.24;
 
 
 library Reporting {
-    uint256 private constant DESIGNATED_REPORTING_DURATION_SECONDS = 3 days;
+    uint256 private constant DESIGNATED_REPORTING_DURATION_SECONDS = 1 days;
     uint256 private constant DISPUTE_ROUND_DURATION_SECONDS = 7 days;
     uint256 private constant CLAIM_PROCEEDS_WAIT_TIME = 3 days;
     uint256 private constant FORK_DURATION_SECONDS = 60 days;
