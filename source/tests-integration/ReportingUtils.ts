@@ -60,7 +60,6 @@ export class ReportingUtils {
             numOwnedSharesBefore = await fixture.getNumSharesInMarket(market, outcome);
             console.log("numOwnedShares after selling complete set", numOwnedSharesBefore.toString(10));
         } else {
-            const feeWindow = await fixture.getFeeWindow(market);
             // This will also use the InitialReporter which is not a DisputeCrowdsourcer, but has the called function from abstract inheritance
             const winningReport = await fixture.getWinningReportingParticipant(market);
             winningPayoutHash = await winningReport.getPayoutDistributionHash_();
