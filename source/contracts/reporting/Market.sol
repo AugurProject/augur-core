@@ -144,7 +144,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     }
 
     function contribute(uint256[] _payoutNumerators, bool _invalid, uint256 _amount) public returns (bool) {
-        require(feeWindow.isActive());
+        require(getInitialReporter().getReportTimestamp() != 0);
+        require(!feeWindow.isOver());
         require(!universe.isForking());
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
         require(_payoutDistributionHash != getWinningReportingParticipant().getPayoutDistributionHash());
@@ -163,10 +164,13 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         if (IDisputeCrowdsourcer(_reportingParticipant).getSize() >= universe.getDisputeThresholdForFork()) {
             universe.fork();
         } else {
+            IFeeWindow _originalFeeWindow = feeWindow;
             feeWindow = universe.getOrCreateNextFeeWindow();
-            // Participants is implicitly bounded by the floor of the initial report REP cost to be no more than 21
-            for (uint256 i = 0; i < participants.length; i++) {
-                participants[i].migrate();
+            if (feeWindow != _originalFeeWindow) {
+                // Participants is implicitly bounded by the floor of the initial report REP cost to be no more than 21
+                for (uint256 i = 0; i < participants.length; i++) {
+                    participants[i].migrate();
+                }
             }
         }
         controller.getAugur().logDisputeCrowdsourcerCompleted(universe, this, _reportingParticipant);
