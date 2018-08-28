@@ -55,8 +55,6 @@ def finalizeMarket(fixture, market, payoutNumerators, invalid=False):
     fixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     # finalize the market
     assert market.finalize()
-    # set timestamp to 3 days later (waiting period)
-    fixture.contracts["Time"].incrementTimestamp(long(timedelta(days = 3, seconds = 1).total_seconds()))
 
 def test_helpers(kitchenSinkFixture, scalarMarket):
     market = scalarMarket
@@ -227,11 +225,6 @@ def test_reedem_failure(kitchenSinkFixture, cash, market):
         claimTradingProceeds.claimTradingProceeds(market.address, tester.a1)
     # finalize the market
     assert market.finalize()
-    # waiting period not over
-    with raises(TransactionFailed):
-        claimTradingProceeds.claimTradingProceeds(market.address, tester.a1)
 
-    # set timestamp to 3 days later (waiting period)
-    kitchenSinkFixture.contracts["Time"].incrementTimestamp(long(timedelta(days = 3, seconds = 1).total_seconds()))
     # validate that everything else is OK
     assert claimTradingProceeds.claimTradingProceeds(market.address, tester.a1)
