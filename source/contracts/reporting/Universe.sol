@@ -29,6 +29,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     uint256 private forkEndTime;
     uint256 private forkReputationGoal;
     uint256 private disputeThresholdForFork;
+    uint256 private disputeThresholdForDisputePacing;
     uint256 private initialReportMinValue;
     mapping(uint256 => IFeeWindow) private feeWindows;
     mapping(address => bool) private markets;
@@ -65,6 +66,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         forkReputationGoal = _totalRepSupply.div(2); // 50% of REP migrating results in a victory in a fork
         disputeThresholdForFork = _totalRepSupply.div(40); // 2.5% of the total rep supply
         initialReportMinValue = disputeThresholdForFork.div(3).div(2**18).add(1); // This value will result in a maximum 20 round dispute sequence
+        disputeThresholdForDisputePacing = disputeThresholdForFork.div(2**5); // Disputes begin normal pacing once there are 4 rounds remaining. The "last" round is the one that causes a fork and requires no time so the exponent here is 5 to provide for that many rounds actually occuring.
         return true;
     }
 
@@ -98,6 +100,10 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
 
     function getDisputeThresholdForFork() public view returns (uint256) {
         return disputeThresholdForFork;
+    }
+
+    function getDisputeThresholdForDisputePacing() public view returns (uint256) {
+        return disputeThresholdForDisputePacing;
     }
 
     function getInitialReportMinValue() public view returns (uint256) {

@@ -51,6 +51,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     IMailbox private marketCreatorMailbox;
     uint256 private finalizationTime;
     uint256 private noShowBond;
+    bool private disputePacingOn;
 
     // Collections
     IReportingParticipant[] public participants;
@@ -145,7 +146,11 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function contribute(uint256[] _payoutNumerators, bool _invalid, uint256 _amount) public returns (bool) {
         require(getInitialReporter().getReportTimestamp() != 0);
-        require(!feeWindow.isOver());
+        if (disputePacingOn) {
+            require(feeWindow.isActive());
+        } else {
+            require(!feeWindow.isOver());
+        }
         require(!universe.isForking());
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
         require(_payoutDistributionHash != getWinningReportingParticipant().getPayoutDistributionHash());
@@ -161,9 +166,11 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     function finishedCrowdsourcingDisputeBond(IReportingParticipant _reportingParticipant) private returns (bool) {
         participants.push(_reportingParticipant);
         crowdsourcers = MapFactory(controller.lookup("MapFactory")).createMap(controller, this); // disavow other crowdsourcers
-        if (IDisputeCrowdsourcer(_reportingParticipant).getSize() >= universe.getDisputeThresholdForFork()) {
+        uint256 _crowdsourcerSize = IDisputeCrowdsourcer(_reportingParticipant).getSize();
+        if (_crowdsourcerSize >= universe.getDisputeThresholdForFork()) {
             universe.fork();
         } else {
+            disputePacingOn = _crowdsourcerSize >= universe.getDisputeThresholdForDisputePacing();
             IFeeWindow _originalFeeWindow = feeWindow;
             feeWindow = universe.getOrCreateNextFeeWindow();
             if (feeWindow != _originalFeeWindow) {
@@ -455,6 +462,10 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function getValidityBondAttoeth() public view returns (uint256) {
         return validityBondAttoeth;
+    }
+
+    function getDisputePacingOn() public view returns (bool) {
+        return disputePacingOn;
     }
 
     function derivePayoutDistributionHash(uint256[] _payoutNumerators, bool _invalid) public view returns (bytes32) {

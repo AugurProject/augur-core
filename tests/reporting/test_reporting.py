@@ -500,6 +500,20 @@ def test_rep_migration_convenience_function(localFixture, universe, market):
     bonus = 10 / localFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
     assert newReputationToken.balanceOf(tester.a0) == 10 + bonus
 
+def test_dispute_pacing_threshold(localFixture, universe, market):
+    # We'll dispute until we reach the dispute pacing threshold
+    while not market.getDisputePacingOn():
+        proceedToNextRound(localFixture, market, moveTimeForward = False)
+
+    # Now if we try to immediately dispute without the newly assgiend fee window being active the tx will fail
+    with raises(TransactionFailed):
+        market.contribute([market.getNumTicks(), 0], False, 1)
+
+    # If we move time forward to the fee window start we succeed
+    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+    assert localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
+    assert market.contribute([market.getNumTicks(), 0], False, 1)
+
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)
