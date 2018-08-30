@@ -170,7 +170,9 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         if (_crowdsourcerSize >= universe.getDisputeThresholdForFork()) {
             universe.fork();
         } else {
-            disputePacingOn = _crowdsourcerSize >= universe.getDisputeThresholdForDisputePacing();
+            if (_crowdsourcerSize >= universe.getDisputeThresholdForDisputePacing()) {
+                disputePacingOn = true;
+            }
             IFeeWindow _originalFeeWindow = feeWindow;
             feeWindow = universe.getOrCreateNextFeeWindow();
             if (feeWindow != _originalFeeWindow) {
