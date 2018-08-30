@@ -114,19 +114,15 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function doInitialReport(uint256[] _payoutNumerators, bool _invalid) public returns (bool) {
+    function doInitialReport(uint256[] _payoutNumerators, bool _invalid, string _description) public returns (bool) {
         IInitialReporter _initialReporter = getInitialReporter();
         uint256 _timestamp = controller.getTimestamp();
-        require(_initialReporter.getReportTimestamp() == 0);
         require(_timestamp > endTime);
-        bool _isDesignatedReporter = msg.sender == _initialReporter.getDesignatedReporter();
-        bool _designatedReportingExpired = _timestamp > getDesignatedReportingEndTime();
-        require(_designatedReportingExpired || _isDesignatedReporter);
         uint256 _initialReportStake = distributeInitialReportingRep(msg.sender, _initialReporter);
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
         feeWindow = universe.getOrCreateNextFeeWindow();
         _initialReporter.report(msg.sender, _payoutDistributionHash, _payoutNumerators, _invalid, _initialReportStake);
-        controller.getAugur().logInitialReportSubmitted(universe, msg.sender, this, _initialReportStake, _isDesignatedReporter, _payoutNumerators, _invalid);
+        controller.getAugur().logInitialReportSubmitted(universe, msg.sender, this, _initialReportStake, _initialReporter.designatedReporterShowed(), _payoutNumerators, _invalid, _description);
         return true;
     }
 
@@ -144,7 +140,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return _initialReportStake;
     }
 
-    function contribute(uint256[] _payoutNumerators, bool _invalid, uint256 _amount) public returns (bool) {
+    function contribute(uint256[] _payoutNumerators, bool _invalid, uint256 _amount, string _description) public returns (bool) {
         require(getInitialReporter().getReportTimestamp() != 0);
         if (disputePacingOn) {
             require(feeWindow.isActive());
@@ -156,7 +152,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require(_payoutDistributionHash != getWinningReportingParticipant().getPayoutDistributionHash());
         IDisputeCrowdsourcer _crowdsourcer = getOrCreateDisputeCrowdsourcer(_payoutDistributionHash, _payoutNumerators, _invalid);
         uint256 _actualAmount = _crowdsourcer.contribute(msg.sender, _amount);
-        controller.getAugur().logDisputeCrowdsourcerContribution(universe, msg.sender, this, _crowdsourcer, _actualAmount);
+        controller.getAugur().logDisputeCrowdsourcerContribution(universe, msg.sender, this, _crowdsourcer, _actualAmount, _description);
         if (_crowdsourcer.totalSupply() == _crowdsourcer.getSize()) {
             finishedCrowdsourcingDisputeBond(_crowdsourcer);
         }

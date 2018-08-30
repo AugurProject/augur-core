@@ -13,7 +13,7 @@ def proceedToDesignatedReporting(fixture, market):
 def proceedToInitialReporting(fixture, market):
     fixture.contracts["Time"].setTimestamp(market.getDesignatedReportingEndTime() + 1)
 
-def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees = False, moveTimeForward = True, randomPayoutNumerators = False):
+def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees = False, moveTimeForward = True, randomPayoutNumerators = False, description = ""):
     if fixture.contracts["Controller"].getTimestamp() < market.getEndTime():
         fixture.contracts["Time"].setTimestamp(market.getDesignatedReportingEndTime() + 1)
 
@@ -23,7 +23,7 @@ def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees 
     payoutNumerators[0] = market.getNumTicks()
 
     if (feeWindow == longToHexString(0)):
-        market.doInitialReport(payoutNumerators, False)
+        market.doInitialReport(payoutNumerators, False, "")
         assert market.getFeeWindow()
     else:
         feeWindow = fixture.applySignature('FeeWindow', market.getFeeWindow())
@@ -44,7 +44,7 @@ def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees 
         chosenPayoutHash = market.derivePayoutDistributionHash(chosenPayoutNumerators, False)
         amount = 2 * market.getParticipantStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
         with PrintGasUsed(fixture, "Contribute:", 0):
-            market.contribute(chosenPayoutNumerators, False, amount, sender=contributor)
+            market.contribute(chosenPayoutNumerators, False, amount, description, sender=contributor)
         assert market.getForkingMarket() or market.getFeeWindow() != feeWindow
 
     if (doGenerateFees):

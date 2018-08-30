@@ -196,7 +196,7 @@ export class TestFixture {
     }
 
     public async contribute(market: Market, payoutNumerators: Array<BN>, invalid: boolean, amount: BN): Promise<void> {
-        await market.contribute(payoutNumerators, invalid, amount);
+        await market.contribute(payoutNumerators, invalid, amount, "");
         return;
     }
 
@@ -251,7 +251,7 @@ export class TestFixture {
     }
 
     public async doInitialReport(market: Market, payoutNumerators: Array<BN>, invalid: boolean): Promise<void> {
-        await market.doInitialReport(payoutNumerators, invalid);
+        await market.doInitialReport(payoutNumerators, invalid, "");
         return;
     }
 
