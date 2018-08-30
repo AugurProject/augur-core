@@ -27,6 +27,8 @@ def proceedToNextRound(fixture, market, contributor = tester.k0, doGenerateFees 
         assert market.getFeeWindow()
     else:
         feeWindow = fixture.applySignature('FeeWindow', market.getFeeWindow())
+        if market.getDisputePacingOn():
+            fixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
         # This will also use the InitialReporter which is not a DisputeCrowdsourcer, but has the called function from abstract inheritance
         winningReport = fixture.applySignature('DisputeCrowdsourcer', market.getWinningReportingParticipant())
         winningPayoutHash = winningReport.getPayoutDistributionHash()
