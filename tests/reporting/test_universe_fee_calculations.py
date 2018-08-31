@@ -69,7 +69,7 @@ def test_validity_bond_up(contractsFixture, universe, market):
 
     # The DR will admit the market is invalid
     payoutNumerators = [5000, 5000]
-    assert market.doInitialReport(payoutNumerators, True)
+    assert market.doInitialReport(payoutNumerators, True, "")
 
     # Move time forward to finalize the market
     feeWindow = contractsFixture.applySignature('FeeWindow', market.getFeeWindow())
@@ -90,7 +90,7 @@ def test_validity_bond_min(contractsFixture, universe, market):
 
     # The DR will report the market had a normal resolution
     payoutNumerators = [0, 10000]
-    assert market.doInitialReport(payoutNumerators, False)
+    assert market.doInitialReport(payoutNumerators, False, "")
 
     # Move time forward to finalize the market
     feeWindow = contractsFixture.applySignature('FeeWindow', market.getFeeWindow())
@@ -111,13 +111,13 @@ def test_validity_bond_down(contractsFixture, universe, market, scalarMarket, ca
 
     # The DR will admit the market is invalid
     payoutNumerators = [5000, 5000]
-    assert market.doInitialReport(payoutNumerators, True)
+    assert market.doInitialReport(payoutNumerators, True, "")
 
     # Move time forward into the fee window and report on the other market
     feeWindow = contractsFixture.applySignature('FeeWindow', market.getFeeWindow())
     contractsFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
     payoutNumerators = [200000, 200000]
-    assert scalarMarket.doInitialReport(payoutNumerators, False)
+    assert scalarMarket.doInitialReport(payoutNumerators, False, "")
 
     # And then move time forward further and finalize the first market
     contractsFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
@@ -149,7 +149,7 @@ def test_dr_report_stake_up(contractsFixture, universe, market):
     # The DR will report
     numTicks = market.getNumTicks()
     payoutNumerators = [numTicks, 0]
-    assert market.doInitialReport(payoutNumerators, False)
+    assert market.doInitialReport(payoutNumerators, False, "")
 
     # Proceed to the next round so we can dispute the DR
     feeWindow = contractsFixture.applySignature('FeeWindow', market.getFeeWindow())
@@ -157,7 +157,7 @@ def test_dr_report_stake_up(contractsFixture, universe, market):
     payoutNumerators = [0, numTicks]
     chosenPayoutHash = market.derivePayoutDistributionHash(payoutNumerators, False)
     amount = 2 * market.getParticipantStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
-    assert market.contribute(payoutNumerators, False, amount)
+    assert market.contribute(payoutNumerators, False, amount, "")
 
     # Move time forward to finalize the market
     feeWindow = contractsFixture.applySignature('FeeWindow', market.getFeeWindow())
@@ -179,7 +179,7 @@ def test_dr_report_stake_min(contractsFixture, universe, market):
     # The DR will report
     numTicks = market.getNumTicks()
     payoutNumerators = [numTicks, 0]
-    assert market.doInitialReport(payoutNumerators, False)
+    assert market.doInitialReport(payoutNumerators, False, "")
 
     # Move time forward to finalize the market
     feeWindow = contractsFixture.applySignature('FeeWindow', market.getFeeWindow())
@@ -201,7 +201,7 @@ def test_dr_report_stake_down(contractsFixture, universe, market, cash):
     # The DR will report
     numTicks = market.getNumTicks()
     payoutNumerators = [numTicks, 0]
-    assert market.doInitialReport(payoutNumerators, False)
+    assert market.doInitialReport(payoutNumerators, False, "")
 
     # Proceed to the next round so we can dispute the DR
     feeWindow = contractsFixture.applySignature('FeeWindow', market.getFeeWindow())
@@ -209,7 +209,7 @@ def test_dr_report_stake_down(contractsFixture, universe, market, cash):
     payoutNumerators = [0, numTicks]
     chosenPayoutHash = market.derivePayoutDistributionHash(payoutNumerators, False)
     amount = 2 * market.getParticipantStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
-    assert market.contribute(payoutNumerators, False, amount)
+    assert market.contribute(payoutNumerators, False, amount, "")
 
     # Move time forward to finalize the market
     feeWindow = contractsFixture.applySignature('FeeWindow', market.getFeeWindow())
@@ -236,7 +236,7 @@ def test_no_show_bond_up(contractsFixture, universe, market):
     # The DR will be absent and we'll do an initial report as another user
     numTicks = market.getNumTicks()
     payoutNumerators = [numTicks, 0]
-    assert market.doInitialReport(payoutNumerators, False, sender=tester.k1)
+    assert market.doInitialReport(payoutNumerators, False, "", sender=tester.k1)
 
     # Move time forward to finalize the market
     feeWindow = contractsFixture.applySignature('FeeWindow', market.getFeeWindow())
@@ -258,7 +258,7 @@ def test_no_show_bond_min(contractsFixture, universe, market):
     # The DR will show up
     numTicks = market.getNumTicks()
     payoutNumerators = [numTicks, 0]
-    assert market.doInitialReport(payoutNumerators, False)
+    assert market.doInitialReport(payoutNumerators, False, "")
 
     # Move time forward to finalize the market
     feeWindow = contractsFixture.applySignature('FeeWindow', market.getFeeWindow())
@@ -280,7 +280,7 @@ def test_no_show_bond_down(contractsFixture, universe, market, cash):
     # The DR will be absent and we'll do an initial report as another user
     numTicks = market.getNumTicks()
     payoutNumerators = [numTicks, 0]
-    assert market.doInitialReport(payoutNumerators, False, sender=tester.k1)
+    assert market.doInitialReport(payoutNumerators, False, "", sender=tester.k1)
 
     # Move time forward to finalize the market
     feeWindow = contractsFixture.applySignature('FeeWindow', market.getFeeWindow())

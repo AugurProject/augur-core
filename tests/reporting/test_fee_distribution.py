@@ -106,13 +106,13 @@ def test_failed_crowdsourcer_fees(finalize, localFixture, universe, market, cash
     amount = market.getParticipantStake()
 
     # confirm we can contribute 0
-    assert market.contribute([1, market.getNumTicks()-1], False, 0, sender=tester.k1)
+    assert market.contribute([1, market.getNumTicks()-1], False, 0, "", sender=tester.k1)
 
     with TokenDelta(reputationToken, -amount + 1, tester.a1, "Disputing did not reduce REP balance correctly"):
-        assert market.contribute([1, market.getNumTicks()-1], False, amount - 1, sender=tester.k1)
+        assert market.contribute([1, market.getNumTicks()-1], False, amount - 1, "", sender=tester.k1)
 
     with TokenDelta(reputationToken, -amount + 1, tester.a2, "Disputing did not reduce REP balance correctly"):
-        assert market.contribute([1, market.getNumTicks()-1], False, amount - 1, sender=tester.k2)
+        assert market.contribute([1, market.getNumTicks()-1], False, amount - 1, "", sender=tester.k2)
 
     assert market.getFeeWindow() == feeWindow.address
 
@@ -129,7 +129,7 @@ def test_failed_crowdsourcer_fees(finalize, localFixture, universe, market, cash
         expectedTotalFees = getExpectedFees(localFixture, cash, failedCrowdsourcer, 1)
     else:
         # Continue to the next round which will disavow failed crowdsourcers and let us redeem once the window is over
-        market.contribute([0, market.getNumTicks()], False, amount * 2)
+        market.contribute([0, market.getNumTicks()], False, amount * 2, "")
         assert market.getFeeWindow() != feeWindow.address
         localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
         expectedTotalFees = getExpectedFees(localFixture, cash, failedCrowdsourcer, 1)
@@ -155,7 +155,7 @@ def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reput
     # We'll have testers push markets into the next round by funding dispute crowdsourcers
     amount = 2 * market.getParticipantStake()
     with TokenDelta(reputationToken, -amount, tester.a1, "Disputing did not reduce REP balance correctly"):
-        assert market.contribute([0, market.getNumTicks()], False, amount, sender=tester.k1)
+        assert market.contribute([0, market.getNumTicks()], False, amount, "", sender=tester.k1)
 
     newFeeWindowAddress = market.getFeeWindow()
     assert newFeeWindowAddress != feeWindow.address
@@ -277,9 +277,9 @@ def test_multiple_contributors_crowdsourcer_fees(localFixture, universe, market,
     # We'll have testers push markets into the next round by funding dispute crowdsourcers
     amount = market.getParticipantStake()
     with TokenDelta(reputationToken, -amount, tester.a1, "Disputing did not reduce REP balance correctly"):
-        assert market.contribute([0, market.getNumTicks()], False, amount, sender=tester.k1)
+        assert market.contribute([0, market.getNumTicks()], False, amount, "", sender=tester.k1)
     with TokenDelta(reputationToken, -amount, tester.a2, "Disputing did not reduce REP balance correctly"):
-        assert market.contribute([0, market.getNumTicks()], False, amount, sender=tester.k2)
+        assert market.contribute([0, market.getNumTicks()], False, amount, "", sender=tester.k2)
 
     newFeeWindowAddress = market.getFeeWindow()
     assert newFeeWindowAddress != feeWindow.address
@@ -376,9 +376,9 @@ def localSnapshot(fixture, kitchenSinkSnapshot):
     # Designated Report on the markets
     designatedReportCost = universe.getOrCacheDesignatedReportStake()
     with TokenDelta(reputationToken, 0, tester.a0, "Doing the designated report didn't deduct REP correctly or didn't award the no show bond"):
-        market.doInitialReport([market.getNumTicks(), 0], False)
-        categoricalMarket.doInitialReport([categoricalMarket.getNumTicks(), 0, 0], False)
-        scalarMarket.doInitialReport([scalarMarket.getNumTicks(), 0], False)
+        market.doInitialReport([market.getNumTicks(), 0], False, "")
+        categoricalMarket.doInitialReport([categoricalMarket.getNumTicks(), 0, 0], False, "")
+        scalarMarket.doInitialReport([scalarMarket.getNumTicks(), 0], False, "")
 
     return fixture.createSnapshot()
 

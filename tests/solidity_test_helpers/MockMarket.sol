@@ -277,6 +277,10 @@ contract MockMarket is IMarket {
         return designatedReporter;
     }
 
+    function getDesignatedReportingEndTime() public view returns (uint256) {
+        0;
+    }
+
     function getMarketCreatorSettlementFeeDivisor() public view returns (uint256) {
         return marketCreatorSettlementFeeDivisor;
     }

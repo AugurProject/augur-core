@@ -12,11 +12,11 @@ def test_designatedReportHappyPath(localFixture, universe, market):
 
     # an address that is not the designated reporter cannot report
     with raises(TransactionFailed):
-        market.doInitialReport([0, market.getNumTicks()], False, sender=tester.k1)
+        market.doInitialReport([0, market.getNumTicks()], False, "", sender=tester.k1)
 
     # Reporting with an invalid number of outcomes should fail
     with raises(TransactionFailed):
-        market.doInitialReport([0, 0, market.getNumTicks()], False)
+        market.doInitialReport([0, 0, market.getNumTicks()], False, "")
 
     # do an initial report as the designated reporter
     initialReportLog = {
@@ -26,13 +26,14 @@ def test_designatedReportHappyPath(localFixture, universe, market):
         "amountStaked": universe.getInitialReportMinValue(),
         "isDesignatedReporter": True,
         "payoutNumerators": [0, market.getNumTicks()],
-        "invalid": False
+        "invalid": False,
+        "description": "Obviously I'm right",
     }
     with AssertLog(localFixture, "InitialReportSubmitted", initialReportLog):
-        assert market.doInitialReport([0, market.getNumTicks()], False)
+        assert market.doInitialReport([0, market.getNumTicks()], False, "Obviously I'm right")
 
     with raises(TransactionFailed, message="Cannot initial report twice"):
-        assert market.doInitialReport([0, market.getNumTicks()], False)
+        assert market.doInitialReport([0, market.getNumTicks()], False, "Obviously I'm right")
 
     # the market is now assigned a fee window
     newFeeWindowAddress = market.getFeeWindow()
@@ -61,7 +62,7 @@ def test_initialReportHappyPath(reportByDesignatedReporter, localFixture, univer
 
     # do an initial report as someone other than the designated reporter
     sender = tester.k0 if reportByDesignatedReporter else tester.k1
-    assert market.doInitialReport([0, market.getNumTicks()], False, sender=sender)
+    assert market.doInitialReport([0, market.getNumTicks()], False, "", sender=sender)
 
     # the market is now assigned a fee window
     newFeeWindowAddress = market.getFeeWindow()
@@ -79,7 +80,7 @@ def test_initialReport_methods(localFixture, universe, market, cash, constants):
     proceedToInitialReporting(localFixture, market)
 
     # do an initial report as someone other than the designated reporter
-    assert market.doInitialReport([0, market.getNumTicks()], False, sender=tester.k1)
+    assert market.doInitialReport([0, market.getNumTicks()], False, "", sender=tester.k1)
 
     # the market is now assigned a fee window
     newFeeWindowAddress = market.getFeeWindow()
@@ -152,7 +153,8 @@ def test_roundsOfReporting(rounds, localFixture, market, universe):
         "universe": universe.address,
         "reporter": bytesToHexString(tester.a0),
         "market": market.address,
-        "amountStaked": universe.getInitialReportMinValue() * 2
+        "amountStaked": universe.getInitialReportMinValue() * 2,
+        "description": "Clearly incorrect",
     }
 
     crowdsourcerCompletedLog = {
@@ -163,7 +165,7 @@ def test_roundsOfReporting(rounds, localFixture, market, universe):
     with AssertLog(localFixture, "DisputeCrowdsourcerCreated", crowdsourcerCreatedLog):
         with AssertLog(localFixture, "DisputeCrowdsourcerContribution", crowdsourcerContributionLog):
             with AssertLog(localFixture, "DisputeCrowdsourcerCompleted", crowdsourcerCompletedLog):
-                proceedToNextRound(localFixture, market)
+                proceedToNextRound(localFixture, market, description="Clearly incorrect")
 
     # proceed through several rounds of disputing
     for i in range(rounds - 2):
@@ -227,7 +229,7 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
 
     # We cannot contribute to a crowdsourcer during a fork
     with raises(TransactionFailed):
-        categoricalMarket.contribute([2,2,categoricalMarket.getNumTicks()-4], False, 1)
+        categoricalMarket.contribute([2,2,categoricalMarket.getNumTicks()-4], False, 1, "")
 
     # We cannot purchase new Participation Tokens during a fork
     feeWindowAddress = universe.getCurrentFeeWindow()
@@ -245,7 +247,7 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
 
     # We cannot contribute to a crowdsourcer in a forked universe
     with raises(TransactionFailed):
-        categoricalMarket.contribute([2,2,categoricalMarket.getNumTicks()-4], False, 1)
+        categoricalMarket.contribute([2,2,categoricalMarket.getNumTicks()-4], False, 1, "")
 
     # The categorical market can be migrated to the winning universe
     newUniverseAddress = universe.getWinningChildUniverse()
@@ -428,16 +430,16 @@ def test_fee_window_record_keeping(localFixture, universe, cash, market, categor
     proceedToDesignatedReporting(localFixture, market)
 
     # Do a report that we'll make incorrect
-    assert market.doInitialReport([0, market.getNumTicks()], False)
+    assert market.doInitialReport([0, market.getNumTicks()], False, "")
 
     # Do a report for a market we'll say is invalid
-    assert categoricalMarket.doInitialReport([0, 0, categoricalMarket.getNumTicks()], False)
+    assert categoricalMarket.doInitialReport([0, 0, categoricalMarket.getNumTicks()], False, "")
 
     # Designated reporter doesn't show up for the third market. Go into initial reporting and do a report by someone else
     reputationToken = localFixture.applySignature('ReputationToken', universe.getReputationToken())
     reputationToken.transfer(tester.a1, 10**6 * 10**18)
     proceedToInitialReporting(localFixture, scalarMarket)
-    assert scalarMarket.doInitialReport([0, scalarMarket.getNumTicks()], False, sender=tester.k1)
+    assert scalarMarket.doInitialReport([0, scalarMarket.getNumTicks()], False, "", sender=tester.k1)
 
     # proceed to the window start time
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
@@ -447,7 +449,7 @@ def test_fee_window_record_keeping(localFixture, universe, cash, market, categor
     chosenPayoutNumerators = [market.getNumTicks(), 0]
     chosenPayoutHash = market.derivePayoutDistributionHash(chosenPayoutNumerators, False)
     amount = 2 * market.getParticipantStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
-    assert market.contribute(chosenPayoutNumerators, False, amount)
+    assert market.contribute(chosenPayoutNumerators, False, amount, "")
     newFeeWindowAddress = market.getFeeWindow()
     assert newFeeWindowAddress != feeWindow
 
@@ -455,7 +457,7 @@ def test_fee_window_record_keeping(localFixture, universe, cash, market, categor
     chosenPayoutNumerators = [categoricalMarket.getNumTicks() / 3, categoricalMarket.getNumTicks() / 3, categoricalMarket.getNumTicks() / 3]
     chosenPayoutHash = categoricalMarket.derivePayoutDistributionHash(chosenPayoutNumerators, True)
     amount = 2 * categoricalMarket.getParticipantStake() - 3 * categoricalMarket.getStakeInOutcome(chosenPayoutHash)
-    assert categoricalMarket.contribute(chosenPayoutNumerators, True, amount)
+    assert categoricalMarket.contribute(chosenPayoutNumerators, True, amount, "")
     assert categoricalMarket.getFeeWindow() != feeWindow
 
     # progress time forward
@@ -507,12 +509,12 @@ def test_dispute_pacing_threshold(localFixture, universe, market):
 
     # Now if we try to immediately dispute without the newly assgiend fee window being active the tx will fail
     with raises(TransactionFailed):
-        market.contribute([market.getNumTicks(), 0], False, 1)
+        market.contribute([market.getNumTicks(), 0], False, 1, "")
 
     # If we move time forward to the fee window start we succeed
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
     assert localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
-    assert market.contribute([market.getNumTicks(), 0], False, 1)
+    assert market.contribute([market.getNumTicks(), 0], False, 1, "")
 
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
