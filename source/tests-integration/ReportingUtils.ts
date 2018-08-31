@@ -34,7 +34,7 @@ export class ReportingUtils {
 
         let winningPayoutHash = "";
         if (feeWindowAddress === ZERO_ADDRESS) {
-            await market.doInitialReport(payoutNumerators, false);
+            await market.doInitialReport(payoutNumerators, false, "");
             expect(await market.getFeeWindow_() === ZERO_ADDRESS).to.be.false;
             console.log("Submitted initial report");
 

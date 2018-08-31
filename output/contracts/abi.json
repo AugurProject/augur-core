@@ -513,23 +513,15 @@
 					"type": "address"
 				},
 				{
-					"name": "_reporter",
+					"name": "_target",
 					"type": "address"
 				},
 				{
-					"name": "_market",
-					"type": "address"
-				},
-				{
-					"name": "_disputeCrowdsourcer",
-					"type": "address"
-				},
-				{
-					"name": "_amountStaked",
+					"name": "_amount",
 					"type": "uint256"
 				}
 			],
-			"name": "logDisputeCrowdsourcerContribution",
+			"name": "logFeeWindowBurned",
 			"outputs": [
 				{
 					"name": "",
@@ -548,15 +540,27 @@
 					"type": "address"
 				},
 				{
-					"name": "_target",
+					"name": "_reporter",
 					"type": "address"
 				},
 				{
-					"name": "_amount",
+					"name": "_market",
+					"type": "address"
+				},
+				{
+					"name": "_disputeCrowdsourcer",
+					"type": "address"
+				},
+				{
+					"name": "_amountStaked",
 					"type": "uint256"
+				},
+				{
+					"name": "_description",
+					"type": "string"
 				}
 			],
-			"name": "logFeeWindowBurned",
+			"name": "logDisputeCrowdsourcerContribution",
 			"outputs": [
 				{
 					"name": "",
@@ -670,49 +674,6 @@
 				}
 			],
 			"name": "logOrderCanceled",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_universe",
-					"type": "address"
-				},
-				{
-					"name": "_reporter",
-					"type": "address"
-				},
-				{
-					"name": "_market",
-					"type": "address"
-				},
-				{
-					"name": "_amountStaked",
-					"type": "uint256"
-				},
-				{
-					"name": "_isDesignatedReporter",
-					"type": "bool"
-				},
-				{
-					"name": "_payoutNumerators",
-					"type": "uint256[]"
-				},
-				{
-					"name": "_invalid",
-					"type": "bool"
-				}
-			],
-			"name": "logInitialReportSubmitted",
 			"outputs": [
 				{
 					"name": "",
@@ -1052,6 +1013,53 @@
 				}
 			],
 			"name": "logFeeTokenBurned",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_universe",
+					"type": "address"
+				},
+				{
+					"name": "_reporter",
+					"type": "address"
+				},
+				{
+					"name": "_market",
+					"type": "address"
+				},
+				{
+					"name": "_amountStaked",
+					"type": "uint256"
+				},
+				{
+					"name": "_isDesignatedReporter",
+					"type": "bool"
+				},
+				{
+					"name": "_payoutNumerators",
+					"type": "uint256[]"
+				},
+				{
+					"name": "_invalid",
+					"type": "bool"
+				},
+				{
+					"name": "_description",
+					"type": "string"
+				}
+			],
+			"name": "logInitialReportSubmitted",
 			"outputs": [
 				{
 					"name": "",
@@ -1548,6 +1556,11 @@
 					"indexed": false,
 					"name": "invalid",
 					"type": "bool"
+				},
+				{
+					"indexed": false,
+					"name": "description",
+					"type": "string"
 				}
 			],
 			"name": "InitialReportSubmitted",
@@ -1617,6 +1630,11 @@
 					"indexed": false,
 					"name": "amountStaked",
 					"type": "uint256"
+				},
+				{
+					"indexed": false,
+					"name": "description",
+					"type": "string"
 				}
 			],
 			"name": "DisputeCrowdsourcerContribution",
@@ -7477,29 +7495,6 @@
 			"type": "function"
 		},
 		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_payoutNumerators",
-					"type": "uint256[]"
-				},
-				{
-					"name": "_invalid",
-					"type": "bool"
-				}
-			],
-			"name": "doInitialReport",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
 			"constant": true,
 			"inputs": [],
 			"name": "getInitialReporter",
@@ -7595,6 +7590,37 @@
 			],
 			"payable": false,
 			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_payoutNumerators",
+					"type": "uint256[]"
+				},
+				{
+					"name": "_invalid",
+					"type": "bool"
+				},
+				{
+					"name": "_amount",
+					"type": "uint256"
+				},
+				{
+					"name": "_description",
+					"type": "string"
+				}
+			],
+			"name": "contribute",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
 			"type": "function"
 		},
 		{
@@ -7750,33 +7776,6 @@
 			],
 			"payable": false,
 			"stateMutability": "view",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_payoutNumerators",
-					"type": "uint256[]"
-				},
-				{
-					"name": "_invalid",
-					"type": "bool"
-				},
-				{
-					"name": "_amount",
-					"type": "uint256"
-				}
-			],
-			"name": "contribute",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
 			"type": "function"
 		},
 		{
@@ -8138,6 +8137,33 @@
 			],
 			"payable": false,
 			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_payoutNumerators",
+					"type": "uint256[]"
+				},
+				{
+					"name": "_invalid",
+					"type": "bool"
+				},
+				{
+					"name": "_description",
+					"type": "string"
+				}
+			],
+			"name": "doInitialReport",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
 			"type": "function"
 		},
 		{
