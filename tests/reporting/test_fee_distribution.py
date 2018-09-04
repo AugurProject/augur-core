@@ -351,7 +351,6 @@ def test_forkAndRedeem(localFixture, universe, market, categoricalMarket, cash, 
         key = localFixture.testerKey[i % 4]
         reportingParticipant = localFixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(i))
         expectedRep = reportingParticipant.getStake()
-        expectedRep += expectedRep / localFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
         expectedRep += reportingParticipant.getStake() / 2
         repToken = noUniverseReputationToken if i % 2 == 0 else yesUniverseReputationToken
         with TokenDelta(repToken, expectedRep, account, "Redeeming didn't increase REP correctly for " + str(i)):
