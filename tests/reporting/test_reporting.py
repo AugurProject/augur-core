@@ -1,3 +1,4 @@
+from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.tools.tester import ABIContract, TransactionFailed
 from pytest import fixture, mark, raises
@@ -343,6 +344,25 @@ def test_finalized_fork_migration(localFixture, universe, market, categoricalMar
     with raises(TransactionFailed):
         market.disavowCrowdsourcers()
 
+def test_fork_migration_no_report(localFixture, universe, market, cash):
+    # Create a market before the fork occurs which has an end date past the forking window
+    endTime = long(localFixture.contracts["Time"].getTimestamp() + timedelta(days=365).total_seconds())
+    longMarket = localFixture.createYesNoMarket(universe, endTime, 1, cash, tester.a0)
+
+    # Proceed to Forking for the yesNo market
+    proceedToFork(localFixture, market, universe)
+
+    # Now finalize the fork so migration can occur
+    finalizeFork(localFixture, market, universe)
+
+    # Now when we migrate the market through the fork we'll place a new bond in the winning universe's REP
+    oldReputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
+    oldBalance = oldReputationToken.balanceOf(longMarket.address)
+    newUniverse = localFixture.applySignature("Universe", universe.getChildUniverse(market.getWinningPayoutDistributionHash()))
+    newReputationToken = localFixture.applySignature("ReputationToken", newUniverse.getReputationToken())
+    with TokenDelta(oldReputationToken, 0, longMarket.address, "Migrating didn't disavow old no show bond"):
+        with TokenDelta(newReputationToken, oldBalance, longMarket.address, "Migrating didn't place new no show bond"):
+            assert longMarket.migrateThroughOneFork([], False, "")
 
 def test_forking_values(localFixture, universe, market, cash):
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())

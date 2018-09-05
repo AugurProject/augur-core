@@ -310,9 +310,11 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         // Pay the No Show REP bond
         noShowBond = universe.getOrCacheDesignatedReportStake();
         noShowBondOwner = msg.sender;
+        getReputationToken().trustedMarketTransfer(noShowBondOwner, this, noShowBond);
+
+        // Update the Initial Reporter
         IInitialReporter _initialReporter = getInitialReporter();
         _initialReporter.migrateToNewUniverse(msg.sender);
-        getReputationToken().trustedMarketTransfer(noShowBondOwner, this, noShowBond);
 
         // If the market is past expiration use the reporting data to make an initial report
         uint256 _timestamp = controller.getTimestamp();
