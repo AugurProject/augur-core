@@ -59,24 +59,17 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         return true;
     }
 
-    function resetReportTimestamp() public returns (bool) {
+    function returnRepFromDisavow() public returns (bool) {
         require(IMarket(msg.sender) == market);
-        if (reportTimestamp == 0) {
-            return;
-        }
-        reportTimestamp = controller.getTimestamp();
+        require(reputationToken.transfer(owner, reputationToken.balanceOf(this)));
+        reportTimestamp = 0;
         return true;
     }
 
-    function migrateREP() public returns (bool) {
+    function migrateToNewUniverse(address _designatedReporter) public returns (bool) {
         require(IMarket(msg.sender) == market);
-        IUniverse _newUniverse = market.getUniverse();
-        IReputationToken _newReputationToken = _newUniverse.getReputationToken();
-        uint256 _balance = reputationToken.balanceOf(this);
-        if (_balance > 0) {
-            reputationToken.migrateOut(_newReputationToken, _balance);
-        }
-        reputationToken = _newReputationToken;
+        designatedReporter = _designatedReporter;
+        reputationToken = market.getUniverse().getReputationToken();
         return true;
     }
 

@@ -116,10 +116,10 @@ def test_initialReport_methods(localFixture, universe, market, cash, constants):
         initialReporter.report(tester.a0, "", [], False)
 
     with raises(TransactionFailed):
-        initialReporter.resetReportTimestamp()
+        initialReporter.returnRepFromDisavow()
 
     with raises(TransactionFailed):
-        initialReporter.migrateREP()
+        initialReporter.migrateToNewUniverse(tester.a0)
 
     # When we redeem the initialReporter it goes to the correct party as well
     expectedRep = initialReporter.getStake()
@@ -192,7 +192,7 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
         universe.fork()
 
     with raises(TransactionFailed, message="We cannot migrate until the fork is finalized"):
-        categoricalMarket.migrateThroughOneFork()
+        categoricalMarket.migrateThroughOneFork([0,0,categoricalMarket.getNumTicks()], False, "")
 
     with raises(TransactionFailed, message="We cannot create markets during a fork"):
         time = localFixture.contracts["Time"].getTimestamp()
@@ -249,12 +249,6 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
     with raises(TransactionFailed):
         categoricalMarket.contribute([2,2,categoricalMarket.getNumTicks()-4], False, 1, "")
 
-    # The categorical market can be migrated to the winning universe if the fork period isn't over
-    if not finalizeByMigration:
-        with raises(TransactionFailed):
-            categoricalMarket.migrateThroughOneFork()
-        return
-
     newUniverseAddress = universe.getWinningChildUniverse()
 
     # buy some complete sets to change OI
@@ -270,7 +264,7 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
         "originalUniverse": universe.address,
     }
     with AssertLog(localFixture, "MarketMigrated", marketMigratedLog):
-        assert categoricalMarket.migrateThroughOneFork()
+        assert categoricalMarket.migrateThroughOneFork([0,0,categoricalMarket.getNumTicks()], False, "")
 
     assert universe.getOpenInterestInAttoEth() == 0
 
@@ -305,13 +299,14 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
 
     assert categoricalMarket.finalize()
 
-    # We can migrate a market that has not had its initial reporting completed as well, and confirm its REP no show bond is in the new universe REP
+    # We can migrate a market that has not had its initial reporting completed as well, and confirm that the report is now made in the new universe
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
     previousREPBalance = reputationToken.balanceOf(scalarMarket.address)
     assert previousREPBalance > 0
-    assert scalarMarket.migrateThroughOneFork()
+    assert scalarMarket.migrateThroughOneFork([0,scalarMarket.getNumTicks()], False, "")
     newUniverseREP = localFixture.applySignature("ReputationToken", newUniverse.getReputationToken())
-    assert newUniverseREP.balanceOf(scalarMarket.address) == previousREPBalance
+    initialReporter = localFixture.applySignature('InitialReporter', scalarMarket.getInitialReporter())
+    assert newUniverseREP.balanceOf(initialReporter.address) == previousREPBalance
 
     # We can finalize this market as well
     proceedToNextRound(localFixture, scalarMarket)
@@ -335,7 +330,7 @@ def test_finalized_fork_migration(localFixture, universe, market, categoricalMar
 
     # The categorical market is finalized and cannot be migrated to the new universe
     with raises(TransactionFailed):
-        categoricalMarket.migrateThroughOneFork()
+        categoricalMarket.migrateThroughOneFork([0,0,categoricalMarket.getNumTicks()], False, "")
 
     # We also can't disavow the crowdsourcers for this market
     with raises(TransactionFailed):
@@ -343,7 +338,7 @@ def test_finalized_fork_migration(localFixture, universe, market, categoricalMar
 
     # The forking market may not migrate or disavow crowdsourcers either
     with raises(TransactionFailed):
-        market.migrateThroughOneFork()
+        market.migrateThroughOneFork([0,market.getNumTicks()], False, "")
 
     with raises(TransactionFailed):
         market.disavowCrowdsourcers()

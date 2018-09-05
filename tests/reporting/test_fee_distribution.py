@@ -329,7 +329,7 @@ def test_forkAndRedeem(localFixture, universe, market, categoricalMarket, cash, 
     categoricalDisputeCrowdsourcer = localFixture.applySignature("DisputeCrowdsourcer", categoricalMarket.getReportingParticipant(1))
 
     # Migrate the categorical market into the winning universe. This will disavow the dispute crowdsourcer on it, letting us redeem for original universe rep and eth
-    assert categoricalMarket.migrateThroughOneFork()
+    assert categoricalMarket.migrateThroughOneFork([0,0,categoricalMarket.getNumTicks()], False, "")
 
     expectedRep = categoricalDisputeCrowdsourcer.getStake()
     expectedEth = getExpectedFees(localFixture, cash, categoricalDisputeCrowdsourcer, 1)

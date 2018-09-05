@@ -52,6 +52,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     uint256 private finalizationTime;
     uint256 private noShowBond;
     bool private disputePacingOn;
+    address private noShowBondOwner;
 
     // Collections
     IReportingParticipant[] public participants;
@@ -69,6 +70,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         universe = _universe;
         require(!universe.isForking());
         owner = _creator;
+        noShowBondOwner = owner;
         assessFees();
         endTime = _endTime;
         numOutcomes = _numOutcomes;
@@ -115,23 +117,29 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     }
 
     function doInitialReport(uint256[] _payoutNumerators, bool _invalid, string _description) public returns (bool) {
+        doInitialReportInternal(msg.sender, _payoutNumerators, _invalid, _description);
+        return true;
+    }
+
+    function doInitialReportInternal(address _reporter, uint256[] _payoutNumerators, bool _invalid, string _description) public returns (bool) {
+        require(!universe.isForking());
         IInitialReporter _initialReporter = getInitialReporter();
         uint256 _timestamp = controller.getTimestamp();
         require(_timestamp > endTime);
-        uint256 _initialReportStake = distributeInitialReportingRep(msg.sender, _initialReporter);
+        uint256 _initialReportStake = distributeInitialReportingRep(_reporter, _initialReporter);
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
         feeWindow = universe.getOrCreateNextFeeWindow();
-        _initialReporter.report(msg.sender, _payoutDistributionHash, _payoutNumerators, _invalid, _initialReportStake);
-        controller.getAugur().logInitialReportSubmitted(universe, msg.sender, this, _initialReportStake, _initialReporter.designatedReporterShowed(), _payoutNumerators, _invalid, _description);
+        _initialReporter.report(_reporter, _payoutDistributionHash, _payoutNumerators, _invalid, _initialReportStake);
+        controller.getAugur().logInitialReportSubmitted(universe, _reporter, this, _initialReportStake, _initialReporter.designatedReporterShowed(), _payoutNumerators, _invalid, _description);
         return true;
     }
 
     function distributeInitialReportingRep(address _reporter, IInitialReporter _initialReporter) private returns (uint256) {
         IReputationToken _reputationToken = getReputationToken();
         uint256 _initialReportStake = noShowBond;
-        // If the designated reporter showed up return the no show bond to the market creator. Otherwise it will be used as stake in the first report.
+        // If the designated reporter showed up return the no show bond to the bond owner. Otherwise it will be used as stake in the first report.
         if (_reporter == _initialReporter.getDesignatedReporter()) {
-            require(_reputationToken.transfer(owner, _initialReportStake));
+            require(_reputationToken.transfer(noShowBondOwner, _initialReportStake));
             _initialReportStake = universe.getOrCacheDesignatedReportStake();
             _reputationToken.trustedMarketTransfer(_reporter, _initialReporter, _initialReportStake);
         } else {
@@ -273,11 +281,13 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return _crowdsourcer;
     }
 
-    function migrateThroughOneFork() public returns (bool) {
+    function migrateThroughOneFork(uint256[] _payoutNumerators, bool _invalid, string _description) public returns (bool) {
         // only proceed if the forking market is finalized
         IMarket _forkingMarket = universe.getForkingMarket();
         require(_forkingMarket.isFinalized());
         require(!isFinalized());
+
+        disavowCrowdsourcers();
 
         IUniverse _currentUniverse = universe;
         bytes32 _winningForkPayoutDistributionHash = _forkingMarket.getWinningPayoutDistributionHash();
@@ -293,28 +303,23 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         }
         _destinationUniverse.addMarketTo();
         _currentUniverse.removeMarketFrom();
-        IReputationToken _oldReputationToken = getReputationToken();
         universe = _destinationUniverse;
 
         universe.incrementOpenInterestFromMarket(_marketOI);
 
-        // reset state back to Initial Reporter
-        IInitialReporter _initialParticipant = getInitialReporter();
+        // Pay the No Show REP bond
+        noShowBond = universe.getOrCacheDesignatedReportStake();
+        noShowBondOwner = msg.sender;
+        IInitialReporter _initialReporter = getInitialReporter();
+        _initialReporter.migrateToNewUniverse(msg.sender);
+        getReputationToken().trustedMarketTransfer(noShowBondOwner, this, noShowBond);
 
-        delete participants;
-        participants.push(_initialParticipant);
-        _initialParticipant.resetReportTimestamp();
-
-        // Migrate REP
-        _initialParticipant.migrateREP();
-        IReputationToken _newReputationToken = getReputationToken();
-        uint256 _balance = _oldReputationToken.balanceOf(this);
-        if (_balance > 0) {
-            _oldReputationToken.migrateOut(_newReputationToken, _balance);
+        // If the market is past expiration use the reporting data to make an initial report
+        uint256 _timestamp = controller.getTimestamp();
+        if (_timestamp > endTime) {
+            doInitialReportInternal(msg.sender, _payoutNumerators, _invalid, _description);
         }
 
-        // Disavow crowdsourcers
-        crowdsourcers = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
         return true;
     }
 
@@ -324,8 +329,21 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require(_forkingMarket != this);
         require(!isFinalized());
         IInitialReporter _initialParticipant = getInitialReporter();
+        // Early out if already disavowed or nothing to disavow
+        if (_initialParticipant.getReportTimestamp() == 0) {
+            return true;
+        }
         delete participants;
         participants.push(_initialParticipant);
+        // Send REP from the no show bond back to the address that placed it. If a report has been made tell the InitialReporter to return that REP and reset
+        IReputationToken _reputationToken = getReputationToken();
+        uint256 _balance = _reputationToken.balanceOf(this);
+        if (_balance > 0) {
+            require(_reputationToken.transfer(noShowBondOwner, _balance));
+            noShowBond = 0;
+        } else {
+            _initialParticipant.returnRepFromDisavow();
+        }
         crowdsourcers = MapFactory(controller.lookup("MapFactory")).createMap(controller, this);
         controller.getAugur().logMarketParticipantsDisavowed(universe);
         return true;
