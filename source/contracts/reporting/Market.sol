@@ -145,6 +145,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         } else {
             require(_reputationToken.transfer(_initialReporter, _initialReportStake));
         }
+        noShowBond = 0;
         return _initialReportStake;
     }
 
@@ -339,9 +340,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         participants.push(_initialParticipant);
         // Send REP from the no show bond back to the address that placed it. If a report has been made tell the InitialReporter to return that REP and reset
         IReputationToken _reputationToken = getReputationToken();
-        uint256 _balance = _reputationToken.balanceOf(this);
-        if (_balance > 0) {
-            require(_reputationToken.transfer(noShowBondOwner, _balance));
+        if (noShowBond > 0) {
+            require(_reputationToken.transfer(noShowBondOwner, noShowBond));
             noShowBond = 0;
         } else {
             _initialParticipant.returnRepFromDisavow();
