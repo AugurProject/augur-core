@@ -121,7 +121,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function doInitialReportInternal(address _reporter, uint256[] _payoutNumerators, bool _invalid, string _description) public returns (bool) {
+    function doInitialReportInternal(address _reporter, uint256[] _payoutNumerators, bool _invalid, string _description) private returns (bool) {
         require(!universe.isForking());
         IInitialReporter _initialReporter = getInitialReporter();
         uint256 _timestamp = controller.getTimestamp();
@@ -339,8 +339,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         delete participants;
         participants.push(_initialParticipant);
         // Send REP from the no show bond back to the address that placed it. If a report has been made tell the InitialReporter to return that REP and reset
-        IReputationToken _reputationToken = getReputationToken();
         if (noShowBond > 0) {
+            IReputationToken _reputationToken = getReputationToken();
             require(_reputationToken.transfer(noShowBondOwner, noShowBond));
             noShowBond = 0;
         } else {
