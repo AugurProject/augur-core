@@ -1,3 +1,4 @@
+from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.tools.tester import ABIContract, TransactionFailed
 from pytest import fixture, mark, raises
@@ -116,10 +117,10 @@ def test_initialReport_methods(localFixture, universe, market, cash, constants):
         initialReporter.report(tester.a0, "", [], False)
 
     with raises(TransactionFailed):
-        initialReporter.resetReportTimestamp()
+        initialReporter.returnRepFromDisavow()
 
     with raises(TransactionFailed):
-        initialReporter.migrateREP()
+        initialReporter.migrateToNewUniverse(tester.a0)
 
     # When we redeem the initialReporter it goes to the correct party as well
     expectedRep = initialReporter.getStake()
@@ -192,7 +193,7 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
         universe.fork()
 
     with raises(TransactionFailed, message="We cannot migrate until the fork is finalized"):
-        categoricalMarket.migrateThroughOneFork()
+        categoricalMarket.migrateThroughOneFork([0,0,categoricalMarket.getNumTicks()], False, "")
 
     with raises(TransactionFailed, message="We cannot create markets during a fork"):
         time = localFixture.contracts["Time"].getTimestamp()
@@ -249,7 +250,6 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
     with raises(TransactionFailed):
         categoricalMarket.contribute([2,2,categoricalMarket.getNumTicks()-4], False, 1, "")
 
-    # The categorical market can be migrated to the winning universe
     newUniverseAddress = universe.getWinningChildUniverse()
 
     # buy some complete sets to change OI
@@ -265,9 +265,10 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
         "originalUniverse": universe.address,
     }
     with AssertLog(localFixture, "MarketMigrated", marketMigratedLog):
-        assert categoricalMarket.migrateThroughOneFork()
+        assert categoricalMarket.migrateThroughOneFork([0,0,categoricalMarket.getNumTicks()], False, "")
 
     assert universe.getOpenInterestInAttoEth() == 0
+
 
     # The dispute crowdsourcer has been disavowed
     newUniverse = localFixture.applySignature("Universe", categoricalMarket.getUniverse())
@@ -299,14 +300,14 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
 
     assert categoricalMarket.finalize()
 
-    # We can migrate a market that has not had its initial reporting completed as well, and confirm its REP no show bond is in the new universe REP
+    # We can migrate a market that has not had its initial reporting completed as well, and confirm that the report is now made in the new universe
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
     previousREPBalance = reputationToken.balanceOf(scalarMarket.address)
     assert previousREPBalance > 0
-    bonus = previousREPBalance / localFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR() if finalizeByMigration else 0
-    assert scalarMarket.migrateThroughOneFork()
+    assert scalarMarket.migrateThroughOneFork([0,scalarMarket.getNumTicks()], False, "")
     newUniverseREP = localFixture.applySignature("ReputationToken", newUniverse.getReputationToken())
-    assert newUniverseREP.balanceOf(scalarMarket.address) == previousREPBalance + bonus
+    initialReporter = localFixture.applySignature('InitialReporter', scalarMarket.getInitialReporter())
+    assert newUniverseREP.balanceOf(initialReporter.address) == previousREPBalance
 
     # We can finalize this market as well
     proceedToNextRound(localFixture, scalarMarket)
@@ -330,7 +331,7 @@ def test_finalized_fork_migration(localFixture, universe, market, categoricalMar
 
     # The categorical market is finalized and cannot be migrated to the new universe
     with raises(TransactionFailed):
-        categoricalMarket.migrateThroughOneFork()
+        categoricalMarket.migrateThroughOneFork([0,0,categoricalMarket.getNumTicks()], False, "")
 
     # We also can't disavow the crowdsourcers for this market
     with raises(TransactionFailed):
@@ -338,11 +339,30 @@ def test_finalized_fork_migration(localFixture, universe, market, categoricalMar
 
     # The forking market may not migrate or disavow crowdsourcers either
     with raises(TransactionFailed):
-        market.migrateThroughOneFork()
+        market.migrateThroughOneFork([0,market.getNumTicks()], False, "")
 
     with raises(TransactionFailed):
         market.disavowCrowdsourcers()
 
+def test_fork_migration_no_report(localFixture, universe, market, cash):
+    # Create a market before the fork occurs which has an end date past the forking window
+    endTime = long(localFixture.contracts["Time"].getTimestamp() + timedelta(days=365).total_seconds())
+    longMarket = localFixture.createYesNoMarket(universe, endTime, 1, cash, tester.a0)
+
+    # Proceed to Forking for the yesNo market
+    proceedToFork(localFixture, market, universe)
+
+    # Now finalize the fork so migration can occur
+    finalizeFork(localFixture, market, universe)
+
+    # Now when we migrate the market through the fork we'll place a new bond in the winning universe's REP
+    oldReputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
+    oldBalance = oldReputationToken.balanceOf(longMarket.address)
+    newUniverse = localFixture.applySignature("Universe", universe.getChildUniverse(market.getWinningPayoutDistributionHash()))
+    newReputationToken = localFixture.applySignature("ReputationToken", newUniverse.getReputationToken())
+    with TokenDelta(oldReputationToken, 0, longMarket.address, "Migrating didn't disavow old no show bond"):
+        with TokenDelta(newReputationToken, oldBalance, longMarket.address, "Migrating didn't place new no show bond"):
+            assert longMarket.migrateThroughOneFork([], False, "")
 
 def test_forking_values(localFixture, universe, market, cash):
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
@@ -360,9 +380,9 @@ def test_forking_values(localFixture, universe, market, cash):
     childUniverseTheoreticalSupply = childUniverseReputationToken.getTotalTheoreticalSupply()
     assert childUniverseTheoreticalSupply > reputationToken.getTotalTheoreticalSupply()
 
-    # In fact it will be approximately the bonus REP migrated into the new universe more.
+    # In fact it will be equal to the stake placed on the dispute bonds for the forking market for this universe / 2 to account for the minted winnings
     delta = childUniverseTheoreticalSupply - reputationToken.getTotalTheoreticalSupply()
-    migrationBonus = long(childUniverseReputationToken.getTotalMigrated() / 20L)
+    migrationBonus = 0
     participantIndex = 0
     while True:
         try:
@@ -373,7 +393,7 @@ def test_forking_values(localFixture, universe, market, cash):
             migrationBonus += long(reportingParticipant.getSize() / 2L)
         except TransactionFailed:
             break
-    assert delta == migrationBonus - 5 # rounding error dust buildup
+    assert delta == migrationBonus
 
     # The universe needs to be nudged to actually update values since there are potentially unbounded universes and updating the values derived by this total is not essential as a matter of normal procedure
     # In a forked universe the total supply will be different so its childrens goals will not be the same initially
@@ -499,8 +519,7 @@ def test_rep_migration_convenience_function(localFixture, universe, market):
     # We can see that the child universe was created
     newUniverse = localFixture.applySignature("Universe", universe.getChildUniverse(payoutDistributionHash))
     newReputationToken = localFixture.applySignature("ReputationToken", newUniverse.getReputationToken())
-    bonus = 10 / localFixture.contracts["Constants"].FORK_MIGRATION_PERCENTAGE_BONUS_DIVISOR()
-    assert newReputationToken.balanceOf(tester.a0) == 10 + bonus
+    assert newReputationToken.balanceOf(tester.a0) == 10
 
 def test_dispute_pacing_threshold(localFixture, universe, market):
     # We'll dispute until we reach the dispute pacing threshold

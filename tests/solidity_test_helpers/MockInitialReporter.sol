@@ -103,7 +103,11 @@ contract MockInitialReporter is IInitialReporter {
         return 0;
     }
 
-    function migrateREP() public returns (bool) {
+    function returnRepFromDisavow() public returns (bool) {
+        return true;
+    }
+
+    function migrateToNewUniverse(address _designatedReporter) public returns (bool) {
         return true;
     }
 }

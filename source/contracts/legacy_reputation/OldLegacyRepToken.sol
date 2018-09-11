@@ -82,7 +82,7 @@ contract OldLegacyReputationToken is DelegationTarget, ITyped, Initializable, Va
         totalMigrated += _attotokens;
         // Award a bonus if migration is done before the fork period is over, even if it has finalized
         if (controller.getTimestamp() < _parentUniverse.getForkEndTime()) {
-            uint256 _bonus = _attotokens.div(Reporting.getForkMigrationPercentageBonusDivisor());
+            uint256 _bonus = _attotokens.div(20);
             mint(_reporter, _bonus);
             totalTheoreticalSupply += _bonus;
         }

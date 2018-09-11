@@ -147,20 +147,6 @@ def test_market_finalize_fork(localFixture, initializedMarket, mockUniverse):
     assert initializedMarket.finalizeFork() == True
     assert initializedMarket.getWinningPayoutDistributionHash() == stringToBytes("111")
 
-def test_migrate_through_one_fork(localFixture, initializedMarket, mockUniverse):
-    with raises(TransactionFailed, message="universe forking market needs to be finialized"):
-        initializedMarket.migrateThroughOneFork()
-
-    forkingMarket = localFixture.upload('solidity_test_helpers/MockMarket.sol', 'forkingMarket')
-    winningUniverse = localFixture.upload('solidity_test_helpers/MockUniverse.sol', 'winningUniverse')
-    mockUniverse.setForkingMarket(forkingMarket.address)
-    mockUniverse.setChildUniverse(winningUniverse.address)
-
-    initializedMarket.migrateThroughOneFork()
-    assert initializedMarket.getUniverse() == winningUniverse.address
-    assert winningUniverse.addMarketToWasCalled() == True
-    assert mockUniverse.removeMarketFromWasCalled() == True
-
 
 def test_finalize(localFixture, chain, initializedMarket, mockInitialReporter, mockNextFeeWindow, mockUniverse):
     with raises(TransactionFailed, message="can't finalize without an initial report"):
