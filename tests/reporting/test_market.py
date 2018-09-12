@@ -26,8 +26,13 @@ def test_market_creation(contractsFixture, universe, cash, market):
     assert market.getWinningPayoutDistributionHash() == stringToBytes("")
     assert market.getInitialized()
 
+    endTime = 0
     with raises(TransactionFailed, message="Cannot create a market with an end date in the past"):
-        contractsFixture.createYesNoMarket(universe, 0, 1, cash, tester.a0)
+        contractsFixture.createYesNoMarket(universe, endTime, 1, cash, tester.a0)
+
+    endTime = contractsFixture.contracts["Time"].getTimestamp() + contractsFixture.contracts["Constants"].MAXIMUM_MARKET_DURATION() + 1
+    with raises(TransactionFailed, message="Cannot create a market with an end date past the maximum duration"):
+        contractsFixture.createYesNoMarket(universe, endTime, 1, cash, tester.a0)
 
 def test_description_requirement(contractsFixture, universe, cash):
     endTime = contractsFixture.contracts["Time"].getTimestamp() + 1

@@ -6,6 +6,7 @@ library Reporting {
     uint256 private constant DISPUTE_ROUND_DURATION_SECONDS = 7 days;
     uint256 private constant CLAIM_PROCEEDS_WAIT_TIME = 3 days;
     uint256 private constant FORK_DURATION_SECONDS = 60 days;
+    uint256 private constant MAXIMUM_MARKET_DURATION = 91 days;
 
     uint256 private constant INITIAL_REP_SUPPLY = 11 * 10 ** 6 * 10 ** 18; // 11 Million REP
 
@@ -25,6 +26,7 @@ library Reporting {
     function getDisputeRoundDurationSeconds() internal pure returns (uint256) { return DISPUTE_ROUND_DURATION_SECONDS; }
     function getClaimTradingProceedsWaitTime() internal pure returns (uint256) { return CLAIM_PROCEEDS_WAIT_TIME; }
     function getForkDurationSeconds() internal pure returns (uint256) { return FORK_DURATION_SECONDS; }
+    function getMaximumMarketDuration() internal pure returns (uint256) { return MAXIMUM_MARKET_DURATION; }
     function getDefaultValidityBond() internal pure returns (uint256) { return DEFAULT_VALIDITY_BOND; }
     function getValidityBondFloor() internal pure returns (uint256) { return VALIDITY_BOND_FLOOR; }
     function getTargetInvalidMarketsDivisor() internal pure returns (uint256) { return TARGET_INVALID_MARKETS_DIVISOR; }

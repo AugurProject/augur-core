@@ -66,7 +66,9 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require((_numTicks >= _numOutcomes));
         require(_feePerEthInAttoeth <= MAX_FEE_PER_ETH_IN_ATTOETH);
         require(_creator != NULL_ADDRESS);
-        require(controller.getTimestamp() < _endTime);
+        uint256 _timestamp = controller.getTimestamp();
+        require(_timestamp < _endTime);
+        require(_endTime < _timestamp + Reporting.getMaximumMarketDuration());
         universe = _universe;
         require(!universe.isForking());
         owner = _creator;

@@ -345,11 +345,15 @@ def test_finalized_fork_migration(localFixture, universe, market, categoricalMar
         market.disavowCrowdsourcers()
 
 def test_fork_migration_no_report(localFixture, universe, market, cash):
+    # Proceed to Forking for the yesNo market but don't go all the way so that we can create the new market still
+    for i in range(10):
+        proceedToNextRound(localFixture, market)
+
     # Create a market before the fork occurs which has an end date past the forking window
-    endTime = long(localFixture.contracts["Time"].getTimestamp() + timedelta(days=365).total_seconds())
+    endTime = long(localFixture.contracts["Time"].getTimestamp() + timedelta(days=90).total_seconds())
     longMarket = localFixture.createYesNoMarket(universe, endTime, 1, cash, tester.a0)
 
-    # Proceed to Forking for the yesNo market
+    # Go to the forking period
     proceedToFork(localFixture, market, universe)
 
     # Now finalize the fork so migration can occur

@@ -10,6 +10,7 @@ contract Constants {
     uint256 public constant DISPUTE_ROUND_DURATION_SECONDS = Reporting.getDisputeRoundDurationSeconds();
     uint256 public constant CLAIM_PROCEEDS_WAIT_TIME = Reporting.getClaimTradingProceedsWaitTime();
     uint256 public constant FORK_DURATION_SECONDS = Reporting.getForkDurationSeconds();
+    uint256 public constant MAXIMUM_MARKET_DURATION = Reporting.getMaximumMarketDuration();
 
     uint256 public constant DEFAULT_VALIDITY_BOND = Reporting.getDefaultValidityBond();
     uint256 public constant VALIDITY_BOND_FLOOR = Reporting.getValidityBondFloor();
