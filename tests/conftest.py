@@ -327,8 +327,6 @@ class ContractsFixture:
                     self.contracts[name] = self.applySignature(name, self.contracts[name].address)
                 elif name == "TimeControlled":
                     self.uploadAndAddToController(path.join(directory, filename), lookupKey = "Time", signatureKey = "TimeControlled")
-                elif name == "Trade":
-                    self.uploadAndAddToController("solidity_test_helpers/TestTrade.sol", lookupKey = "Trade", signatureKey = "Trade")
                 else:
                     self.uploadAndAddToController(path.join(directory, filename))
 
