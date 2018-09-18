@@ -14,7 +14,7 @@ def test_cancelBid(contractsFixture, cash, market, universe):
     orders = contractsFixture.contracts['Orders']
 
     orderType = BID
-    fxpAmount = fix(1)
+    amount = fix(1)
     fxpPrice = 6000
     outcomeID = YES
     tradeGroupID = "42"
@@ -25,7 +25,7 @@ def test_cancelBid(contractsFixture, cash, market, universe):
     marketInitialCash = cash.balanceOf(market.address)
     marketInitialYesShares = yesShareToken.totalSupply()
     marketInitialNoShares = noShareToken.totalSupply()
-    orderID = createOrder.publicCreateOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10000'))
+    orderID = createOrder.publicCreateOrder(orderType, amount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10000'))
 
     assert orderID, "Order ID should be non-zero"
     assert orders.getOrderCreator(orderID), "Order should have an owner"
@@ -62,7 +62,7 @@ def test_cancelAsk(contractsFixture, cash, market):
     orders = contractsFixture.contracts['Orders']
 
     orderType = ASK
-    fxpAmount = fix(1)
+    amount = fix(1)
     fxpPrice = 6000
     outcomeID = 1
     tradeGroupID = "42"
@@ -73,7 +73,7 @@ def test_cancelAsk(contractsFixture, cash, market):
     marketInitialCash = cash.balanceOf(market.address)
     marketInitialYesShares = yesShareToken.totalSupply()
     marketInitialNoShares = noShareToken.totalSupply()
-    orderID = createOrder.publicCreateOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10000'))
+    orderID = createOrder.publicCreateOrder(orderType, amount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10000'))
     assert(orderID != bytearray(32)), "Order ID should be non-zero"
     assert orders.getOrderCreator(orderID), "Order should have an owner"
 
@@ -197,12 +197,12 @@ def test_exceptions(contractsFixture, cash, market):
     cancelOrder = contractsFixture.contracts['CancelOrder']
 
     orderType = BID
-    fxpAmount = fix(1)
+    amount = fix(1)
     fxpPrice = 6000
     outcomeID = YES
     tradeGroupID = "42"
     marketInitialCash = cash.balanceOf(market.address)
-    orderID = createOrder.publicCreateOrder(orderType, fxpAmount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10000'))
+    orderID = createOrder.publicCreateOrder(orderType, amount, fxpPrice, market.address, outcomeID, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender=tester.k1, value = fix('10000'))
     assert(orderID != bytearray(32)), "Order ID should be non-zero"
 
     # cancelOrder exceptions

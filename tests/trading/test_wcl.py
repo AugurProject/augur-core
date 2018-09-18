@@ -38,10 +38,10 @@ def test_create_ask_with_shares_fill_with_shares(contractsFixture, cash, market)
     initialMakerETH = contractsFixture.chain.head_state.get_balance(tester.a1)
     initialFillerETH = contractsFixture.chain.head_state.get_balance(tester.a2)
     assert noShareToken.approve(fillOrder.address, fix(12), sender = tester.k2)
-    fxpAmountRemaining = fillOrder.publicFillOrder(askOrderID, fix(12), sender = tester.k2)
+    amountRemaining = fillOrder.publicFillOrder(askOrderID, fix(12), sender = tester.k2)
     creatorFee = completeSetFees * 0.6
     fillerFee = completeSetFees * 0.4
-    assert fxpAmountRemaining == 0
+    assert amountRemaining == 0
     assert cash.balanceOf(tester.a1) == 0
     assert cash.balanceOf(tester.a2) == 0
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH + fix('12', '6000') - long(creatorFee)
@@ -76,8 +76,8 @@ def test_create_ask_with_shares_fill_with_cash(contractsFixture, cash, market):
     # 3. fill ASK order for YES with cash
     initialMakerETH = contractsFixture.chain.head_state.get_balance(tester.a1)
     initialFillerETH = contractsFixture.chain.head_state.get_balance(tester.a2)
-    fxpAmountRemaining = fillOrder.publicFillOrder(askOrderID, fix(12), sender = tester.k2, value=fix('12', '6000'))
-    assert fxpAmountRemaining == 0
+    amountRemaining = fillOrder.publicFillOrder(askOrderID, fix(12), sender = tester.k2, value=fix('12', '6000'))
+    assert amountRemaining == 0
     assert cash.balanceOf(tester.a1) == 0
     assert cash.balanceOf(tester.a2) == 0
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialMakerETH + fix('12', '6000')
@@ -139,8 +139,8 @@ def test_create_ask_with_cash_fill_with_cash(contractsFixture, cash, market):
     assert noShareToken.balanceOf(tester.a1) == 0
 
     # 2. fill ASK order for YES with cash
-    fxpAmountRemaining = fillOrder.publicFillOrder(askOrderID, fix(12), sender = tester.k2, value=fix('12', '6000'))
-    assert fxpAmountRemaining == 0
+    amountRemaining = fillOrder.publicFillOrder(askOrderID, fix(12), sender = tester.k2, value=fix('12', '6000'))
+    assert amountRemaining == 0
     assert cash.balanceOf(tester.a1) == fix('0')
     assert cash.balanceOf(tester.a2) == fix('0')
     assert yesShareToken.balanceOf(tester.a1) == 0

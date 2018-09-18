@@ -3,7 +3,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from utils import longTo32Bytes, longToHexString, bytesToHexString, fix, AssertLog, stringToBytes, EtherDelta, PrintGasUsed
-from constants import ASK, BID, YES, NO
+from constants import ASK, BID, YES, NO, LONG, SHORT
 from pytest import raises, fixture, mark
 from pprint import pprint
 
@@ -35,7 +35,7 @@ def test_one_bid_on_books_buy_full_order(withSelf, contractsFixture, cash, marke
         "tradeGroupId": stringToBytes("42"),
     }
     with AssertLog(contractsFixture, "OrderFilled", orderFilledLog):
-        assert trade.publicSell(market.address, YES, fix(2), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('2', '4000'))
+        assert trade.publicTrade(SHORT,market.address, YES, fix(2), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('2', '4000'))
 
     assert orders.getAmount(orderID) == 0
     assert orders.getPrice(orderID) == 0
@@ -45,12 +45,7 @@ def test_one_bid_on_books_buy_full_order(withSelf, contractsFixture, cash, marke
     assert orders.getBetterOrderId(orderID) == longTo32Bytes(0)
     assert orders.getWorseOrderId(orderID) == longTo32Bytes(0)
 
-
-@mark.parametrize('useTrade', [
-    True,
-    False
-])
-def test_one_bid_on_books_buy_partial_order(useTrade, contractsFixture, cash, market, universe):
+def test_one_bid_on_books_buy_partial_order(contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
@@ -62,15 +57,12 @@ def test_one_bid_on_books_buy_partial_order(useTrade, contractsFixture, cash, ma
 
     # fill best order
     fillOrderID = None
-    if useTrade:
-        orderFilledLog = {
-            "amountFilled": fix(1),
-        }
-        with AssertLog(contractsFixture, "OrderFilled", orderFilledLog):
-            with PrintGasUsed(contractsFixture, "publicTrade", 0):
-                fillOrderID = trade.publicTrade(1, market.address, YES, fix(1), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('1', '4000'))
-    else:
-        fillOrderID = trade.publicSell(market.address, YES, fix(1), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('1', '4000'))
+    orderFilledLog = {
+        "amountFilled": fix(1),
+    }
+    with AssertLog(contractsFixture, "OrderFilled", orderFilledLog):
+        with PrintGasUsed(contractsFixture, "publicTrade", 0):
+            fillOrderID = trade.publicTrade(1, market.address, YES, fix(1), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('1', '4000'))
 
     assert orders.getAmount(orderID) == fix(1)
     assert orders.getPrice(orderID) == 6000
@@ -81,11 +73,7 @@ def test_one_bid_on_books_buy_partial_order(useTrade, contractsFixture, cash, ma
     assert orders.getWorseOrderId(orderID) == longTo32Bytes(0)
     assert fillOrderID == longTo32Bytes(1)
 
-@mark.parametrize('useTrade', [
-    True,
-    False
-])
-def test_one_bid_on_books_buy_partial_order_fill_loop_limit(useTrade, contractsFixture, cash, market, universe):
+def test_one_bid_on_books_buy_partial_order_fill_loop_limit(contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
@@ -97,15 +85,12 @@ def test_one_bid_on_books_buy_partial_order_fill_loop_limit(useTrade, contractsF
 
     # fill best order
     fillOrderID = None
-    if useTrade:
-        orderFilledLog = {
-            "amountFilled": fix(1),
-        }
-        with AssertLog(contractsFixture, "OrderFilled", orderFilledLog):
-            with PrintGasUsed(contractsFixture, "publicTrade", 0):
-                fillOrderID = trade.publicTrade(1, market.address, YES, fix(1), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('1', '4000'))
-    else:
-        fillOrderID = trade.publicSell(market.address, YES, fix(1), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('1', '4000'))
+    orderFilledLog = {
+        "amountFilled": fix(1),
+    }
+    with AssertLog(contractsFixture, "OrderFilled", orderFilledLog):
+        with PrintGasUsed(contractsFixture, "publicTrade", 0):
+            fillOrderID = trade.publicTrade(1, market.address, YES, fix(1), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('1', '4000'))
 
     assert orders.getAmount(orderID) == fix(1)
     assert orders.getPrice(orderID) == 6000
@@ -116,11 +101,11 @@ def test_one_bid_on_books_buy_partial_order_fill_loop_limit(useTrade, contractsF
     assert orders.getWorseOrderId(orderID) == longTo32Bytes(0)
     assert fillOrderID == longTo32Bytes(1)
 
-@mark.parametrize('withAmount', [
+@mark.parametrize('withTotalCost', [
     True,
     False
 ])
-def test_one_bid_on_books_buy_excess_order(withAmount, contractsFixture, cash, market, universe):
+def test_one_bid_on_books_buy_excess_order(withTotalCost, contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
@@ -151,10 +136,10 @@ def test_one_bid_on_books_buy_excess_order(withAmount, contractsFixture, cash, m
     }
     with AssertLog(contractsFixture, "OrderFilled", orderFilledLog):
         with AssertLog(contractsFixture, "OrderCreated", orderCreatedLog):
-            if withAmount:
-                fillOrderID = trade.publicSellWithAmount(market.address, YES, fix(5, 6000), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('5', '4000'))
+            if withTotalCost:
+                fillOrderID = trade.publicTradeWithTotalCost(SHORT,market.address, YES, fix(5, 6000), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('5', '4000'))
             else:
-                fillOrderID = trade.publicSell(market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('5', '4000'))
+                fillOrderID = trade.publicTrade(SHORT,market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('5', '4000'))
 
     assert orders.getAmount(orderID) == 0
     assert orders.getPrice(orderID) == 0
@@ -186,7 +171,7 @@ def test_two_bids_on_books_buy_both(contractsFixture, cash, market, universe):
 
     # fill best order
     with PrintGasUsed(contractsFixture, "Fill two", 0):
-        fillOrderID = trade.publicSell(market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('5', '4000'))
+        fillOrderID = trade.publicTrade(SHORT,market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('5', '4000'))
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0
@@ -220,7 +205,7 @@ def test_two_bids_on_books_buy_one_with_limit(contractsFixture, cash, market, un
 
     # fill best order
     with PrintGasUsed(contractsFixture, "Fill two", 0):
-        fillOrderID = trade.publicSell(market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, 1, sender = tester.k2, value=fix('5', '4000'))
+        fillOrderID = trade.publicTrade(SHORT,market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, 1, sender = tester.k2, value=fix('5', '4000'))
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0
@@ -248,7 +233,7 @@ def test_two_bids_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     orderID2 = createOrder.publicCreateOrder(BID, fix(7), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('7', '6000'))
 
     # fill best order
-    fillOrderID = trade.publicSell(market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('15', '4000'))
+    fillOrderID = trade.publicTrade(SHORT,market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('15', '4000'))
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0
@@ -282,7 +267,7 @@ def test_two_bids_on_books_buy_one_full_then_create(contractsFixture, cash, mark
 
     # fill/create
     with PrintGasUsed(contractsFixture, "buy one and create", 0):
-        fillOrderID = trade.publicSell(market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('15', '4000'))
+        fillOrderID = trade.publicTrade(SHORT,market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('15', '4000'))
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0
@@ -308,11 +293,11 @@ def test_two_bids_on_books_buy_one_full_then_create(contractsFixture, cash, mark
     assert orders.getBetterOrderId(fillOrderID) == longTo32Bytes(0)
     assert orders.getWorseOrderId(fillOrderID) == longTo32Bytes(0)
 
-@mark.parametrize('withAmount', [
+@mark.parametrize('withTotalCost', [
     True,
     False
 ])
-def test_one_ask_on_books_buy_full_order(withAmount, contractsFixture, cash, market, universe):
+def test_one_ask_on_books_buy_full_order(withTotalCost, contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
@@ -323,10 +308,10 @@ def test_one_ask_on_books_buy_full_order(withAmount, contractsFixture, cash, mar
     orderID = createOrder.publicCreateOrder(ASK, fix(12), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '4000'))
 
     # fill best order
-    if withAmount:
-        fillOrderID = trade.publicBuyWithAmount(market.address, YES, fix(12, 6000), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('12', '6000'))
+    if withTotalCost:
+        fillOrderID = trade.publicTradeWithTotalCost(LONG, market.address, YES, fix(12, 6000), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('12', '6000'))
     else:
-        fillOrderID = trade.publicBuy(market.address, YES, fix(12), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('12', '6000'))
+        fillOrderID = trade.publicTrade(LONG, market.address, YES, fix(12), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('12', '6000'))
 
     assert orders.getAmount(orderID) == 0
     assert orders.getPrice(orderID) == 0
@@ -348,7 +333,7 @@ def test_one_ask_on_books_buy_partial_order(contractsFixture, cash, market, univ
     orderID = createOrder.publicCreateOrder(ASK, fix(12), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '4000'))
 
     # fill best order
-    fillOrderID = trade.publicBuy(market.address, YES, fix(7), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('7', '6000'))
+    fillOrderID = trade.publicTrade(LONG, market.address, YES, fix(7), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('7', '6000'))
 
     assert orders.getAmount(orderID) == fix(5)
     assert orders.getPrice(orderID) == 6000
@@ -371,7 +356,7 @@ def test_one_ask_on_books_buy_excess_order(contractsFixture, cash, market, unive
     orderID = createOrder.publicCreateOrder(ASK, fix(12), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k1, value=fix('12', '4000'))
 
     # fill best order
-    fillOrderID = trade.publicBuy(market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('15', '6000'))
+    fillOrderID = trade.publicTrade(LONG,market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('15', '6000'))
 
     assert orders.getAmount(orderID) == 0
     assert orders.getPrice(orderID) == 0
@@ -402,7 +387,7 @@ def test_two_asks_on_books_buy_both(contractsFixture, cash, market, universe):
     orderID2 = createOrder.publicCreateOrder(ASK, fix(3), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('3', '4000'))
 
     # fill best order
-    fillOrderID = trade.publicBuy(market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('15', '6000'))
+    fillOrderID = trade.publicTrade(LONG,market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('15', '6000'))
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0
@@ -434,7 +419,7 @@ def test_two_asks_on_books_buy_full_and_partial(contractsFixture, cash, market, 
     orderID2 = createOrder.publicCreateOrder(ASK, fix(7), 6000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('7', '4000'))
 
     # fill best order
-    fillOrderID = trade.publicBuy(market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('15', '6000'))
+    fillOrderID = trade.publicTrade(LONG,market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('15', '6000'))
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0
@@ -467,7 +452,7 @@ def test_two_asks_on_books_buy_one_full_then_create(contractsFixture, cash, mark
     orderID2 = createOrder.publicCreateOrder(ASK, fix(7), 7000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), tradeGroupID, sender = tester.k3, value=fix('7', '4000'))
 
     # fill/create
-    fillOrderID = trade.publicBuy(market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('15', '6000'))
+    fillOrderID = trade.publicTrade(LONG,market.address, YES, fix(15), 6000, "0", "0", tradeGroupID, 6, sender = tester.k2, value=fix('15', '6000'))
 
     assert orders.getAmount(orderID1) == 0
     assert orders.getPrice(orderID1) == 0
@@ -493,11 +478,11 @@ def test_two_asks_on_books_buy_one_full_then_create(contractsFixture, cash, mark
     assert orders.getBetterOrderId(fillOrderID) == longTo32Bytes(0)
     assert orders.getWorseOrderId(fillOrderID) == longTo32Bytes(0)
 
-@mark.parametrize('withAmount', [
+@mark.parametrize('withTotalCost', [
     True,
     False
 ])
-def test_take_best_order(withAmount, contractsFixture, cash, market, universe):
+def test_take_best_order(withTotalCost, contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     orders = contractsFixture.contracts['Orders']
@@ -509,8 +494,8 @@ def test_take_best_order(withAmount, contractsFixture, cash, market, universe):
     assert orderID
 
     # fill order with cash using on-chain matcher
-    if withAmount:
-        assert trade.publicFillBestOrderWithAmount(BID, market.address, YES, fix(1, 6000), 6000, "43", 6, sender=tester.k2, value=fix('1', '6000')) == 0
+    if withTotalCost:
+        assert trade.publicFillBestOrderWithTotalCost(BID, market.address, YES, fix(1, 6000), 6000, "43", 6, sender=tester.k2, value=fix('1', '6000')) == 0
     else:
         assert trade.publicFillBestOrder(BID, market.address, YES, fix(1), 6000, "43", 6, sender=tester.k2, value=fix('1', '6000')) == 0
 
@@ -584,7 +569,6 @@ def test_take_best_order_with_shares_escrowed_buy_with_cash(withSelf, contractsF
     assert orders.getOrderSharesEscrowed(orderID) == 0
     assert orders.getBetterOrderId(orderID) == longTo32Bytes(0)
     assert orders.getWorseOrderId(orderID) == longTo32Bytes(0)
-
 
 def test_take_best_order_with_shares_escrowed_buy_with_shares_categorical(contractsFixture, cash, categoricalMarket, universe):
     market = categoricalMarket
@@ -666,7 +650,7 @@ def test_trade_with_self(contractsFixture, cash, market, universe):
     }
     with AssertLog(contractsFixture, "OrderFilled", orderFilledLog):
         with AssertLog(contractsFixture, "OrderCreated", orderCreatedLog):
-            fillOrderID = trade.publicSell(market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, 6, sender = tester.k1, value=fix('5', '4000'))
+            fillOrderID = trade.publicTrade(SHORT,market.address, YES, fix(5), 6000, "0", "0", tradeGroupID, 6, sender = tester.k1, value=fix('5', '4000'))
 
     assert orders.getAmount(orderID) == 0
     assert orders.getPrice(orderID) == 0
@@ -684,11 +668,11 @@ def test_trade_with_self(contractsFixture, cash, market, universe):
     assert orders.getBetterOrderId(fillOrderID) == longTo32Bytes(0)
     assert orders.getWorseOrderId(fillOrderID) == longTo32Bytes(0)
 
-@mark.parametrize('withAmount', [
+@mark.parametrize('withTotalCost', [
     True,
     False
 ])
-def test_trade_with_self_take_order_make_order(withAmount, contractsFixture, cash, market, universe):
+def test_trade_with_self_take_order_make_order(withTotalCost, contractsFixture, cash, market, universe):
     createOrder = contractsFixture.contracts['CreateOrder']
     trade = contractsFixture.contracts['Trade']
     fillOrder = contractsFixture.contracts['FillOrder']
@@ -703,8 +687,8 @@ def test_trade_with_self_take_order_make_order(withAmount, contractsFixture, cas
 
     # fill best order
     takeCost = fix('1', '5000')
-    if withAmount:
-        fillOrderID = trade.publicTradeWithAmount(BID, market.address, YES, takeCost, 5000, "0", "0", tradeGroupID, 6, sender = tester.k1, value=takeCost)
+    if withTotalCost:
+        fillOrderID = trade.publicTradeWithTotalCost(BID, market.address, YES, takeCost, 5000, "0", "0", tradeGroupID, 6, sender = tester.k1, value=takeCost)
     else:
         fillOrderID = trade.publicTrade(BID, market.address, YES, fix(1), 5000, "0", "0", tradeGroupID, 6, sender = tester.k1, value=takeCost)
 
@@ -780,3 +764,53 @@ def test_create_order_after_exhausting_book(isMatch, contractsFixture, cash, mar
         assert orders.getOrderSharesEscrowed(fillOrderID) == 0
         assert orders.getBetterOrderId(fillOrderID) == longTo32Bytes(0)
         assert orders.getWorseOrderId(fillOrderID) == longTo32Bytes(0)
+
+@mark.parametrize('useFill', [
+    True,
+    False
+])
+def test_take_best_order_with_shares_escrowed_buy_with_cash_by_ignoring_shares(useFill, contractsFixture, cash, market, universe):
+    createOrder = contractsFixture.contracts['CreateOrder']
+    trade = contractsFixture.contracts['Trade']
+    orders = contractsFixture.contracts['Orders']
+    completeSets = contractsFixture.contracts['CompleteSets']
+    firstShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(0))
+    secondShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(1))
+
+    # buy complete sets for both users
+    numTicks = market.getNumTicks()
+    assert completeSets.publicBuyCompleteSets(market.address, fix(1), sender=tester.k1, value=fix('1', numTicks))
+    assert completeSets.publicBuyCompleteSets(market.address, fix(1), sender=tester.k2, value=fix('1', numTicks))
+    assert firstShareToken.balanceOf(tester.a1) == firstShareToken.balanceOf(tester.a2) == fix(1)
+    assert secondShareToken.balanceOf(tester.a1) == secondShareToken.balanceOf(tester.a2) == fix(1)
+
+    # create order with shares
+    orderID = createOrder.publicCreateOrder(ASK, fix(1), 6000, market.address, 0, longTo32Bytes(0), longTo32Bytes(0), "42", sender=tester.k1)
+    assert orderID
+
+    # Since we're ignoring owned shares we need to put up the required cost of the fill
+    with raises(TransactionFailed):
+        if useFill:
+            trade.publicFillBestOrder(BID, market.address, 0, fix(1), 6000, "43", 6, True, sender=tester.k2) == 0
+        else:
+            trade.publicTrade(BID, market.address, 0, fix(1), 6000, longTo32Bytes(0), longTo32Bytes(0), "43", 6, True, sender=tester.k2)
+
+    # fill order with cash using on-chain matcher and ignoring owned shares
+    if useFill:
+        assert trade.publicFillBestOrder(BID, market.address, 0, fix(1), 6000, "43", 6, True, sender=tester.k2, value=fix(6000)) == 0
+    else:
+        assert trade.publicTrade(BID, market.address, 0, fix(1), 6000, longTo32Bytes(0), longTo32Bytes(0), "43", 6, True, sender=tester.k2, value=fix(6000))
+
+    assert firstShareToken.balanceOf(tester.a1) == 0
+    assert secondShareToken.balanceOf(tester.a1) == fix(1)
+
+    assert firstShareToken.balanceOf(tester.a2) == fix(2)
+    assert secondShareToken.balanceOf(tester.a2) == fix(1)
+
+    assert orders.getAmount(orderID) == 0
+    assert orders.getPrice(orderID) == 0
+    assert orders.getOrderCreator(orderID) == longToHexString(0)
+    assert orders.getOrderMoneyEscrowed(orderID) == 0
+    assert orders.getOrderSharesEscrowed(orderID) == 0
+    assert orders.getBetterOrderId(orderID) == longTo32Bytes(0)
+    assert orders.getWorseOrderId(orderID) == longTo32Bytes(0)

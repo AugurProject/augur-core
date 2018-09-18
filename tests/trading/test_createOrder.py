@@ -203,3 +203,42 @@ def test_duplicate_creation_transaction(contractsFixture, cash, market):
 
     with raises(TransactionFailed):
         createOrder.publicCreateOrder(BID, fix(1), 4000, market.address, 1, longTo32Bytes(0), longTo32Bytes(0), "7", value = fix(1, 4000))
+
+def test_ask_withSharesIgnored(contractsFixture, universe, cash, market):
+    orders = contractsFixture.contracts['Orders']
+    createOrder = contractsFixture.contracts['CreateOrder']
+    fillOrder = contractsFixture.contracts['FillOrder']
+    completeSets = contractsFixture.contracts['CompleteSets']
+    yesShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(YES))
+    noShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(NO))
+
+    # buy fix(2) complete sets
+    assert completeSets.publicBuyCompleteSets(market.address, fix(2), sender = tester.k1, value= fix(2, market.getNumTicks()))
+    assert cash.balanceOf(tester.a1) == fix('0')
+    assert yesShareToken.balanceOf(tester.a1) == fix(2)
+    assert noShareToken.balanceOf(tester.a1) == fix(2)
+
+    orderID = None
+
+    # Even though we have no shares available to cover this order if we indicate that we do not want to use them we'll need to provide sufficient ETH to cover the order
+    with raises(TransactionFailed):
+        createOrder.publicCreateOrder(BID, fix(1), 5000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", True, sender=tester.k1)
+
+    orderCreatedLog = {
+        'creator': bytesToHexString(tester.a1),
+        'shareToken': yesShareToken.address,
+        'tradeGroupId': stringToBytes("42"),
+    }
+    with AssertLog(contractsFixture, "OrderCreated", orderCreatedLog):
+        orderID = createOrder.publicCreateOrder(BID, fix(1), 5000, market.address, YES, longTo32Bytes(0), longTo32Bytes(0), "42", True, sender=tester.k1, value=fix('5000'))
+    assert cash.balanceOf(tester.a1) == fix('0')
+    assert yesShareToken.balanceOf(tester.a1) == fix(2)
+    assert noShareToken.balanceOf(tester.a1) == fix(2)
+
+    # validate the order contains expected results
+    assert orderID != bytearray(32), "Order ID should be non-zero"
+    assert orders.getAmount(orderID) == fix(1)
+    assert orders.getPrice(orderID) == 5000
+    assert orders.getOrderCreator(orderID) == bytesToHexString(tester.a1)
+    assert orders.getOrderMoneyEscrowed(orderID) == fix('5000')
+    assert orders.getOrderSharesEscrowed(orderID) == 0
