@@ -61,12 +61,12 @@ library Trade {
     // Constructor
     //
 
-    function create(IController _controller, bytes32 _orderId, address _fillerAddress, uint256 _fillerSize) internal view returns (Data) {
+    function create(IController _controller, bytes32 _orderId, address _fillerAddress, uint256 _fillerSize, bool _ignoreShares) internal view returns (Data) {
         Contracts memory _contracts = getContracts(_controller, _orderId);
         FilledOrder memory _order = getOrder(_contracts, _orderId);
         Order.Types _orderOrderType = _contracts.orders.getOrderType(_orderId);
         Participant memory _creator = getMaker(_contracts, _order, _orderOrderType);
-        Participant memory _filler = getFiller(_contracts, _orderOrderType, _fillerAddress, _fillerSize);
+        Participant memory _filler = getFiller(_contracts, _orderOrderType, _fillerAddress, _fillerSize, _ignoreShares);
 
         return Data({
             contracts: _contracts,
@@ -302,9 +302,12 @@ library Trade {
         });
     }
 
-    function getFiller(Contracts _contracts, Order.Types _orderOrderType, address _address, uint256 _size) private view returns (Participant memory) {
+    function getFiller(Contracts _contracts, Order.Types _orderOrderType, address _address, uint256 _size, bool _ignoreShares) private view returns (Participant memory) {
         Direction _direction = (_orderOrderType == Order.Types.Bid) ? Direction.Short : Direction.Long;
-        uint256 _sharesToSell = getFillerSharesToSell(_contracts.longShareToken, _contracts.shortShareTokens, _address, _direction, _size);
+        uint256 _sharesToSell = 0;
+        if (!_ignoreShares) {
+            _sharesToSell = getFillerSharesToSell(_contracts.longShareToken, _contracts.shortShareTokens, _address, _direction, _size);
+        }
         uint256 _sharesToBuy = _size.sub(_sharesToSell);
         return Participant({
             participantAddress: _address,
@@ -358,20 +361,22 @@ contract FillOrder is CashAutoConverter, ReentrancyGuard, IFillOrder {
     using Trade for Trade.Data;
 
     // CONSIDER: Do we want the API to be in terms of shares as it is now, or would the desired amount of ETH to place be preferable? Would both be useful?
-    function publicFillOrder(bytes32 _orderId, uint256 _amountFillerWants, bytes32 _tradeGroupId) external payable convertToAndFromCash returns (uint256) {
-        uint256 _result = this.fillOrder(msg.sender, _orderId, _amountFillerWants, _tradeGroupId);
+    function publicFillOrder(bytes32 _orderId, uint256 _amountFillerWants, bytes32 _tradeGroupId, bool _ignoreShares) external payable convertToAndFromCash returns (uint256) {
+        uint256 _result = this.fillOrder(msg.sender, _orderId, _amountFillerWants, _tradeGroupId, _ignoreShares);
         IMarket _market = IOrders(controller.lookup("Orders")).getMarket(_orderId);
         _market.assertBalances();
         return _result;
     }
 
-    function fillOrder(address _filler, bytes32 _orderId, uint256 _amountFillerWants, bytes32 _tradeGroupId) external onlyWhitelistedCallers nonReentrant returns (uint256) {
-        Trade.Data memory _tradeData = Trade.create(controller, _orderId, _filler, _amountFillerWants);
+    function fillOrder(address _filler, bytes32 _orderId, uint256 _amountFillerWants, bytes32 _tradeGroupId, bool _ignoreShares) external onlyWhitelistedCallers nonReentrant returns (uint256) {
+        Trade.Data memory _tradeData = Trade.create(controller, _orderId, _filler, _amountFillerWants, _ignoreShares);
         uint256 _marketCreatorFees;
         uint256 _reporterFees;
-        (_marketCreatorFees, _reporterFees) = _tradeData.tradeMakerSharesForFillerShares();
+        if (!_ignoreShares) {
+            (_marketCreatorFees, _reporterFees) = _tradeData.tradeMakerSharesForFillerShares();
+            _tradeData.tradeMakerTokensForFillerShares();
+        }
         _tradeData.tradeMakerSharesForFillerTokens();
-        _tradeData.tradeMakerTokensForFillerShares();
         _tradeData.tradeMakerTokensForFillerTokens();
         // Turn any remaining Cash balance the creator has into ETH. This is done for the filler though the use of a CashAutoConverter modifier. If someone is taking their own order we skip this step since the modifier will do it and they may need the ETH in the tx to make an order later in the context of publicTrade
         uint256 _creatorCashBalance = _tradeData.contracts.denominationToken.balanceOf(_tradeData.creator.participantAddress);
