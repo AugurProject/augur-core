@@ -11143,7 +11143,7 @@
 					"type": "uint256"
 				},
 				{
-					"name": "_displayPrice",
+					"name": "_price",
 					"type": "uint256"
 				},
 				{
@@ -11165,6 +11165,10 @@
 				{
 					"name": "_tradeGroupId",
 					"type": "bytes32"
+				},
+				{
+					"name": "_ignoreShares",
+					"type": "bool"
 				}
 			],
 			"name": "publicCreateOrder",
@@ -11176,6 +11180,61 @@
 			],
 			"payable": true,
 			"stateMutability": "payable",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_creator",
+					"type": "address"
+				},
+				{
+					"name": "_type",
+					"type": "uint8"
+				},
+				{
+					"name": "_attoshares",
+					"type": "uint256"
+				},
+				{
+					"name": "_price",
+					"type": "uint256"
+				},
+				{
+					"name": "_market",
+					"type": "address"
+				},
+				{
+					"name": "_outcome",
+					"type": "uint256"
+				},
+				{
+					"name": "_betterOrderId",
+					"type": "bytes32"
+				},
+				{
+					"name": "_worseOrderId",
+					"type": "bytes32"
+				},
+				{
+					"name": "_tradeGroupId",
+					"type": "bytes32"
+				},
+				{
+					"name": "_ignoreShares",
+					"type": "bool"
+				}
+			],
+			"name": "createOrder",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bytes32"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
 			"type": "function"
 		},
 		{
@@ -11196,91 +11255,9 @@
 			"payable": false,
 			"stateMutability": "nonpayable",
 			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_creator",
-					"type": "address"
-				},
-				{
-					"name": "_type",
-					"type": "uint8"
-				},
-				{
-					"name": "_attoshares",
-					"type": "uint256"
-				},
-				{
-					"name": "_displayPrice",
-					"type": "uint256"
-				},
-				{
-					"name": "_market",
-					"type": "address"
-				},
-				{
-					"name": "_outcome",
-					"type": "uint256"
-				},
-				{
-					"name": "_betterOrderId",
-					"type": "bytes32"
-				},
-				{
-					"name": "_worseOrderId",
-					"type": "bytes32"
-				},
-				{
-					"name": "_tradeGroupId",
-					"type": "bytes32"
-				}
-			],
-			"name": "createOrder",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bytes32"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
 		}
 	],
 	"FillOrder": [
-		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_filler",
-					"type": "address"
-				},
-				{
-					"name": "_orderId",
-					"type": "bytes32"
-				},
-				{
-					"name": "_amountFillerWants",
-					"type": "uint256"
-				},
-				{
-					"name": "_tradeGroupId",
-					"type": "bytes32"
-				}
-			],
-			"name": "fillOrder",
-			"outputs": [
-				{
-					"name": "",
-					"type": "uint256"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
 		{
 			"constant": true,
 			"inputs": [],
@@ -11328,6 +11305,10 @@
 				{
 					"name": "_tradeGroupId",
 					"type": "bytes32"
+				},
+				{
+					"name": "_ignoreShares",
+					"type": "bool"
 				}
 			],
 			"name": "publicFillOrder",
@@ -11339,6 +11320,41 @@
 			],
 			"payable": true,
 			"stateMutability": "payable",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_filler",
+					"type": "address"
+				},
+				{
+					"name": "_orderId",
+					"type": "bytes32"
+				},
+				{
+					"name": "_amountFillerWants",
+					"type": "uint256"
+				},
+				{
+					"name": "_tradeGroupId",
+					"type": "bytes32"
+				},
+				{
+					"name": "_ignoreShares",
+					"type": "bool"
+				}
+			],
+			"name": "fillOrder",
+			"outputs": [
+				{
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
 			"type": "function"
 		}
 	],
@@ -12721,100 +12737,6 @@
 	],
 	"Trade": [
 		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_market",
-					"type": "address"
-				},
-				{
-					"name": "_outcome",
-					"type": "uint256"
-				},
-				{
-					"name": "_fxpAmount",
-					"type": "uint256"
-				},
-				{
-					"name": "_price",
-					"type": "uint256"
-				},
-				{
-					"name": "_betterOrderId",
-					"type": "bytes32"
-				},
-				{
-					"name": "_worseOrderId",
-					"type": "bytes32"
-				},
-				{
-					"name": "_tradeGroupId",
-					"type": "bytes32"
-				},
-				{
-					"name": "_loopLimit",
-					"type": "uint256"
-				}
-			],
-			"name": "publicSellWithLimit",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bytes32"
-				}
-			],
-			"payable": true,
-			"stateMutability": "payable",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_direction",
-					"type": "uint8"
-				},
-				{
-					"name": "_market",
-					"type": "address"
-				},
-				{
-					"name": "_outcome",
-					"type": "uint256"
-				},
-				{
-					"name": "_fxpAmount",
-					"type": "uint256"
-				},
-				{
-					"name": "_price",
-					"type": "uint256"
-				},
-				{
-					"name": "_betterOrderId",
-					"type": "bytes32"
-				},
-				{
-					"name": "_worseOrderId",
-					"type": "bytes32"
-				},
-				{
-					"name": "_tradeGroupId",
-					"type": "bytes32"
-				}
-			],
-			"name": "publicTrade",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bytes32"
-				}
-			],
-			"payable": true,
-			"stateMutability": "payable",
-			"type": "function"
-		},
-		{
 			"constant": true,
 			"inputs": [],
 			"name": "getController",
@@ -12826,57 +12748,6 @@
 			],
 			"payable": false,
 			"stateMutability": "view",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_direction",
-					"type": "uint8"
-				},
-				{
-					"name": "_market",
-					"type": "address"
-				},
-				{
-					"name": "_outcome",
-					"type": "uint256"
-				},
-				{
-					"name": "_fxpAmount",
-					"type": "uint256"
-				},
-				{
-					"name": "_price",
-					"type": "uint256"
-				},
-				{
-					"name": "_betterOrderId",
-					"type": "bytes32"
-				},
-				{
-					"name": "_worseOrderId",
-					"type": "bytes32"
-				},
-				{
-					"name": "_tradeGroupId",
-					"type": "bytes32"
-				},
-				{
-					"name": "_loopLimit",
-					"type": "uint256"
-				}
-			],
-			"name": "publicTradeWithLimit",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bytes32"
-				}
-			],
-			"payable": true,
-			"stateMutability": "payable",
 			"type": "function"
 		},
 		{
@@ -12914,7 +12785,7 @@
 					"type": "uint256"
 				},
 				{
-					"name": "_fxpAmount",
+					"name": "_amount",
 					"type": "uint256"
 				},
 				{
@@ -12928,9 +12799,13 @@
 				{
 					"name": "_loopLimit",
 					"type": "uint256"
+				},
+				{
+					"name": "_ignoreShares",
+					"type": "bool"
 				}
 			],
-			"name": "publicFillBestOrderWithLimit",
+			"name": "publicFillBestOrder",
 			"outputs": [
 				{
 					"name": "",
@@ -12945,6 +12820,10 @@
 			"constant": false,
 			"inputs": [
 				{
+					"name": "_direction",
+					"type": "uint8"
+				},
+				{
 					"name": "_market",
 					"type": "address"
 				},
@@ -12953,7 +12832,7 @@
 					"type": "uint256"
 				},
 				{
-					"name": "_fxpAmount",
+					"name": "_amount",
 					"type": "uint256"
 				},
 				{
@@ -12971,9 +12850,17 @@
 				{
 					"name": "_tradeGroupId",
 					"type": "bytes32"
+				},
+				{
+					"name": "_loopLimit",
+					"type": "uint256"
+				},
+				{
+					"name": "_ignoreShares",
+					"type": "bool"
 				}
 			],
-			"name": "publicSell",
+			"name": "publicTrade",
 			"outputs": [
 				{
 					"name": "",
@@ -13000,42 +12887,7 @@
 					"type": "uint256"
 				},
 				{
-					"name": "_fxpAmount",
-					"type": "uint256"
-				},
-				{
-					"name": "_price",
-					"type": "uint256"
-				},
-				{
-					"name": "_tradeGroupId",
-					"type": "bytes32"
-				}
-			],
-			"name": "publicFillBestOrder",
-			"outputs": [
-				{
-					"name": "",
-					"type": "uint256"
-				}
-			],
-			"payable": true,
-			"stateMutability": "payable",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_market",
-					"type": "address"
-				},
-				{
-					"name": "_outcome",
-					"type": "uint256"
-				},
-				{
-					"name": "_fxpAmount",
+					"name": "_totalCost",
 					"type": "uint256"
 				},
 				{
@@ -13057,9 +12909,13 @@
 				{
 					"name": "_loopLimit",
 					"type": "uint256"
+				},
+				{
+					"name": "_ignoreShares",
+					"type": "bool"
 				}
 			],
-			"name": "publicBuyWithLimit",
+			"name": "publicTradeWithTotalCost",
 			"outputs": [
 				{
 					"name": "",
@@ -13074,6 +12930,10 @@
 			"constant": false,
 			"inputs": [
 				{
+					"name": "_direction",
+					"type": "uint8"
+				},
+				{
 					"name": "_market",
 					"type": "address"
 				},
@@ -13082,7 +12942,7 @@
 					"type": "uint256"
 				},
 				{
-					"name": "_fxpAmount",
+					"name": "_totalCost",
 					"type": "uint256"
 				},
 				{
@@ -13090,23 +12950,23 @@
 					"type": "uint256"
 				},
 				{
-					"name": "_betterOrderId",
-					"type": "bytes32"
-				},
-				{
-					"name": "_worseOrderId",
-					"type": "bytes32"
-				},
-				{
 					"name": "_tradeGroupId",
 					"type": "bytes32"
+				},
+				{
+					"name": "_loopLimit",
+					"type": "uint256"
+				},
+				{
+					"name": "_ignoreShares",
+					"type": "bool"
 				}
 			],
-			"name": "publicBuy",
+			"name": "publicFillBestOrderWithTotalCost",
 			"outputs": [
 				{
 					"name": "",
-					"type": "bytes32"
+					"type": "uint256"
 				}
 			],
 			"payable": true,

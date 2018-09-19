@@ -30,7 +30,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
         address sender;
     }
 
-    function create(Order.TradeDirections _direction, IMarket _market, uint256 _outcome, uint256 _amount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId, uint256 _loopLimit, bool _ignoreShares, address _sender) internal view returns (Data) {
+    function create(Order.TradeDirections _direction, IMarket _market, uint256 _outcome, uint256 _amount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId, uint256 _loopLimit, bool _ignoreShares, address _sender) internal pure returns (Data) {
         require(_amount > 0);
 
         return Data({
@@ -48,8 +48,8 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
         });
     }
 
-    function createWithTotalCost(Order.TradeDirections _direction, IMarket _market, uint256 _outcome, uint256 _totalCost, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId, uint256 _loopLimit, bool _ignoreShares, address _sender) internal view returns (Data) {
-        return create(_direction, _market, _outcome, _totalCost / _price, _price, bytes32(0), bytes32(0), _tradeGroupId, _loopLimit, _ignoreShares, msg.sender);
+    function createWithTotalCost(Order.TradeDirections _direction, IMarket _market, uint256 _outcome, uint256 _totalCost, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId, uint256 _loopLimit, bool _ignoreShares, address _sender) internal pure returns (Data) {
+        return create(_direction, _market, _outcome, _totalCost / _price, _price, _betterOrderId, _worseOrderId, _tradeGroupId, _loopLimit, _ignoreShares, _sender);
     }
 
     function publicTrade(Order.TradeDirections _direction, IMarket _market, uint256 _outcome, uint256 _amount, uint256 _price, bytes32 _betterOrderId, bytes32 _worseOrderId, bytes32 _tradeGroupId, uint256 _loopLimit, bool _ignoreShares) external payable marketIsLegit(_market) convertToAndFromCash returns (bytes32) {
@@ -96,7 +96,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
         return _bestAmount;
     }
 
-    function isMatch(bytes32 _orderId, Order.Types _type, uint256 _orderPrice, uint256 _price) private returns (bool) {
+    function isMatch(bytes32 _orderId, Order.Types _type, uint256 _orderPrice, uint256 _price) private pure returns (bool) {
         if (_orderId == 0) {
             return false;
         }
