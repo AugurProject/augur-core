@@ -90,7 +90,7 @@ contract Trade is CashAutoConverter, ReentrancyGuard, MarketValidator {
             _orderPrice = _orders.getPrice(_orderId);
             _tradeData.loopLimit -= 1;
         }
-        if (_orderId != 0 && isMatch(_orderId, _type, _orderPrice, _tradeData.price)) {
+        if (isMatch(_orderId, _type, _orderPrice, _tradeData.price)) {
             return 0;
         }
         return _bestAmount;
