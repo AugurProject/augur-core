@@ -17,6 +17,7 @@ contract Map is DelegationTarget, Ownable, Initializable {
     }
 
     function add(bytes32 _key, bytes32 _value) public onlyOwner returns (bool) {
+        require(_value != bytes32(0));
         if (contains(_key)) {
             return false;
         }

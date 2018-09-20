@@ -41,6 +41,10 @@ def test_map(testerContractsFixture):
     assert mapTester.contains(KEY1)
     assert mapTester.get(KEY1) == VALUE1
 
+    # Confirm we cannot add NULL_VALUE as a value
+    with raises(TransactionFailed):
+        mapTester.add("BAD_VALUE", NULL_VALUE)
+
     # Remove the value
     assert mapTester.remove(KEY1)
 
