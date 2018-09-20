@@ -21,15 +21,13 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
     uint8 constant public decimals = 18;
     IUniverse private universe;
     uint256 private totalMigrated;
-    mapping(address => uint256) migratedToSibling;
-    uint256 private parentTotalTheoreticalSupply;
     uint256 private totalTheoreticalSupply;
 
     function initialize(IUniverse _universe) public beforeInitialized returns (bool) {
         endInitialization();
         require(_universe != address(0));
         universe = _universe;
-        updateParentTotalTheoreticalSupply();
+        updateTotalTheoreticalSupply();
         return true;
     }
 
@@ -69,7 +67,6 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         require(_parentUniverse.isContainerForReportingParticipant(_reportingParticipant));
         uint256 _bonus = _amountMigrated.div(2);
         mint(_reportingParticipant, _bonus);
-        totalTheoreticalSupply += _bonus;
         return true;
     }
 
@@ -125,25 +122,15 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return ERC20(controller.lookup("LegacyReputationToken"));
     }
 
-    function updateSiblingMigrationTotal(IReputationToken _token) public returns (bool) {
-        require(_token != this);
-        IUniverse _shadyUniverse = _token.getUniverse();
-        require(_token == universe.getParentUniverse().getChildUniverse(_shadyUniverse.getParentPayoutDistributionHash()).getReputationToken());
-        totalTheoreticalSupply += migratedToSibling[_token];
-        migratedToSibling[_token] = _token.getTotalMigrated();
-        totalTheoreticalSupply -= migratedToSibling[_token];
-        return true;
-    }
-
-    function updateParentTotalTheoreticalSupply() public returns (bool) {
+    function updateTotalTheoreticalSupply() public returns (bool) {
         IUniverse _parentUniverse = universe.getParentUniverse();
-        totalTheoreticalSupply -= parentTotalTheoreticalSupply;
         if (_parentUniverse == IUniverse(0)) {
-            parentTotalTheoreticalSupply = Reporting.getInitialREPSupply();
+            totalTheoreticalSupply = Reporting.getInitialREPSupply();
+        } else if (controller.getTimestamp() >= _parentUniverse.getForkEndTime()) {
+            totalTheoreticalSupply = totalSupply();
         } else {
-            parentTotalTheoreticalSupply = _parentUniverse.getReputationToken().getTotalTheoreticalSupply();
+            totalTheoreticalSupply = totalSupply() + _parentUniverse.getReputationToken().totalSupply();
         }
-        totalTheoreticalSupply += parentTotalTheoreticalSupply;
         return true;
     }
 

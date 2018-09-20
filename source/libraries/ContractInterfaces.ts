@@ -1468,20 +1468,6 @@
             return <boolean>result[0];
         }
 
-        public updateParentTotalTheoreticalSupply = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"updateParentTotalTheoreticalSupply","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [], "updateParentTotalTheoreticalSupply", options.sender, options.gasPrice);
-            return;
-        }
-
-        public updateParentTotalTheoreticalSupply_ = async( options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"updateParentTotalTheoreticalSupply","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [], options.sender);
-            return <boolean>result[0];
-        }
-
         public transfer = async(to: string, value: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -1545,17 +1531,17 @@
             return <boolean>result[0];
         }
 
-        public updateSiblingMigrationTotal = async(token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public updateTotalTheoreticalSupply = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_token","type":"address"}],"name":"updateSiblingMigrationTotal","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [token], "updateSiblingMigrationTotal", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"updateTotalTheoreticalSupply","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [], "updateTotalTheoreticalSupply", options.sender, options.gasPrice);
             return;
         }
 
-        public updateSiblingMigrationTotal_ = async(token: string, options?: { sender?: string }): Promise<boolean> => {
+        public updateTotalTheoreticalSupply_ = async( options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_token","type":"address"}],"name":"updateSiblingMigrationTotal","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [token], options.sender);
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"updateTotalTheoreticalSupply","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
             return <boolean>result[0];
         }
 
@@ -4079,20 +4065,6 @@
             return <boolean>result[0];
         }
 
-        public updateParentTotalTheoreticalSupply = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"updateParentTotalTheoreticalSupply","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [], "updateParentTotalTheoreticalSupply", options.sender, options.gasPrice);
-            return;
-        }
-
-        public updateParentTotalTheoreticalSupply_ = async( options?: { sender?: string }): Promise<boolean> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"updateParentTotalTheoreticalSupply","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [], options.sender);
-            return <boolean>result[0];
-        }
-
         public transfer = async(to: string, value: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
@@ -4156,17 +4128,17 @@
             return <boolean>result[0];
         }
 
-        public updateSiblingMigrationTotal = async(token: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public updateTotalTheoreticalSupply = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_token","type":"address"}],"name":"updateSiblingMigrationTotal","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [token], "updateSiblingMigrationTotal", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"updateTotalTheoreticalSupply","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [], "updateTotalTheoreticalSupply", options.sender, options.gasPrice);
             return;
         }
 
-        public updateSiblingMigrationTotal_ = async(token: string, options?: { sender?: string }): Promise<boolean> => {
+        public updateTotalTheoreticalSupply_ = async( options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_token","type":"address"}],"name":"updateSiblingMigrationTotal","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [token], options.sender);
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"updateTotalTheoreticalSupply","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
             return <boolean>result[0];
         }
 

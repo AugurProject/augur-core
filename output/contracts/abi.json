@@ -3932,20 +3932,6 @@
 		},
 		{
 			"constant": false,
-			"inputs": [],
-			"name": "updateParentTotalTheoreticalSupply",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
-			"constant": false,
 			"inputs": [
 				{
 					"name": "_to",
@@ -4052,13 +4038,8 @@
 		},
 		{
 			"constant": false,
-			"inputs": [
-				{
-					"name": "_token",
-					"type": "address"
-				}
-			],
-			"name": "updateSiblingMigrationTotal",
+			"inputs": [],
+			"name": "updateTotalTheoreticalSupply",
 			"outputs": [
 				{
 					"name": "",
@@ -8777,20 +8758,6 @@
 		},
 		{
 			"constant": false,
-			"inputs": [],
-			"name": "updateParentTotalTheoreticalSupply",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
-			"constant": false,
 			"inputs": [
 				{
 					"name": "_to",
@@ -8897,13 +8864,8 @@
 		},
 		{
 			"constant": false,
-			"inputs": [
-				{
-					"name": "_token",
-					"type": "address"
-				}
-			],
-			"name": "updateSiblingMigrationTotal",
+			"inputs": [],
+			"name": "updateTotalTheoreticalSupply",
 			"outputs": [
 				{
 					"name": "",
