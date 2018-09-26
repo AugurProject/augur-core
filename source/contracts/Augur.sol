@@ -23,8 +23,8 @@ contract Augur is Controlled, IAugur {
         ReputationToken,
         ShareToken,
         DisputeCrowdsourcer,
-        FeeWindow,
-        FeeToken
+        FeeWindow, // No longer a valid type but here for backward compat with Augur Node processing
+        FeeToken // No longer a valid type but here for backward compat with Augur Node processing
     }
 
     event MarketCreated(bytes32 indexed topic, string description, string extraInfo, address indexed universe, address market, address indexed marketCreator, bytes32[] outcomes, uint256 marketCreationFee, int256 minPrice, int256 maxPrice, IMarket.MarketType marketType);
@@ -32,11 +32,10 @@ contract Augur is Controlled, IAugur {
     event DisputeCrowdsourcerCreated(address indexed universe, address indexed market, address disputeCrowdsourcer, uint256[] payoutNumerators, uint256 size, bool invalid);
     event DisputeCrowdsourcerContribution(address indexed universe, address indexed reporter, address indexed market, address disputeCrowdsourcer, uint256 amountStaked, string description);
     event DisputeCrowdsourcerCompleted(address indexed universe, address indexed market, address disputeCrowdsourcer);
-    event InitialReporterRedeemed(address indexed universe, address indexed reporter, address indexed market, uint256 amountRedeemed, uint256 repReceived, uint256 reportingFeesReceived, uint256[] payoutNumerators);
-    event DisputeCrowdsourcerRedeemed(address indexed universe, address indexed reporter, address indexed market, address disputeCrowdsourcer, uint256 amountRedeemed, uint256 repReceived, uint256 reportingFeesReceived, uint256[] payoutNumerators);
+    event InitialReporterRedeemed(address indexed universe, address indexed reporter, address indexed market, uint256 amountRedeemed, uint256 repReceived, uint256[] payoutNumerators);
+    event DisputeCrowdsourcerRedeemed(address indexed universe, address indexed reporter, address indexed market, address disputeCrowdsourcer, uint256 amountRedeemed, uint256 repReceived, uint256[] payoutNumerators);
     event ReportingParticipantDisavowed(address indexed universe, address indexed market, address reportingParticipant);
     event MarketParticipantsDisavowed(address indexed universe, address indexed market);
-    event FeeWindowRedeemed(address indexed universe, address indexed reporter, address indexed feeWindow, uint256 amountRedeemed, uint256 reportingFeesReceived);
     event MarketFinalized(address indexed universe, address indexed market);
     event MarketMigrated(address indexed market, address indexed originalUniverse, address indexed newUniverse);
     event UniverseForked(address indexed universe);
@@ -170,17 +169,17 @@ contract Augur is Controlled, IAugur {
         return true;
     }
 
-    function logInitialReporterRedeemed(IUniverse _universe, address _reporter, address _market, uint256 _amountRedeemed, uint256 _repReceived, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
+    function logInitialReporterRedeemed(IUniverse _universe, address _reporter, address _market, uint256 _amountRedeemed, uint256 _repReceived, uint256[] _payoutNumerators) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.isContainerForReportingParticipant(IReportingParticipant(msg.sender)));
-        emit InitialReporterRedeemed(_universe, _reporter, _market, _amountRedeemed, _repReceived, _reportingFeesReceived, _payoutNumerators);
+        emit InitialReporterRedeemed(_universe, _reporter, _market, _amountRedeemed, _repReceived, _payoutNumerators);
         return true;
     }
 
-    function logDisputeCrowdsourcerRedeemed(IUniverse _universe, address _reporter, address _market, uint256 _amountRedeemed, uint256 _repReceived, uint256 _reportingFeesReceived, uint256[] _payoutNumerators) public returns (bool) {
+    function logDisputeCrowdsourcerRedeemed(IUniverse _universe, address _reporter, address _market, uint256 _amountRedeemed, uint256 _repReceived, uint256[] _payoutNumerators) public returns (bool) {
         IDisputeCrowdsourcer _disputeCrowdsourcer = IDisputeCrowdsourcer(msg.sender);
         require(isKnownCrowdsourcer(_disputeCrowdsourcer));
-        emit DisputeCrowdsourcerRedeemed(_universe, _reporter, _market, _disputeCrowdsourcer, _amountRedeemed, _repReceived, _reportingFeesReceived, _payoutNumerators);
+        emit DisputeCrowdsourcerRedeemed(_universe, _reporter, _market, _disputeCrowdsourcer, _amountRedeemed, _repReceived, _payoutNumerators);
         return true;
     }
 
@@ -196,13 +195,6 @@ contract Augur is Controlled, IAugur {
         IMarket _market = IMarket(msg.sender);
         require(_universe.isContainerForMarket(_market));
         emit MarketParticipantsDisavowed(_universe, _market);
-        return true;
-    }
-
-    function logFeeWindowRedeemed(IUniverse _universe, address _reporter, uint256 _amountRedeemed, uint256 _reportingFeesReceived) public returns (bool) {
-        require(isKnownUniverse(_universe));
-        require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
-        emit FeeWindowRedeemed(_universe, _reporter, msg.sender, _amountRedeemed, _reportingFeesReceived);
         return true;
     }
 
@@ -257,13 +249,6 @@ contract Augur is Controlled, IAugur {
         return true;
     }
 
-    function logFeeWindowTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
-        require(isKnownUniverse(_universe));
-        require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
-        emit TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.FeeWindow, 0);
-        return true;
-    }
-
     function logReputationTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
         require(isKnownUniverse(_universe));
         require(_universe.getReputationToken() == IReputationToken(msg.sender));
@@ -313,20 +298,6 @@ contract Augur is Controlled, IAugur {
         return true;
     }
 
-    function logFeeWindowBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isKnownUniverse(_universe));
-        require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
-        emit TokensBurned(_universe, msg.sender, _target, _amount, TokenType.FeeWindow, 0);
-        return true;
-    }
-
-    function logFeeWindowMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isKnownUniverse(_universe));
-        require(_universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
-        emit TokensMinted(_universe, msg.sender, _target, _amount, TokenType.FeeWindow, 0);
-        return true;
-    }
-
     function logDisputeCrowdsourcerTokensBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         IDisputeCrowdsourcer _disputeCrowdsourcer = IDisputeCrowdsourcer(msg.sender);
         require(isKnownCrowdsourcer(_disputeCrowdsourcer));
@@ -344,27 +315,6 @@ contract Augur is Controlled, IAugur {
     function logFeeWindowCreated(IFeeWindow _feeWindow, uint256 _id) public returns (bool) {
         require(universes[msg.sender]);
         emit FeeWindowCreated(msg.sender, _feeWindow, _feeWindow.getStartTime(), _feeWindow.getEndTime(), _id);
-        return true;
-    }
-
-    function logFeeTokenTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
-        require(isKnownUniverse(_universe));
-        require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
-        emit TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.FeeToken, 0);
-        return true;
-    }
-
-    function logFeeTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isKnownUniverse(_universe));
-        require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
-        emit TokensBurned(_universe, msg.sender, _target, _amount, TokenType.FeeToken, 0);
-        return true;
-    }
-
-    function logFeeTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
-        require(isKnownUniverse(_universe));
-        require(_universe.isContainerForFeeToken(IFeeToken(msg.sender)));
-        emit TokensMinted(_universe, msg.sender, _target, _amount, TokenType.FeeToken, 0);
         return true;
     }
 

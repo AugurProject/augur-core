@@ -8,7 +8,6 @@ source/contracts/trading/OrdersFetcher.sol
 source/contracts/LegacyReputationToken.sol
 source/contracts/TimeControlled.sol
 source/contracts/TestNetReputationToken.sol
-source/contracts/reporting/RepPriceOracle.sol
 source/contracts/reporting/Mailbox.sol
 source/contracts/reporting/DisputeCrowdsourcer.sol
 source/contracts/reporting/InitialReporter.sol

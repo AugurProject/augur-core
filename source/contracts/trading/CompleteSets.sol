@@ -91,8 +91,7 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, MarketV
             require(_denominationToken.transferFrom(_market, _market.getMarketCreatorMailbox(), _creatorFee));
         }
         if (_reportingFee != 0) {
-            IFeeWindow _feeWindow = _market.getUniverse().getOrCreateNextFeeWindow();
-            require(_denominationToken.transferFrom(_market, _feeWindow, _reportingFee));
+            require(_denominationToken.transferFrom(_market, _market.getUniverse().getAuction(), _reportingFee));
         }
         require(_denominationToken.transferFrom(_market, _sender, _payout));
 

@@ -21,7 +21,7 @@ contract IMarket is ITyped, IOwnable {
         SCALAR
     }
 
-    function initialize(IUniverse _universe, uint256 _endTime, uint256 _feePerEthInAttoeth, ICash _cash, address _designatedReporterAddress, address _creator, uint256 _numOutcomes, uint256 _numTicks) public payable returns (bool _success);
+    function initialize(IUniverse _universe, uint256 _endTime, uint256 _feePerEthInAttoEth, ICash _cash, address _designatedReporterAddress, address _creator, uint256 _numOutcomes, uint256 _numTicks) public payable returns (bool _success);
     function derivePayoutDistributionHash(uint256[] _payoutNumerators, bool _invalid) public view returns (bytes32);
     function getUniverse() public view returns (IUniverse);
     function getFeeWindow() public view returns (IFeeWindow);

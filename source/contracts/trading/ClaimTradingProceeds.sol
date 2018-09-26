@@ -46,7 +46,7 @@ contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, MarketValid
                 require(_denominationToken.transferFrom(_market, _market.getMarketCreatorMailbox(), _creatorShare));
             }
             if (_reporterShare > 0) {
-                require(_denominationToken.transferFrom(_market, _market.getUniverse().getOrCreateNextFeeWindow(), _reporterShare));
+                require(_denominationToken.transferFrom(_market, _market.getUniverse().getAuction(), _reporterShare));
             }
         }
 

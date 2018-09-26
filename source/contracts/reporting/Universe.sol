@@ -8,10 +8,11 @@ import 'libraries/Initializable.sol';
 import 'factories/ReputationTokenFactory.sol';
 import 'factories/FeeWindowFactory.sol';
 import 'factories/MarketFactory.sol';
+import 'factories/AuctionFactory.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IReputationToken.sol';
+import 'reporting/IAuction.sol';
 import 'reporting/IFeeWindow.sol';
-import 'reporting/IFeeToken.sol';
 import 'reporting/Reporting.sol';
 import 'reporting/IRepPriceOracle.sol';
 import 'libraries/math/SafeMathUint256.sol';
@@ -24,6 +25,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     IUniverse private parentUniverse;
     bytes32 private parentPayoutDistributionHash;
     IReputationToken private reputationToken;
+    IAuction private auction;
     IMarket private forkingMarket;
     bytes32 private tentativeWinningChildUniversePayoutDistributionHash;
     uint256 private forkEndTime;
@@ -36,7 +38,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     mapping(bytes32 => IUniverse) private childUniverses;
     uint256 private openInterestInAttoEth;
 
-    mapping (address => uint256) private validityBondInAttoeth;
+    mapping (address => uint256) private validityBondInAttoEth;
     mapping (address => uint256) private targetReporterGasCosts;
     mapping (address => uint256) private designatedReportStakeInAttoRep;
     mapping (address => uint256) private designatedReportNoShowBondInAttoRep;
@@ -47,6 +49,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         parentUniverse = _parentUniverse;
         parentPayoutDistributionHash = _parentPayoutDistributionHash;
         reputationToken = ReputationTokenFactory(controller.lookup("ReputationTokenFactory")).createReputationToken(controller, this);
+        auction = AuctionFactory(controller.lookup("AuctionFactory")).createAuction(controller, this);
         updateForkValues();
         require(reputationToken != address(0));
         return true;
@@ -84,6 +87,10 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
 
     function getReputationToken() public view returns (IReputationToken) {
         return reputationToken;
+    }
+
+    function getAuction() public view returns (IAuction) {
+        return auction;
     }
 
     function getForkingMarket() public view returns (IMarket) {
@@ -224,13 +231,6 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _shadyFeeWindow == _legitFeeWindow;
     }
 
-    function isContainerForFeeToken(IFeeToken _shadyFeeToken) public view returns (bool) {
-        IFeeWindow _shadyFeeWindow = _shadyFeeToken.getFeeWindow();
-        require(isContainerForFeeWindow(_shadyFeeWindow));
-        IFeeWindow _legitFeeWindow = _shadyFeeWindow;
-        return _legitFeeWindow.getFeeToken() == _shadyFeeToken;
-    }
-
     function isContainerForMarket(IMarket _shadyMarket) public view returns (bool) {
         return markets[address(_shadyMarket)];
     }
@@ -303,29 +303,29 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return openInterestInAttoEth;
     }
 
-    function getRepMarketCapInAttoeth() public view returns (uint256) {
-        uint256 _attoEthPerRep = IRepPriceOracle(controller.lookup("RepPriceOracle")).getRepPriceInAttoEth();
-        uint256 _repMarketCapInAttoeth = getReputationToken().totalSupply().mul(_attoEthPerRep).div(10 ** 18);
-        return _repMarketCapInAttoeth;
+    function getRepMarketCapInAttoEth() public view returns (uint256) {
+        uint256 _attoEthPerRep = auction.getRepPriceInAttoEth();
+        uint256 _repMarketCapInAttoEth = getReputationToken().totalSupply().mul(_attoEthPerRep).div(10 ** 18);
+        return _repMarketCapInAttoEth;
     }
 
-    function getTargetRepMarketCapInAttoeth() public view returns (uint256) {
+    function getTargetRepMarketCapInAttoEth() public view returns (uint256) {
         return getOpenInterestInAttoEth().mul(Reporting.getTargetRepMarketCapMultiplier()).div(Reporting.getTargetRepMarketCapDivisor());
     }
 
     function getOrCacheValidityBond() public returns (uint256) {
         IFeeWindow _feeWindow = getOrCreateCurrentFeeWindow();
         IFeeWindow  _previousFeeWindow = getOrCreatePreviousPreviousFeeWindow();
-        uint256 _currentValidityBondInAttoeth = validityBondInAttoeth[_feeWindow];
-        if (_currentValidityBondInAttoeth != 0) {
-            return _currentValidityBondInAttoeth;
+        uint256 _currentValidityBondInAttoEth = validityBondInAttoEth[_feeWindow];
+        if (_currentValidityBondInAttoEth != 0) {
+            return _currentValidityBondInAttoEth;
         }
         uint256 _totalMarketsInPreviousWindow = _previousFeeWindow.getNumMarkets();
         uint256 _invalidMarketsInPreviousWindow = _previousFeeWindow.getNumInvalidMarkets();
-        uint256 _previousValidityBondInAttoeth = validityBondInAttoeth[_previousFeeWindow];
-        _currentValidityBondInAttoeth = calculateFloatingValue(_invalidMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.getTargetInvalidMarketsDivisor(), _previousValidityBondInAttoeth, Reporting.getDefaultValidityBond(), Reporting.getValidityBondFloor());
-        validityBondInAttoeth[_feeWindow] = _currentValidityBondInAttoeth;
-        return _currentValidityBondInAttoeth;
+        uint256 _previousValidityBondInAttoEth = validityBondInAttoEth[_previousFeeWindow];
+        _currentValidityBondInAttoEth = calculateFloatingValue(_invalidMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.getTargetInvalidMarketsDivisor(), _previousValidityBondInAttoEth, Reporting.getDefaultValidityBond(), Reporting.getValidityBondFloor());
+        validityBondInAttoEth[_feeWindow] = _currentValidityBondInAttoEth;
+        return _currentValidityBondInAttoEth;
     }
 
     function getOrCacheDesignatedReportStake() public returns (uint256) {
@@ -400,15 +400,15 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         if (_currentFeeDivisor != 0) {
             return _currentFeeDivisor;
         }
-        uint256 _repMarketCapInAttoeth = getRepMarketCapInAttoeth();
-        uint256 _targetRepMarketCapInAttoeth = getTargetRepMarketCapInAttoeth();
+        uint256 _repMarketCapInAttoEth = getRepMarketCapInAttoEth();
+        uint256 _targetRepMarketCapInAttoEth = getTargetRepMarketCapInAttoEth();
         uint256 _previousFeeDivisor = shareSettlementFeeDivisor[_previousFeeWindow];
         if (_previousFeeDivisor == 0) {
             _currentFeeDivisor = Reporting.getDefaultReportingFeeDivisor();
-        } else if (_targetRepMarketCapInAttoeth == 0) {
+        } else if (_targetRepMarketCapInAttoEth == 0) {
             _currentFeeDivisor = Reporting.getDefaultReportingFeeDivisor();
         } else {
-            _currentFeeDivisor = _previousFeeDivisor.mul(_repMarketCapInAttoeth).div(_targetRepMarketCapInAttoeth);
+            _currentFeeDivisor = _previousFeeDivisor.mul(_repMarketCapInAttoEth).div(_targetRepMarketCapInAttoEth);
         }
 
         _currentFeeDivisor = _currentFeeDivisor
@@ -458,21 +458,10 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _newMarket;
     }
 
-    function redeemStake(IReportingParticipant[] _reportingParticipants, IFeeWindow[] _feeWindows) public returns (bool) {
+    function redeemStake(IReportingParticipant[] _reportingParticipants) public returns (bool) {
         for (uint256 i=0; i < _reportingParticipants.length; i++) {
             _reportingParticipants[i].redeem(msg.sender);
         }
-
-        for (uint256 k=0; k < _feeWindows.length; k++) {
-            _feeWindows[k].redeem(msg.sender);
-        }
-
-        return true;
-    }
-
-    function buyParticipationTokens(uint256 _attotokens) public returns (bool) {
-        IFeeWindow _feeWindow = getOrCreateCurrentFeeWindow();
-        _feeWindow.trustedUniverseBuy(msg.sender, _attotokens);
         return true;
     }
 }

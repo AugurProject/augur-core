@@ -89,7 +89,6 @@ def test_publicSellCompleteSets(contractsFixture, universe, cash, market):
     assert contractsFixture.chain.head_state.get_balance(tester.a1) == initialTester1ETH + 88200
     assert cash.balanceOf(market.address) == 10000
     assert cash.balanceOf(market.getMarketCreatorMailbox()) == 900
-    assert cash.balanceOf(universe.getNextFeeWindow()) == 900
 
 def test_publicSellCompleteSets_failure(contractsFixture, universe, cash, market):
     completeSets = contractsFixture.contracts['CompleteSets']

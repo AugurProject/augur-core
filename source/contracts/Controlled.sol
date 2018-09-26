@@ -24,6 +24,11 @@ contract Controlled is IControlled {
         _;
     }
 
+    modifier onlyKeyHolder {
+        require(msg.sender == controller.owner());
+        _;
+    }
+
     constructor() public {
         controller = IController(msg.sender);
     }

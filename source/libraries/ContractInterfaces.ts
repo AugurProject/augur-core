@@ -48,7 +48,7 @@
         }
     }
 
-    
+
     export class Controlled extends Contract {
         public constructor(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN) {
             super(connector, accountManager, address, defaultGasPrice);
@@ -3393,17 +3393,17 @@
             return <BN>result[0];
         }
 
-        public initialize = async(universe: string, endTime: BN, feePerEthInAttoeth: BN, cash: string, designatedReporterAddress: string, creator: string, numOutcomes: BN, numTicks: BN, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
+        public initialize = async(universe: string, endTime: BN, feePerEthInAttoEth: BN, cash: string, designatedReporterAddress: string, creator: string, numOutcomes: BN, numTicks: BN, options?: { sender?: string, gasPrice?: BN, attachedEth?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInAttoeth","type":"uint256"},{"name":"_cash","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_creator","type":"address"},{"name":"_numOutcomes","type":"uint256"},{"name":"_numTicks","type":"uint256"}],"name":"initialize","outputs":[{"name":"_success","type":"bool"}],"payable":true,"stateMutability":"payable","type":"function"};
-            await this.remoteCall(abi, [universe, endTime, feePerEthInAttoeth, cash, designatedReporterAddress, creator, numOutcomes, numTicks], "initialize", options.sender, options.gasPrice, options.attachedEth);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInAttoEth","type":"uint256"},{"name":"_cash","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_creator","type":"address"},{"name":"_numOutcomes","type":"uint256"},{"name":"_numTicks","type":"uint256"}],"name":"initialize","outputs":[{"name":"_success","type":"bool"}],"payable":true,"stateMutability":"payable","type":"function"};
+            await this.remoteCall(abi, [universe, endTime, feePerEthInAttoEth, cash, designatedReporterAddress, creator, numOutcomes, numTicks], "initialize", options.sender, options.gasPrice, options.attachedEth);
             return;
         }
 
-        public initialize_ = async(universe: string, endTime: BN, feePerEthInAttoeth: BN, cash: string, designatedReporterAddress: string, creator: string, numOutcomes: BN, numTicks: BN, options?: { sender?: string, attachedEth?: BN }): Promise<boolean> => {
+        public initialize_ = async(universe: string, endTime: BN, feePerEthInAttoEth: BN, cash: string, designatedReporterAddress: string, creator: string, numOutcomes: BN, numTicks: BN, options?: { sender?: string, attachedEth?: BN }): Promise<boolean> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInAttoeth","type":"uint256"},{"name":"_cash","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_creator","type":"address"},{"name":"_numOutcomes","type":"uint256"},{"name":"_numTicks","type":"uint256"}],"name":"initialize","outputs":[{"name":"_success","type":"bool"}],"payable":true,"stateMutability":"payable","type":"function"};
-            const result = await this.localCall(abi, [universe, endTime, feePerEthInAttoeth, cash, designatedReporterAddress, creator, numOutcomes, numTicks], options.sender, options.attachedEth);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_endTime","type":"uint256"},{"name":"_feePerEthInAttoEth","type":"uint256"},{"name":"_cash","type":"address"},{"name":"_designatedReporterAddress","type":"address"},{"name":"_creator","type":"address"},{"name":"_numOutcomes","type":"uint256"},{"name":"_numTicks","type":"uint256"}],"name":"initialize","outputs":[{"name":"_success","type":"bool"}],"payable":true,"stateMutability":"payable","type":"function"};
+            const result = await this.localCall(abi, [universe, endTime, feePerEthInAttoEth, cash, designatedReporterAddress, creator, numOutcomes, numTicks], options.sender, options.attachedEth);
             return <boolean>result[0];
         }
 
@@ -3568,9 +3568,9 @@
             return <string>result[0];
         }
 
-        public getValidityBondAttoeth_ = async( options?: { sender?: string }): Promise<BN> => {
+        public getValidityBondAttoEth_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getValidityBondAttoeth","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getValidityBondAttoEth","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
         }
@@ -4261,9 +4261,9 @@
             return <boolean>result[0];
         }
 
-        public getRepMarketCapInAttoeth_ = async( options?: { sender?: string }): Promise<BN> => {
+        public getRepMarketCapInAttoEth_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getRepMarketCapInAttoeth","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getRepMarketCapInAttoEth","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
         }
@@ -4324,9 +4324,9 @@
             return <boolean>result[0];
         }
 
-        public getTargetRepMarketCapInAttoeth_ = async( options?: { sender?: string }): Promise<BN> => {
+        public getTargetRepMarketCapInAttoEth_ = async( options?: { sender?: string }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getTargetRepMarketCapInAttoeth","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getTargetRepMarketCapInAttoEth","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <BN>result[0];
         }
@@ -6099,4 +6099,3 @@
     export function ContractFactory(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN): Controlled {
         return new Controlled(connector, accountManager, address, defaultGasPrice);
     }
-    

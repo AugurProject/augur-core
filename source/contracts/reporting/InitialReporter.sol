@@ -17,7 +17,6 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         endInitialization();
         market = _market;
         reputationToken = market.getUniverse().getReputationToken();
-        cash = market.getDenominationToken();
         designatedReporter = _designatedReporter;
         return true;
     }
@@ -27,15 +26,10 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         if (!_isDisavowed && !market.isFinalized()) {
             market.finalize();
         }
-        redeemForAllFeeWindows();
         uint256 _repBalance = reputationToken.balanceOf(this);
         require(reputationToken.transfer(owner, _repBalance));
-        uint256 _cashBalance = cash.balanceOf(this);
-        if (_cashBalance > 0) {
-            cash.withdrawEtherTo(owner, _cashBalance);
-        }
         if (!_isDisavowed) {
-            controller.getAugur().logInitialReporterRedeemed(market.getUniverse(), owner, market, size, _repBalance, _cashBalance, payoutNumerators);
+            controller.getAugur().logInitialReporterRedeemed(market.getUniverse(), owner, market, size, _repBalance, payoutNumerators);
         }
         return true;
     }
@@ -54,8 +48,6 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         invalid = _invalid;
         payoutNumerators = _payoutNumerators;
         size = _initialReportStake;
-        feeWindow = market.getFeeWindow();
-        feeWindow.mintFeeTokens(size);
         return true;
     }
 
@@ -75,7 +67,7 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
 
     function forkAndRedeem() public returns (bool) {
         if (!isDisavowed()) {
-            controller.getAugur().logInitialReporterRedeemed(market.getUniverse(), owner, market, size, reputationToken.balanceOf(this), cash.balanceOf(this), payoutNumerators);
+            controller.getAugur().logInitialReporterRedeemed(market.getUniverse(), owner, market, size, reputationToken.balanceOf(this), payoutNumerators);
         }
         fork();
         redeem(msg.sender);
@@ -96,10 +88,6 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
 
     function designatedReporterShowed() public view returns (bool) {
         return actualReporter == designatedReporter;
-    }
-
-    function getFeeWindow() public view returns (IFeeWindow) {
-        return feeWindow;
     }
 
     function getReputationToken() public view returns (IReputationToken) {

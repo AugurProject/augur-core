@@ -12,18 +12,8 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
     IMarket internal market;
     uint256 internal size;
     bytes32 internal payoutDistributionHash;
-    IFeeWindow internal feeWindow;
     uint256[] internal payoutNumerators;
     IReputationToken internal reputationToken;
-    ICash internal cash;
-
-    function migrate() public returns (bool) {
-        require(IMarket(msg.sender) == market);
-        uint256 _balance = feeWindow.getFeeToken().balanceOf(this);
-        feeWindow = market.getFeeWindow();
-        feeWindow.mintFeeTokens(_balance);
-        return true;
-    }
 
     function liquidateLosing() public returns (bool) {
         require(IMarket(msg.sender) == market);
@@ -37,23 +27,12 @@ contract BaseReportingParticipant is Controlled, IReportingParticipant {
         require(market == market.getUniverse().getForkingMarket());
         IUniverse _newUniverse = market.getUniverse().createChildUniverse(payoutNumerators, invalid);
         IReputationToken _newReputationToken = _newUniverse.getReputationToken();
-        redeemForAllFeeWindows();
         uint256 _balance = reputationToken.balanceOf(this);
         reputationToken.migrateOut(_newReputationToken, _balance);
         _newReputationToken.mintForReportingParticipant(size);
         reputationToken = _newReputationToken;
         controller.getAugur().logReportingParticipantDisavowed(market.getUniverse(), market);
         market = IMarket(0);
-        return true;
-    }
-
-    function redeemForAllFeeWindows() internal returns (bool) {
-        IFeeWindow _curFeeWindow = feeWindow;
-        IUniverse _universe = feeWindow.getUniverse();
-        while (_curFeeWindow.getFeeToken().balanceOf(this) > 0) {
-            _curFeeWindow.redeemForReportingParticipant();
-            _curFeeWindow = _universe.getOrCreateFeeWindowBefore(_curFeeWindow);
-        }
         return true;
     }
 
