@@ -133,4 +133,4 @@ def generateFees(fixture, universe, market):
     newFeesBalance = cash.balanceOf(universe.getAuction())
     reporterFees = cost / universe.getOrCacheReportingFeeDivisor()
     feesGenerated = newFeesBalance - oldFeesBalance
-    assert feesGenerated == reporterFees, "Cash balance of window higher by: " + str(fees - reporterFees)
+    assert feesGenerated == reporterFees, "Cash balance of auction higher by: " + str(fees - reporterFees)

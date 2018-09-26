@@ -2,7 +2,7 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import fixture, raises, mark
 from utils import longToHexString, EtherDelta, TokenDelta, PrintGasUsed
-from reporting_utils import generateFees, proceedToNextRound, proceedToFork, finalizeFork
+from reporting_utils import proceedToNextRound, proceedToFork, finalizeFork
 
 def test_redeem_reporting_participants(kitchenSinkFixture, market, categoricalMarket, scalarMarket, universe, cash):
     reputationToken = kitchenSinkFixture.applySignature("ReputationToken", universe.getReputationToken())

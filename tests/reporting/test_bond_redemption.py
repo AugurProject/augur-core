@@ -2,14 +2,11 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed, ABIContract
 from pytest import fixture, mark, raises
 from utils import longTo32Bytes, bytesToHexString, TokenDelta, EtherDelta, longToHexString, PrintGasUsed, AssertLog
-from reporting_utils import generateFees, proceedToNextRound, finalizeFork
+from reporting_utils import proceedToNextRound, finalizeFork
 
-def test_initial_report_fee_collection(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken):
+def test_initial_report(localFixture, universe, market, categoricalMarket, scalarMarket, cash, reputationToken):
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
     constants = localFixture.contracts["Constants"]
-
-    # generate some fees
-    generateFees(localFixture, universe, market)
 
     # Now end the window and finalize
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
@@ -43,17 +40,11 @@ def test_initial_report_fee_collection(localFixture, universe, market, categoric
     True,
     False,
 ])
-def test_failed_crowdsourcer_fees(finalize, localFixture, universe, market, cash, reputationToken):
+def test_failed_crowdsourcer(finalize, localFixture, universe, market, cash, reputationToken):
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
-
-    # generate some fees
-    generateFees(localFixture, universe, market)
 
     # We'll make the window active
     localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
-
-    # generate some fees
-    generateFees(localFixture, universe, market)
 
     # We'll have testers contribute to a dispute but not reach the target
     amount = market.getParticipantStake()
@@ -77,7 +68,7 @@ def test_failed_crowdsourcer_fees(finalize, localFixture, universe, market, cash
         failedCrowdsourcer.contribute(tester.a0, 1)
 
     if finalize:
-        # Fast forward time until the fee window is over and we can redeem to recieve the REP back and fees
+        # Fast forward time until the fee window is over and we can redeem to recieve the REP back
         localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     else:
         # Continue to the next round which will disavow failed crowdsourcers and let us redeem once the window is over
@@ -91,15 +82,12 @@ def test_failed_crowdsourcer_fees(finalize, localFixture, universe, market, cash
     with TokenDelta(reputationToken, amount - 1, tester.a2, "Redeeming did not refund REP"):
         assert failedCrowdsourcer.redeem(tester.a2)
 
-def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
+def test_one_round_crowdsourcer(localFixture, universe, market, cash, reputationToken):
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
     constants = localFixture.contracts["Constants"]
 
     # We'll make the window active
     localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
-
-    # generate some fees
-    generateFees(localFixture, universe, market)
 
     # We'll have testers push markets into the next round by funding dispute crowdsourcers
     amount = 2 * market.getParticipantStake()
@@ -109,21 +97,17 @@ def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reput
     newFeeWindowAddress = market.getFeeWindow()
     assert newFeeWindowAddress != feeWindow.address
 
-    # fast forward time to the fee new window and generate additional fees
+    # fast forward time to the fee new window
     feeWindow = localFixture.applySignature('FeeWindow', newFeeWindowAddress)
     localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
 
-    # Fast forward time until the new fee window is over and we can redeem our winning stake, and dispute bond tokens and receive fees
+    # Fast forward time until the new fee window is over and we can redeem our winning stake, and dispute bond tokens
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     assert market.finalize()
 
     initialReporter = localFixture.applySignature('InitialReporter', market.getReportingParticipant(0))
     marketDisputeCrowdsourcer = localFixture.applySignature('DisputeCrowdsourcer', market.getReportingParticipant(1))
 
-    # The dispute crowdsourcer contributor locked in REP for 2 rounds, as did the Initial Reporter
-    expectedTotalFees = cash.balanceOf(feeWindow.address) + cash.balanceOf(universe.getOrCreateFeeWindowBefore(feeWindow.address))
-
-    expectedFees = expectedTotalFees * 2 / 3
     expectedRep = market.getParticipantStake()
     assert expectedRep == long(marketDisputeCrowdsourcer.getStake() + marketDisputeCrowdsourcer.getStake() / 2)
     disputeCrowdsourcerRedeemedLog = {
@@ -137,15 +121,13 @@ def test_one_round_crowdsourcer_fees(localFixture, universe, market, cash, reput
     }
     with AssertLog(localFixture, "DisputeCrowdsourcerRedeemed", disputeCrowdsourcerRedeemedLog):
         with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't refund REP"):
-            with EtherDelta(expectedFees, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
-                assert marketDisputeCrowdsourcer.redeem(tester.a1, sender=tester.k1)
+            assert marketDisputeCrowdsourcer.redeem(tester.a1, sender=tester.k1)
 
-    # The initial reporter gets fees even though they were not correct. They do not get their REP back though
-    expectedFees = cash.balanceOf(feeWindow.address) + cash.balanceOf(universe.getOrCreateFeeWindowBefore(feeWindow.address))
+    # The initial reporter does not get their REP back
     with TokenDelta(reputationToken, 0, tester.a0, "Redeeming didn't refund REP"):
         assert initialReporter.redeem(tester.a0)
 
-def test_multiple_round_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
+def test_multiple_round_crowdsourcer(localFixture, universe, market, cash, reputationToken):
     constants = localFixture.contracts["Constants"]
 
     # Initial Report disputed
@@ -173,7 +155,7 @@ def test_multiple_round_crowdsourcer_fees(localFixture, universe, market, cash, 
     with raises(TransactionFailed):
         winningDisputeCrowdsourcer1.redeem(tester.a2)
 
-    # Fast forward time until the new fee window is over and we can receive fees
+    # Fast forward time until the new fee window is over
     feeWindow = localFixture.applySignature("FeeWindow", market.getFeeWindow())
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     assert market.finalize()
@@ -190,22 +172,18 @@ def test_multiple_round_crowdsourcer_fees(localFixture, universe, market, cash, 
     with TokenDelta(reputationToken, expectedRep, tester.a3, "Redeeming didn't refund REP"):
         assert winningDisputeCrowdsourcer2.redeem(tester.a3)
 
-    # The losing reports get fees as well but no REP
+    # The losing reports get no REP
     with TokenDelta(reputationToken, 0, tester.a1, "Redeeming refunded REP"):
         assert losingDisputeCrowdsourcer1.redeem(tester.a1)
 
-    # The second losing bond has fees from 3 rounds
     with TokenDelta(reputationToken, 0, tester.a1, "Redeeming refunded REP"):
         assert losingDisputeCrowdsourcer2.redeem(tester.a1)
 
-def test_multiple_contributors_crowdsourcer_fees(localFixture, universe, market, cash, reputationToken):
+def test_multiple_contributors_crowdsourcer(localFixture, universe, market, cash, reputationToken):
     feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
 
     # We'll make the window active
     localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
-
-    # generate some fees
-    generateFees(localFixture, universe, market)
 
     # We'll have testers push markets into the next round by funding dispute crowdsourcers
     amount = market.getParticipantStake()
@@ -217,28 +195,22 @@ def test_multiple_contributors_crowdsourcer_fees(localFixture, universe, market,
     newFeeWindowAddress = market.getFeeWindow()
     assert newFeeWindowAddress != feeWindow.address
 
-    # fast forward time to the fee new window and generate additional fees
+    # fast forward time to the fee new window
     feeWindow = localFixture.applySignature('FeeWindow', newFeeWindowAddress)
     localFixture.contracts["Time"].setTimestamp(feeWindow.getStartTime() + 1)
 
-    # Fast forward time until the new fee window is over and we can redeem our winning stake, and dispute bond tokens and receive fees
+    # Fast forward time until the new fee window is over and we can redeem our winning stake, and dispute bond tokens
     localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
     assert market.finalize()
 
     marketDisputeCrowdsourcer = localFixture.applySignature('DisputeCrowdsourcer', market.getReportingParticipant(1))
 
-    # The dispute crowdsourcer contributors locked in REP for 2 rounds and staked twice the initial reporter so they split 2/3 of the total stake
-    expectedFees = cash.balanceOf(feeWindow.address) + cash.balanceOf(universe.getOrCreateFeeWindowBefore(feeWindow.address))
-    expectedFees = expectedFees / 3 * 2
-
     expectedRep = long(amount + amount / 2)
     with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't refund REP"):
-        with EtherDelta(expectedFees / 2, tester.a1, localFixture.chain, "Redeeming didn't increase ETH correctly"):
-            assert marketDisputeCrowdsourcer.redeem(tester.a1)
+        assert marketDisputeCrowdsourcer.redeem(tester.a1)
 
     with TokenDelta(reputationToken, expectedRep + 1, tester.a2, "Redeeming didn't refund REP"):
-        with EtherDelta(expectedFees - expectedFees / 2, tester.a2, localFixture.chain, "Redeeming didn't increase ETH correctly"):
-            assert marketDisputeCrowdsourcer.redeem(tester.a2)
+        assert marketDisputeCrowdsourcer.redeem(tester.a2)
 
 def test_forkAndRedeem(localFixture, universe, market, categoricalMarket, cash, reputationToken):
     # Let's do some initial disputes for the categorical market
