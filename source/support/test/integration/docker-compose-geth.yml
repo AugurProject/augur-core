@@ -20,6 +20,7 @@ services:
       - ETHEREUM_HTTP=http://geth-dev-node:8545
       - ETHEREUM_GAS_PRICE_IN_NANOETH=1
       - ETHEREUM_PRIVATE_KEY=0xfae42052f82bed612a724fec3632f325f377120592c75bb78adfcceae6470c5a
+      - DEBUG=1
       # - AUGUR_CONTROLLER_ADDRESS=0x35d93ab4de2f58c495e8ec0654f6dcc95c690fd2
     links:
       - geth-dev-node
