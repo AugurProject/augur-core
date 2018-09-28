@@ -57,6 +57,5 @@ COPY tests/ /app/tests/
 
 # Copy the git info so ContractDeployer can read the hash on deploy
 RUN npm run build:source
-COPY .git/ /app/.git/
 
 ENTRYPOINT ["npm"]
