@@ -14,7 +14,7 @@ import { AccountManager } from './AccountManager';
 import { Contracts, Contract } from './Contracts';
 
 // Remove this after #17109 is done
-const DEPRECATED_COMMIT_HASH_PLACEHOLDER = "#17047";
+const DEPRECATED_COMMIT_HASH_PLACEHOLDER = "0x017047";
 
 export class ContractDeployer {
     private readonly accountManager: AccountManager;
