@@ -119,19 +119,6 @@ Deploying to: ${networkConfiguration.networkName}
         return controlled;
     }
 
-    private static async getGitCommit(): Promise<string> {
-        // If we couldn't get the hash from a git repo, try to get it from NPM
-        return await new Promise<string>( (resolve, reject) => {
-            exec("npm show . gitHead", (error, stdout, stderr) => {
-                if (error) {
-                    console.log(stderr);
-                    return reject(error);
-                }
-                resolve(`0x${stdout.trim()}`);
-            });
-        });
-    }
-
     private static async getBytecodeSha(bytecode: Buffer): Promise<string> {
         const digest = await hash('sha256')(bytecode);
         return `0x${digest.toString('hex')}`;
@@ -175,7 +162,7 @@ Deploying to: ${networkConfiguration.networkName}
         // We have to upload and initialize Augur first so it can log the registration and whitelisting of other contracts
         const contract = await this.contracts.get("Augur");
         const address = await this.construct(contract, [], `Uploading ${contract.contractName}`);
-        const commitHash = await ContractDeployer.getGitCommit();
+        const commitHash = "#17074";
         const bytecodeHash = await ContractDeployer.getBytecodeSha(contract.bytecode);
         const augur = new Augur(this.connector, this.accountManager, address, this.connector.gasPrice);
         contract.address = address;
@@ -240,7 +227,7 @@ Deploying to: ${networkConfiguration.networkName}
 
     private async uploadAndAddToController(contract: Contract, registrationContractName: string = contract.contractName, constructorArgs: Array<any> = []): Promise<string> {
         const address = await this.construct(contract, constructorArgs, `Uploading ${contract.contractName}`);
-        const commitHash = await ContractDeployer.getGitCommit();
+        const commitHash = "#17074";
         const bytecodeHash = await ContractDeployer.getBytecodeSha(contract.bytecode);
         await this.controller.registerContract(stringTo32ByteHex(registrationContractName), address, commitHash, bytecodeHash);
         return address;
