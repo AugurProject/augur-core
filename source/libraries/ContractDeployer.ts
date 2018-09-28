@@ -13,6 +13,9 @@ import { NetworkConfiguration } from './NetworkConfiguration';
 import { AccountManager } from './AccountManager';
 import { Contracts, Contract } from './Contracts';
 
+// Remove this after #17109 is done
+const DEPRECATED_COMMIT_HASH_PLACEHOLDER = "#17047";
+
 export class ContractDeployer {
     private readonly accountManager: AccountManager;
     private readonly configuration: DeployerConfiguration;
@@ -161,12 +164,11 @@ Deploying to: ${networkConfiguration.networkName}
         // We have to upload and initialize Augur first so it can log the registration and whitelisting of other contracts
         const contract = await this.contracts.get("Augur");
         const address = await this.construct(contract, [], `Uploading ${contract.contractName}`);
-        const commitHash = "#17047";
         const bytecodeHash = await ContractDeployer.getBytecodeSha(contract.bytecode);
         const augur = new Augur(this.connector, this.accountManager, address, this.connector.gasPrice);
         contract.address = address;
         await augur.setController(this.controller.address);
-        await this.controller.registerContract(stringTo32ByteHex("Augur"), address, commitHash, bytecodeHash);
+        await this.controller.registerContract(stringTo32ByteHex("Augur"), address, DEPRECATED_COMMIT_HASH_PLACEHOLDER, bytecodeHash);
     }
 
     private async uploadAllContracts(): Promise<void> {
@@ -226,9 +228,8 @@ Deploying to: ${networkConfiguration.networkName}
 
     private async uploadAndAddToController(contract: Contract, registrationContractName: string = contract.contractName, constructorArgs: Array<any> = []): Promise<string> {
         const address = await this.construct(contract, constructorArgs, `Uploading ${contract.contractName}`);
-        const commitHash = "#17047";
         const bytecodeHash = await ContractDeployer.getBytecodeSha(contract.bytecode);
-        await this.controller.registerContract(stringTo32ByteHex(registrationContractName), address, commitHash, bytecodeHash);
+        await this.controller.registerContract(stringTo32ByteHex(registrationContractName), address, DEPRECATED_COMMIT_HASH_PLACEHOLDER, bytecodeHash);
         return address;
     }
 
