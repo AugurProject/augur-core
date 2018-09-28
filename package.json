@@ -69,7 +69,9 @@
     "docker:deploy:rinkeby": "npm run docker:deploy:net -- rinkeby",
     "docker:deploy:ropsten": "npm run docker:deploy:net -- ropsten",
     "docker:deploy:foundation": "npm run docker:deploy:net -- foundation",
-    "docker:deploy": "npm run docker:deploy:net -- aura clique rinkeby"
+    "docker:deploy": "npm run docker:deploy:net -- aura clique rinkeby",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "dependencies": {
     "@types/get-port": "3.2.0",
@@ -97,8 +99,9 @@
     "recursive-readdir": "2.2.1",
     "replace": "1.0.0",
     "rimraf": "2.6.2",
-    "solidity-coverage": "0.5.4",
-    "yargs": "11.0.0"
+    "solidity-coverage": "0.5.7",
+    "yargs": "12.0.2",
+    "snyk": "^1.99.1"
   },
   "devDependencies": {
     "@types/chai": "4.0.4",
@@ -113,5 +116,6 @@
     "source-map-support": "0.5.0",
     "ts-node": "3.3.0",
     "typescript": "2.6.1"
-  }
+  },
+  "snyk": true
 }

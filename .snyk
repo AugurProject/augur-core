@@ -1,0 +1,18 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.12.0
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  'npm:debug:20170905':
+    - '@velma/ganache-core > mocha > debug':
+        patched: '2018-09-28T23:29:53.982Z'
+    - '@velma/ganache-core > velma > @velma/solidity-parser > mocha > debug':
+        patched: '2018-09-28T23:29:53.982Z'
+  'npm:minimatch:20160620':
+    - '@velma/ganache-core > velma > @velma/solidity-parser > mocha > glob > minimatch':
+        patched: '2018-09-28T23:29:53.982Z'
+  'npm:ms:20170412':
+    - '@velma/ganache-core > mocha > debug > ms':
+        patched: '2018-09-28T23:29:53.982Z'
+    - '@velma/ganache-core > velma > @velma/solidity-parser > mocha > debug > ms':
+        patched: '2018-09-28T23:29:53.982Z'
