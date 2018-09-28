@@ -1,7 +1,6 @@
 import BN = require('bn.js');
 import { hash } from 'crypto-promise';
 import { exists, readFile, writeFile } from "async-file";
-import { exec } from 'child_process';
 import { encodeParams } from 'ethjs-abi';
 import { TransactionReceipt } from 'ethjs-shared';
 import { stringTo32ByteHex, resolveAll } from "./HelperFunctions";
