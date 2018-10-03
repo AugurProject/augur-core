@@ -196,6 +196,14 @@ def test_reporting_fee_from_auction(localFixture, universe, auction, reputationT
     newDerivedRepPrice = (auction.currentLowerBoundRepPriceInAttoEth() + auction.currentUpperBoundRepPriceInAttoEth()) / 2
     assert auction.currentRepPrice() == newDerivedRepPrice
 
+    # Trading EthForRep again will update the derived price correctly yet again
+    repAmount = 10 ** 18
+    cost = repAmount * repSalePrice / 10 ** 18
+    assert auction.tradeEthForRep(repAmount, value=cost)
+
+    newDerivedRepPrice = (auction.currentLowerBoundRepPriceInAttoEth() + auction.currentUpperBoundRepPriceInAttoEth()) / 2
+    assert auction.currentRepPrice() == newDerivedRepPrice
+
     # Now lets go to the dormant state and confirm that the reported rep price is still the previous recorded auctions derived REP price
     assert time.setTimestamp(auction.getAuctionEndTime() + 1)
     assert auction.getRepPriceInAttoEth() == derivedRepPrice

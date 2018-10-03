@@ -151,7 +151,7 @@ contract Auction is DelegationTarget, Initializable, IAuction {
         currentAttoRepBalance = currentAttoRepBalance.sub(_attoRepAmount);
         // We don't update the price while in bootstrap mode since its a one sided auction
         if (!bootstrapMode) {
-            currentRepPrice = currentUpperBoundRepPriceInAttoEth.add(currentUpperBoundRepPriceInAttoEth) / 2;
+            currentRepPrice = currentLowerBoundRepPriceInAttoEth.add(currentUpperBoundRepPriceInAttoEth) / 2;
         }
         return true;
     }
