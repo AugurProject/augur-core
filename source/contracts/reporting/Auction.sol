@@ -91,9 +91,8 @@ contract Auction is DelegationTarget, Initializable, IAuction {
         uint256 _repBalance = reputationToken.balanceOf(this);
 
         if (_repBalance < _auctionRepBalanceTarget) {
-			reputationToken.mintForAuction(_auctionRepBalanceTarget.sub(_repBalance));
-        }
-		else {
+            reputationToken.mintForAuction(_auctionRepBalanceTarget.sub(_repBalance));
+        } else {
             reputationToken.burnForAuction(_repBalance.sub(_auctionRepBalanceTarget));
         }
 
@@ -108,7 +107,7 @@ contract Auction is DelegationTarget, Initializable, IAuction {
 
         currentAuctionIndex = _currentAuctionIndex;
 
-		initialRepSalePrice = lastRepPrice.mul(Reporting.getAuctionInitialPriceMultiplier());
+        initialRepSalePrice = lastRepPrice.mul(Reporting.getAuctionInitialPriceMultiplier());
         initialEthSalePrice = Reporting.getAuctionInitialPriceMultiplier().mul(10**36).div(lastRepPrice);
         return true;
     }
