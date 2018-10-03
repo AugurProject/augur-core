@@ -74,9 +74,9 @@ contract Auction is DelegationTarget, Initializable, IAuction {
 
     function initializeNewAuction() public returns (bool) {
         if (currentAuctionType == AuctionType.RECORDED) {
-			repPrice = currentRepPrice;
+            repPrice = currentRepPrice;
         }
-		lastRepPrice = currentRepPrice;
+        lastRepPrice = currentRepPrice;
         currentAuctionType = getAuctionType();
         uint256 _currentAuctionIndex = getAuctionIndexForCurrentTime();
         require(currentAuctionType == AuctionType.UNRECORDED || currentAuctionType == AuctionType.RECORDED);
@@ -90,7 +90,7 @@ contract Auction is DelegationTarget, Initializable, IAuction {
         uint256 _auctionRepBalanceTarget = reputationToken.totalSupply() / Reporting.getAuctionTargetSupplyDivisor();
         uint256 _repBalance = reputationToken.balanceOf(this);
 
-		if (_repBalance < _auctionRepBalanceTarget) {
+        if (_repBalance < _auctionRepBalanceTarget) {
 			reputationToken.mintForAuction(_auctionRepBalanceTarget.sub(_repBalance));
         }
 		else {
@@ -109,7 +109,7 @@ contract Auction is DelegationTarget, Initializable, IAuction {
         currentAuctionIndex = _currentAuctionIndex;
 
 		initialRepSalePrice = lastRepPrice.mul(Reporting.getAuctionInitialPriceMultiplier());
-		initialEthSalePrice = Reporting.getAuctionInitialPriceMultiplier().mul(10**36).div(lastRepPrice);
+        initialEthSalePrice = Reporting.getAuctionInitialPriceMultiplier().mul(10**36).div(lastRepPrice);
         return true;
     }
 
@@ -160,14 +160,14 @@ contract Auction is DelegationTarget, Initializable, IAuction {
     function getRepSalePriceInAttoEth() public initializeNewAuctionIfNeeded returns (uint256) {
         uint256 _timePassed = controller.getTimestamp().sub(initializationTime).sub(currentAuctionIndex * 1 days);
         uint256 _priceDecrease = initialRepSalePrice.mul(_timePassed) / Reporting.getAuctionDuration();
-		return initialRepSalePrice.sub(_priceDecrease);
+        return initialRepSalePrice.sub(_priceDecrease);
     }
 
     function getEthSalePriceInAttoRep() public initializeNewAuctionIfNeeded returns (uint256) {
         require(!bootstrapMode);
         uint256 _timePassed = controller.getTimestamp().sub(initializationTime).sub(currentAuctionIndex * 1 days);
         uint256 _priceDecrease = initialEthSalePrice.mul(_timePassed) / Reporting.getAuctionDuration();
-		return initialEthSalePrice.sub(_priceDecrease);
+        return initialEthSalePrice.sub(_priceDecrease);
     }
 
     function getRepPriceInAttoEth() public view returns (uint256) {
@@ -178,7 +178,7 @@ contract Auction is DelegationTarget, Initializable, IAuction {
 
         // If this auction is over and it is a recorded auction use the price it found
         if (getAuctionIndexForCurrentTime() != currentAuctionIndex && currentAuctionType == AuctionType.RECORDED) {
-			return currentRepPrice;
+            return currentRepPrice;
         }
 
         return repPrice;

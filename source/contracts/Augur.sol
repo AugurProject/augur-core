@@ -112,6 +112,7 @@ contract Augur is Controlled, IAugur {
             shareTokens[_market.getShareToken(_outcome)] = true;
         }
     }
+
     function isKnownShareToken(IShareToken _token) public view returns (bool) {
         return shareTokens[_token];
     }
