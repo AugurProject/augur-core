@@ -186,4 +186,16 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
     function getTotalTheoreticalSupply() public view returns (uint256) {
         return 0;
     }
+
+    function trustedAuctionTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
+        return true;
+    }
+
+    function mintForAuction(uint256 _amountToMint) public returns (bool) {
+        return true;
+    }
+
+    function burnForAuction(uint256 _amountToMint) public returns (bool) {
+        return true;
+    }
 }

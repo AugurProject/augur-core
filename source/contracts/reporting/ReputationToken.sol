@@ -70,6 +70,18 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
+    function mintForAuction(uint256 _amountToMint) public afterInitialized returns (bool) {
+        require(universe.getAuction() == IAuction(msg.sender));
+        mint(msg.sender, _amountToMint);
+        return true;
+    }
+
+    function burnForAuction(uint256 _amountToBurn) public afterInitialized returns (bool) {
+        require(universe.getAuction() == IAuction(msg.sender));
+        burn(msg.sender, _amountToBurn);
+        return true;
+    }
+
     function transfer(address _to, uint _value) public returns (bool) {
         return super.transfer(_to, _value);
     }
@@ -95,6 +107,11 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
 
     function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
         require(universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
+        return internalTransfer(_source, _destination, _attotokens);
+    }
+
+    function trustedAuctionTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
+        require(universe.getAuction() == (IAuction(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 

@@ -24,7 +24,6 @@ contract Controller is IController {
     mapping(bytes32 => ContractDetails) public registry;
     // In deployment mode the registration and whitelisting of contracts is permitted. Once turned off it can not be turned back on and no new contracts may be registered or whitelisted.
     bool public deploymentMode = true;
-    bool public useAuction = false;
 
     modifier onlyInDeploymentMode {
         require(deploymentMode);

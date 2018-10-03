@@ -13,8 +13,11 @@ contract IReputationToken is ITyped, ERC20 {
     function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool);
     function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool);
     function trustedUniverseTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool);
+    function trustedAuctionTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool);
     function getUniverse() public view returns (IUniverse);
     function getTotalMigrated() public view returns (uint256);
     function getTotalTheoreticalSupply() public view returns (uint256);
     function mintForReportingParticipant(uint256 _amountMigrated) public returns (bool);
+    function mintForAuction(uint256 _amountToMint) public returns (bool);
+    function burnForAuction(uint256 _amountToMint) public returns (bool);
 }

@@ -37,4 +37,19 @@ contract LegacyReputationToken is OldLegacyReputationToken {
     function onTokenTransfer(address, address, uint256) internal returns (bool) {
         return true;
     }
+
+    // Interface fulfilment
+    function trustedAuctionTransfer(address, address, uint256) public returns (bool) {
+        return true;
+    }
+
+    // Interface fulfilment
+    function mintForAuction(uint256) public returns (bool) {
+        return true;
+    }
+
+    // Interface fulfilment
+    function burnForAuction(uint256) public returns (bool) {
+        return true;
+    }
 }
