@@ -5221,6 +5221,20 @@
 			"type": "function"
 		},
 		{
+			"constant": true,
+			"inputs": [],
+			"name": "getAddress",
+			"outputs": [
+				{
+					"name": "",
+					"type": "address"
+				}
+			],
+			"payable": false,
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
 			"constant": false,
 			"inputs": [
 				{
@@ -5350,6 +5364,20 @@
 		{
 			"constant": true,
 			"inputs": [],
+			"name": "feeBalance",
+			"outputs": [
+				{
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"payable": false,
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"constant": true,
+			"inputs": [],
 			"name": "currentAttoRepBalance",
 			"outputs": [
 				{
@@ -5467,6 +5495,20 @@
 		{
 			"constant": true,
 			"inputs": [],
+			"name": "cash",
+			"outputs": [
+				{
+					"name": "",
+					"type": "address"
+				}
+			],
+			"payable": false,
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"constant": true,
+			"inputs": [],
 			"name": "manualRepPriceInAttoEth",
 			"outputs": [
 				{
@@ -5555,6 +5597,25 @@
 		},
 		{
 			"constant": true,
+			"inputs": [
+				{
+					"name": "_cash",
+					"type": "address"
+				}
+			],
+			"name": "getCashSupply",
+			"outputs": [
+				{
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"payable": false,
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"constant": true,
 			"inputs": [],
 			"name": "getReputationToken",
 			"outputs": [
@@ -5582,6 +5643,29 @@
 			"type": "function"
 		},
 		{
+			"constant": true,
+			"inputs": [
+				{
+					"name": "_cash",
+					"type": "address"
+				},
+				{
+					"name": "_addr",
+					"type": "address"
+				}
+			],
+			"name": "getCashBalance",
+			"outputs": [
+				{
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"payable": false,
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
 			"constant": false,
 			"inputs": [
 				{
@@ -5590,6 +5674,25 @@
 				}
 			],
 			"name": "initialize",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_feeAmount",
+					"type": "uint256"
+				}
+			],
+			"name": "recordFees",
 			"outputs": [
 				{
 					"name": "",

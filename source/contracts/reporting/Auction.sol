@@ -7,6 +7,7 @@ import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'reporting/Reporting.sol';
+import 'trading/ICash.sol';
 
 
 contract Auction is DelegationTarget, Initializable, IAuction {
@@ -24,6 +25,7 @@ contract Auction is DelegationTarget, Initializable, IAuction {
 
     IUniverse private universe;
     IReputationToken private reputationToken;
+    ICash public cash;
     uint256 public manualRepPriceInAttoEth;
     mapping(address => bool) private authorizedPriceFeeders; // The addresses which may alter the manual price feed. They may only enter a new price feed value. They may not add or remove authorized addresses or turn manual mode on or off.
 
@@ -31,6 +33,7 @@ contract Auction is DelegationTarget, Initializable, IAuction {
     bool public bootstrapped; // Records that a bootstrap initialization occured. We can turn bootstrapping off if this has happened before.
     uint256 public initializationTime; // The time this contract was uploaded and initialized. The auction cadence is relative to this time
 
+    uint256 public feeBalance; // The ETH this contract has received in fees.
     uint256 public currentAuctionIndex; // The current auction index. Inicies starts at 0 relative to epoch where each week has 2
     AuctionType public currentAuctionType; // The current auction type.
     uint256 public initialAttoRepBalance; // The initial REP balance in attoREP considered for the current auction
@@ -50,18 +53,12 @@ contract Auction is DelegationTarget, Initializable, IAuction {
         _;
     }
 
-    modifier initializeNewAuctionIfNeeded {
-        if (currentAuctionIndex != getAuctionIndexForCurrentTime()) {
-            initializeNewAuction();
-        }
-        _;
-    }
-
     function initialize(IUniverse _universe) public beforeInitialized returns (bool) {
         endInitialization();
         require(_universe != address(0));
         universe = _universe;
         reputationToken = universe.getReputationToken();
+        cash = ICash(controller.lookup("Cash"));
         initializationTime = controller.getTimestamp();
         authorizedPriceFeeders[controller.owner()] = true;
         manualRepPriceInAttoEth = Reporting.getAuctionInitialRepprice();
@@ -92,12 +89,10 @@ contract Auction is DelegationTarget, Initializable, IAuction {
 
         if (_repBalance < _auctionRepBalanceTarget) {
             reputationToken.mintForAuction(_auctionRepBalanceTarget.sub(_repBalance));
-        } else {
-            reputationToken.burnForAuction(_repBalance.sub(_auctionRepBalanceTarget));
         }
 
         initialAttoRepBalance = _auctionRepBalanceTarget;
-        initialAttoEthBalance = address(this).balance;
+        initialAttoEthBalance = cash.balanceOf(this);
 
         currentAttoRepBalance = initialAttoRepBalance;
         currentAttoEthBalance = initialAttoEthBalance;
@@ -112,7 +107,15 @@ contract Auction is DelegationTarget, Initializable, IAuction {
         return true;
     }
 
-    function tradeRepForEth(uint256 _attoEthAmount) public initializeNewAuctionIfNeeded returns (bool) {
+    function initializeNewAuctionIfNeeded() private returns (bool) {
+        if (currentAuctionIndex != getAuctionIndexForCurrentTime()) {
+            initializeNewAuction();
+        }
+        return true;
+    }
+
+    function tradeRepForEth(uint256 _attoEthAmount) public returns (bool) {
+        initializeNewAuctionIfNeeded();
         require(!bootstrapMode);
         require(currentAttoEthBalance > 0);
         require(_attoEthAmount > 0);
@@ -120,7 +123,7 @@ contract Auction is DelegationTarget, Initializable, IAuction {
         uint256 _ethPriceInAttoRep = getEthSalePriceInAttoRep();
         uint256 _attoRepCost = _attoEthAmount.mul(_ethPriceInAttoRep) / 10**18;
         reputationToken.trustedAuctionTransfer(msg.sender, this, _attoRepCost);
-        msg.sender.transfer(_attoEthAmount);
+        cash.withdrawEtherTo(msg.sender, _attoEthAmount);
         uint256 _attoEthSold = initialAttoEthBalance.sub(currentAttoEthBalance);
         uint256 _newTotalAttoEthSold = _attoEthSold.add(_attoEthAmount);
         uint256 _repPriceInAttoEth = (10**36) / _ethPriceInAttoRep;
@@ -130,10 +133,20 @@ contract Auction is DelegationTarget, Initializable, IAuction {
             .div(_newTotalAttoEthSold);
         currentAttoEthBalance = currentAttoEthBalance.sub(_attoEthAmount);
         currentRepPrice = currentLowerBoundRepPriceInAttoEth.add(currentUpperBoundRepPriceInAttoEth) / 2;
+
+        // Burn any REP purchased using fee income
+        if (feeBalance > 0) {
+            uint256 _feesUsed = feeBalance.min(_attoEthAmount);
+            uint256 _burnAmount = _attoRepCost.mul(_feesUsed).div(_attoEthAmount);
+            reputationToken.burnForAuction(_burnAmount);
+            feeBalance = feeBalance.sub(_feesUsed);
+        }
+
         return true;
     }
 
-    function tradeEthForRep(uint256 _attoRepAmount) public initializeNewAuctionIfNeeded payable returns (bool) {
+    function tradeEthForRep(uint256 _attoRepAmount) public payable returns (bool) {
+        initializeNewAuctionIfNeeded();
         require(currentAttoRepBalance > 0);
         require(_attoRepAmount > 0);
         _attoRepAmount = _attoRepAmount.min(currentAttoRepBalance);
@@ -141,6 +154,7 @@ contract Auction is DelegationTarget, Initializable, IAuction {
         uint256 _attoEthCost = _attoRepAmount.mul(_repPriceInAttoEth) / 10**18;
         // This will raise an exception if insufficient ETH was sent
         msg.sender.transfer(msg.value.sub(_attoEthCost));
+        cash.depositEther.value(_attoEthCost)();
         reputationToken.transfer(msg.sender, _attoRepAmount);
         uint256 _attoRepSold = initialAttoRepBalance.sub(currentAttoRepBalance);
         uint256 _newTotalAttoRepSold = _attoRepSold.add(_attoRepAmount);
@@ -156,13 +170,21 @@ contract Auction is DelegationTarget, Initializable, IAuction {
         return true;
     }
 
-    function getRepSalePriceInAttoEth() public initializeNewAuctionIfNeeded returns (uint256) {
+    function recordFees(uint256 _feeAmount) public returns (bool) {
+        require(msg.sender == controller.lookup("CompleteSets") || msg.sender == controller.lookup("ClaimTradingProceeds"));
+        feeBalance = feeBalance.add(_feeAmount);
+        return true;
+    }
+
+    function getRepSalePriceInAttoEth() public returns (uint256) {
+        initializeNewAuctionIfNeeded();
         uint256 _timePassed = controller.getTimestamp().sub(initializationTime).sub(currentAuctionIndex * 1 days);
         uint256 _priceDecrease = initialRepSalePrice.mul(_timePassed) / Reporting.getAuctionDuration();
         return initialRepSalePrice.sub(_priceDecrease);
     }
 
-    function getEthSalePriceInAttoRep() public initializeNewAuctionIfNeeded returns (uint256) {
+    function getEthSalePriceInAttoRep() public returns (uint256) {
+        initializeNewAuctionIfNeeded();
         require(!bootstrapMode);
         uint256 _timePassed = controller.getTimestamp().sub(initializationTime).sub(currentAuctionIndex * 1 days);
         uint256 _priceDecrease = initialEthSalePrice.mul(_timePassed) / Reporting.getAuctionDuration();

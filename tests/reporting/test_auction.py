@@ -2,8 +2,9 @@ from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed, ABIContract
 from pytest import fixture, raises
 from utils import TokenDelta, EtherDelta, AssertLog
+from reporting_utils import generateFees
 
-def test_bootstrap(localFixture, universe, reputationToken, auction, time):
+def test_bootstrap(localFixture, universe, reputationToken, auction, time, cash):
     # Lets confirm the auction is in the dormant state initially and also in bootstrap mode
     assert auction.getAuctionType() == 0
     assert auction.bootstrapMode()
@@ -36,14 +37,14 @@ def test_bootstrap(localFixture, universe, reputationToken, auction, time):
     # We can purchase some of the REP now. We'll send some extra ETH to confirm it just gets returned too
     repAmount = 10 ** 18
     cost = repAmount * repSalePrice / 10 ** 18
-    with EtherDelta(cost, auction.address, localFixture.chain, "ETH was not transfered to auction correctly"):
+    with TokenDelta(cash, cost, auction.address, "ETH was not transfered to auction correctly"):
         with TokenDelta(reputationToken, repAmount, tester.a0, "REP was not transferred to the user correctly"):
             assert auction.tradeEthForRep(repAmount, value=cost + 20)
 
     # Lets purchase the remaining REP in the auction
     repAmount = auction.currentAttoRepBalance()
     cost = repAmount * repSalePrice / 10 ** 18
-    with EtherDelta(cost, auction.address, localFixture.chain, "ETH was not transfered to auction correctly"):
+    with TokenDelta(cash, cost, auction.address, "ETH was not transfered to auction correctly"):
         with TokenDelta(reputationToken, repAmount, tester.a0, "REP was not transferred to the user correctly"):
             assert auction.tradeEthForRep(repAmount, value=cost)
 
@@ -80,7 +81,7 @@ def test_bootstrap(localFixture, universe, reputationToken, auction, time):
 
     assert not auction.bootstrapMode()
 
-def test_reporting_fee_from_auction(localFixture, universe, auction, reputationToken, time):
+def test_reporting_fee_from_auction(localFixture, universe, auction, reputationToken, time, cash):
     # We'll quickly do the bootstrap auction and seed it with some ETH
     startTime = auction.getAuctionStartTime()
     assert time.setTimestamp(startTime)
@@ -89,7 +90,7 @@ def test_reporting_fee_from_auction(localFixture, universe, auction, reputationT
     repSalePrice = auction.getRepSalePriceInAttoEth()
     repAmount = 5000 * 10 ** 18
     cost = repAmount * repSalePrice / 10 ** 18
-    with EtherDelta(cost, auction.address, localFixture.chain, "ETH was not transfered to auction correctly"):
+    with TokenDelta(cash, cost, auction.address, "ETH was not transfered to auction correctly"):
         with TokenDelta(reputationToken, repAmount, tester.a0, "REP was not transferred to the user correctly"):
             assert auction.tradeEthForRep(repAmount, value=cost)
 
@@ -216,6 +217,47 @@ def test_reporting_fee_from_auction(localFixture, universe, auction, reputationT
     assert auction.initialRepSalePrice() == 4 * newDerivedRepPrice
     assert auction.initialEthSalePrice() == 4 * 10**36 / newDerivedRepPrice
 
+def test_buyback_from_reporting_fees(localFixture, universe, auction, reputationToken, time, market, cash):
+    # We'll quickly do the bootstrap auction and seed it with some ETH
+    startTime = auction.getAuctionStartTime()
+    assert time.setTimestamp(startTime)
+
+    # Buy 5000 REP
+    repSalePrice = auction.getRepSalePriceInAttoEth()
+    repAmount = 5000 * 10 ** 18
+    cost = repAmount * repSalePrice / 10 ** 18
+    assert auction.tradeEthForRep(repAmount, value=cost)
+
+    # Now we'll go to the first real auction
+    endTime = auction.getAuctionEndTime()
+    assert time.setTimestamp(endTime + 1)
+
+    startTime = auction.getAuctionStartTime()
+    assert time.setTimestamp(startTime)
+
+    # Generate some fees
+    generateFees(localFixture, universe, market)
+    feesGenerated = auction.feeBalance()
+
+    # Now we'll sell some REP and we can see that the fees that were collected were used and that the REP provided was burned
+    ethSalePrice = auction.getEthSalePriceInAttoRep()
+    ethAmount = feesGenerated / 2
+    cost = ethAmount * ethSalePrice / 10 ** 18
+    totalRepSupply = reputationToken.totalSupply()
+    assert auction.tradeRepForEth(ethAmount)
+
+    assert totalRepSupply - reputationToken.totalSupply() == cost
+    assert auction.feeBalance() == feesGenerated / 2
+
+    # If we now sell some REP again but do so by selling more than could be covered by remaining fees only a proportional amount of REP is actually burned
+    ethAmount = feesGenerated
+    cost = ethAmount * ethSalePrice / 10 ** 18
+    totalRepSupply = reputationToken.totalSupply()
+    assert auction.tradeRepForEth(ethAmount)
+
+    assert totalRepSupply - reputationToken.totalSupply() == cost / 2
+    assert auction.feeBalance() == 0
+
 @fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)
@@ -234,16 +276,8 @@ def localFixture(fixture, localSnapshot):
     return fixture
 
 @fixture
-def reputationToken(localFixture, kitchenSinkSnapshot, universe):
-    return localFixture.applySignature('ReputationToken', universe.getReputationToken())
-
-@fixture
 def universe(localFixture, kitchenSinkSnapshot):
     return ABIContract(localFixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
-
-@fixture
-def auction(localFixture, kitchenSinkSnapshot, universe):
-    return localFixture.applySignature('Auction', universe.getAuction())
 
 @fixture
 def time(localFixture, kitchenSinkSnapshot):
