@@ -30,9 +30,9 @@ contract IAugur {
     function logCompleteSetsSold(IUniverse _universe, IMarket _market, address _account, uint256 _numCompleteSets) public returns (bool);
     function logTradingProceedsClaimed(IUniverse _universe, address _shareToken, address _sender, address _market, uint256 _numShares, uint256 _numPayoutTokens, uint256 _finalTokenBalance) public returns (bool);
     function logUniverseForked() public returns (bool);
-    function logReputationTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool);
     function logDisputeCrowdsourcerTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool);
     function logShareTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool);
+    function logReputationTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool);
     function logReputationTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool);
     function logReputationTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool);
     function logShareTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool);
@@ -44,4 +44,8 @@ contract IAugur {
     function logInitialReporterTransferred(IUniverse _universe, IMarket _market, address _from, address _to) public returns (bool);
     function logMarketTransferred(IUniverse _universe, address _from, address _to) public returns (bool);
     function logMarketMailboxTransferred(IUniverse _universe, IMarket _market, address _from, address _to) public returns (bool);
+    function logAuctionTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool);
+    function logAuctionTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool);
+    function logAuctionTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool);
+    function recordAuctionTokens(IUniverse _universe) public returns (bool);
 }

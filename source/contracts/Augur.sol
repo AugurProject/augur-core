@@ -14,6 +14,8 @@ import 'reporting/IInitialReporter.sol';
 import 'reporting/IMailbox.sol';
 import 'trading/IShareToken.sol';
 import 'trading/Order.sol';
+import 'reporting/IAuction.sol';
+import 'reporting/IAuctionToken.sol';
 
 
 // Centralized approval authority and event emissions
@@ -24,7 +26,8 @@ contract Augur is Controlled, IAugur {
         ShareToken,
         DisputeCrowdsourcer,
         FeeWindow, // No longer a valid type but here for backward compat with Augur Node processing
-        FeeToken // No longer a valid type but here for backward compat with Augur Node processing
+        FeeToken, // No longer a valid type but here for backward compat with Augur Node processing
+        AuctionToken
     }
 
     event MarketCreated(bytes32 indexed topic, string description, string extraInfo, address indexed universe, address market, address indexed marketCreator, bytes32[] outcomes, uint256 marketCreationFee, int256 minPrice, int256 maxPrice, IMarket.MarketType marketType);
@@ -60,6 +63,7 @@ contract Augur is Controlled, IAugur {
     mapping(address => bool) private universes;
     mapping(address => bool) private crowdsourcers;
     mapping(address => bool) private shareTokens;
+    mapping(address => bool) private auctionTokens;
 
     //
     // Universe
@@ -115,6 +119,26 @@ contract Augur is Controlled, IAugur {
 
     function isKnownShareToken(IShareToken _token) public view returns (bool) {
         return shareTokens[_token];
+    }
+
+    //
+    // Auction Tokens
+    //
+    function recordAuctionTokens(IUniverse _universe) public returns (bool) {
+        require(isKnownUniverse(_universe));
+        IAuction _auction = _universe.getAuction();
+        IAuctionToken _ethAuctionToken = _auction.ethAuctionToken();
+        IAuctionToken _repAuctionToken = _auction.repAuctionToken();
+        if (_ethAuctionToken != IAuctionToken(0)) {
+            auctionTokens[_ethAuctionToken] = true;
+        }
+        if (_repAuctionToken != IAuctionToken(0)) {
+            auctionTokens[_repAuctionToken] = true;
+        }
+    }
+
+    function isKnownAuctionToken(IAuctionToken _token) public view returns (bool) {
+        return auctionTokens[_token];
     }
 
     //
@@ -346,6 +370,24 @@ contract Augur is Controlled, IAugur {
         require(_universe.isContainerForMarket(_market));
         require(IMailbox(msg.sender) == _market.getMarketCreatorMailbox());
         emit MarketMailboxTransferred(_universe, _market, msg.sender, _from, _to);
+        return true;
+    }
+
+    function logAuctionTokensTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
+        require(isKnownAuctionToken(IAuctionToken(msg.sender)));
+        emit TokensTransferred(_universe, msg.sender, _from, _to, _value, TokenType.AuctionToken, 0);
+        return true;
+    }
+
+    function logAuctionTokenBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        require(isKnownAuctionToken(IAuctionToken(msg.sender)));
+        emit TokensBurned(_universe, msg.sender, _target, _amount, TokenType.AuctionToken, 0);
+        return true;
+    }
+
+    function logAuctionTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+        require(isKnownAuctionToken(IAuctionToken(msg.sender)));
+        emit TokensMinted(_universe, msg.sender, _target, _amount, TokenType.AuctionToken, 0);
         return true;
     }
 }

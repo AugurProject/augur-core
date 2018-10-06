@@ -6,14 +6,14 @@ from reporting_utils import generateFees
 
 def test_bootstrap(localFixture, universe, reputationToken, auction, time, cash):
     # Lets confirm the auction is in the dormant state initially and also in bootstrap mode
-    assert auction.getAuctionType() == 0
+    assert auction.getRoundType() == 0
     assert auction.bootstrapMode()
     assert not auction.isActive()
 
     # If we move time forward to the next auction start time we can see that the auction is now active.
     startTime = auction.getAuctionStartTime()
     assert time.setTimestamp(startTime)
-    assert auction.getAuctionType() == 2
+    assert auction.getRoundType() == 2
     assert auction.bootstrapMode()
     assert auction.isActive()
 
@@ -30,7 +30,8 @@ def test_bootstrap(localFixture, universe, reputationToken, auction, time, cash)
     assert auction.getRepSalePriceInAttoEth() == repSalePrice
 
     # Before we do any trading lets confirm the contract balances are as expected
-    assert auction.initialAttoRepBalance() == reputationToken.balanceOf(auction.address)
+    repAuctionToken = localFixture.applySignature("AuctionToken", auction.repAuctionToken())
+    assert auction.initialAttoRepBalance() == reputationToken.balanceOf(repAuctionToken.address)
     assert auction.initialAttoRepBalance() == 11 * 10 ** 6 * 10 ** 18 / 400
     assert localFixture.chain.head_state.get_balance(auction.address) == 0
 
@@ -38,14 +39,14 @@ def test_bootstrap(localFixture, universe, reputationToken, auction, time, cash)
     repAmount = 10 ** 18
     cost = repAmount * repSalePrice / 10 ** 18
     with TokenDelta(cash, cost, auction.address, "ETH was not transfered to auction correctly"):
-        with TokenDelta(reputationToken, repAmount, tester.a0, "REP was not transferred to the user correctly"):
+        with TokenDelta(repAuctionToken, cost, tester.a0, "REP auction token was not transferred to the user correctly"):
             assert auction.tradeEthForRep(repAmount, value=cost + 20)
 
     # Lets purchase the remaining REP in the auction
-    repAmount = auction.currentAttoRepBalance()
+    repAmount = auction.getCurrentAttoRepBalance()
     cost = repAmount * repSalePrice / 10 ** 18
     with TokenDelta(cash, cost, auction.address, "ETH was not transfered to auction correctly"):
-        with TokenDelta(reputationToken, repAmount, tester.a0, "REP was not transferred to the user correctly"):
+        with TokenDelta(repAuctionToken, cost, tester.a0, "REP auction token was not transferred to the user correctly"):
             assert auction.tradeEthForRep(repAmount, value=cost)
 
     # If we try to purchase any more the transaction will fail
@@ -56,15 +57,20 @@ def test_bootstrap(localFixture, universe, reputationToken, auction, time, cash)
     endTime = auction.getAuctionEndTime()
     assert time.setTimestamp(endTime + 1)
 
-    assert auction.getAuctionType() == 3
+    assert auction.getRoundType() == 3
     assert auction.bootstrapMode()
     assert not auction.isActive()
+
+    # Now we can redeem the tokens we received for the amount of REP we purchased
+    expectedREP = reputationToken.balanceOf(repAuctionToken.address)
+    with TokenDelta(reputationToken, expectedREP, tester.a0, "REP was not distributed correctly from auction token redemption"):
+        repAuctionToken.redeem()
 
     startTime = auction.getAuctionStartTime()
     assert time.setTimestamp(startTime)
 
     # We can see that the ETH and REP auctions are active
-    assert auction.getAuctionType() == 6
+    assert auction.getRoundType() == 6
     assert auction.isActive()
 
     assert auction.getRepSalePriceInAttoEth() == auction.initialRepSalePrice()
@@ -72,14 +78,20 @@ def test_bootstrap(localFixture, universe, reputationToken, auction, time, cash)
 
     assert not auction.bootstrapMode()
 
+    ethAuctionToken = localFixture.applySignature("AuctionToken", auction.ethAuctionToken())
     ethSalePrice = auction.initialEthSalePrice()
     ethAmount = 10 ** 18
     cost = ethAmount * ethSalePrice / 10 ** 18
-    with EtherDelta(ethAmount, tester.a0, localFixture.chain, "ETH was not transfered to user correctly"):
+    with TokenDelta(ethAuctionToken, cost, tester.a0, "ETH auction token was not transferred to the user correctly"):
         with TokenDelta(reputationToken, cost, auction.address, "REP was not transferred to the auction correctly"):
             assert auction.tradeRepForEth(ethAmount)
 
-    assert not auction.bootstrapMode()
+    endTime = auction.getAuctionEndTime()
+    assert time.setTimestamp(endTime + 1)
+
+    # We can redeem the eth auction tokens for ETH. Since the auction ended with no other bids we get all the ETH
+    with EtherDelta(cash.balanceOf(ethAuctionToken.address), tester.a0, localFixture.chain, "ETH redemption from eth auction token did not work correctly"):
+        assert ethAuctionToken.redeem()
 
 def test_reporting_fee_from_auction(localFixture, universe, auction, reputationToken, time, cash):
     # We'll quickly do the bootstrap auction and seed it with some ETH
@@ -88,72 +100,60 @@ def test_reporting_fee_from_auction(localFixture, universe, auction, reputationT
 
     # Buy 5000 REP
     repSalePrice = auction.getRepSalePriceInAttoEth()
+    repAuctionToken = localFixture.applySignature("AuctionToken", auction.repAuctionToken())
     repAmount = 5000 * 10 ** 18
     cost = repAmount * repSalePrice / 10 ** 18
     with TokenDelta(cash, cost, auction.address, "ETH was not transfered to auction correctly"):
-        with TokenDelta(reputationToken, repAmount, tester.a0, "REP was not transferred to the user correctly"):
+        with TokenDelta(repAuctionToken, cost, tester.a0, "REP was not transferred to the user correctly"):
             assert auction.tradeEthForRep(repAmount, value=cost)
 
     # Now we'll go to the first real auction, which will be a reported auction, meaning the result affects the reported REP price
     endTime = auction.getAuctionEndTime()
     assert time.setTimestamp(endTime + 1)
 
+    # Now we can redeem the tokens we received for the amount of REP we purchased
+    expectedREP = reputationToken.balanceOf(repAuctionToken.address)
+    with TokenDelta(reputationToken, expectedREP, tester.a0, "REP was not distributed correctly from auction token redemption"):
+        repAuctionToken.redeem()
+
     startTime = auction.getAuctionStartTime()
     assert time.setTimestamp(startTime)
 
-    # Initially the REP price of the auction will simply be what was provided as the constant initialized value and the bound values will be 0
+    # Initially the REP price of the auction will simply be what was provided as the constant initialized value
     assert auction.getRepPriceInAttoEth() == auction.manualRepPriceInAttoEth()
     repSalePrice = auction.getRepSalePriceInAttoEth()
-    assert auction.currentUpperBoundRepPriceInAttoEth() == 0
-    assert auction.currentLowerBoundRepPriceInAttoEth() == 0
+    repAuctionToken = localFixture.applySignature("AuctionToken", auction.repAuctionToken())
+    ethAuctionToken = localFixture.applySignature("AuctionToken", auction.ethAuctionToken())
 
-    # Purchasing REP or ETH will update the current auctions recorded bounds but will not yet update the official REP price
-    repAmount = 10 ** 18
+    # Purchasing REP or ETH will update the current auctions derived price, though until the auction ends it will be very innacurate so we dont bother checking here. We'll purchase 1/4 of the available supply of each at the initial price
+    repAmount = auction.getCurrentAttoRepBalance() / 4
     cost = repAmount * repSalePrice / 10 ** 18
     assert auction.tradeEthForRep(repAmount, value=cost)
 
-    # We purchased 1 REP for repSalePrice attoETH. Lets check the upper bound price of the auction now
-    assert auction.currentUpperBoundRepPriceInAttoEth() == repSalePrice
-
-    # If we purchase 1 ETH for ethSalePrice attoREP we'll simmilarly see the lower bound be set as such (10**36) / price of 1 ETH in attoREP.
     ethSalePrice = auction.getEthSalePriceInAttoRep()
-    ethAmount = 10 ** 18
+    ethAmount = auction.getCurrentAttoEthBalance() / 4
     cost = ethAmount * ethSalePrice / 10 ** 18
     assert auction.tradeRepForEth(ethAmount)
 
-    expectedLowerBoundRepPrice = 10**36 / ethSalePrice
-    assert auction.currentLowerBoundRepPriceInAttoEth() == expectedLowerBoundRepPrice
-
-    # The reported value of REP is simply the mean of these two:
-    assert auction.currentRepPrice() == (auction.currentLowerBoundRepPriceInAttoEth() + auction.currentUpperBoundRepPriceInAttoEth()) / 2
-
-    # We'll let some time pass and buy more REP and ETH and the halfpoint prices
+    # We'll let some time pass and buy the rest of the REP and ETH and the halfpoint prices
     assert time.incrementTimestamp(12 * 60 * 60)
 
-    # First we purchase 2 REP at the new price
     newRepSalePrice = auction.getRepSalePriceInAttoEth()
-    repAmount = 2 * 10 ** 18
+    repAmount = auction.getCurrentAttoRepBalance()
     cost = repAmount * newRepSalePrice / 10 ** 18
     assert auction.tradeEthForRep(repAmount, value=cost)
 
-    # We can observe that the recorded upper bound weighs this purchase more since more REP was purchased
-    upperBoundRepPrice = (newRepSalePrice * 2 + repSalePrice) / 3
-    assert auction.currentUpperBoundRepPriceInAttoEth() == upperBoundRepPrice
-
     # Now we'll purchase 2 ETH
     newEthSalePrice = auction.getEthSalePriceInAttoRep()
-    ethAmount = 2 * 10 ** 18
+    ethAmount = auction.getCurrentAttoEthBalance()
     cost = ethAmount * newEthSalePrice / 10 ** 18
     assert auction.tradeRepForEth(ethAmount)
 
     # We can observe that the recorded lower bound weighs this purchase more since more ETH was purchased
-    newExpectedLowerBoundRepPrice = 10**36 / newEthSalePrice
-    lowerBoundRepPrice = (newExpectedLowerBoundRepPrice * 2 + expectedLowerBoundRepPrice) / 3
-    assert auction.currentLowerBoundRepPriceInAttoEth() == lowerBoundRepPrice
-
-    # And as before the recorded REP price is the mean of the two bounds
-    derivedRepPrice = (auction.currentLowerBoundRepPriceInAttoEth() + auction.currentUpperBoundRepPriceInAttoEth()) / 2
-    assert auction.currentRepPrice() == derivedRepPrice
+    lowerBoundRepPrice = auction.initialAttoEthBalance() * 10**18 / ethAuctionToken.maxSupply()
+    upperBoundRepPrice = repAuctionToken.maxSupply() * 10**18 / auction.initialAttoRepBalance()
+    derivedRepPrice = (lowerBoundRepPrice + upperBoundRepPrice) / 2
+    assert auction.getDerivedRepPriceInAttoEth() == derivedRepPrice
 
     # Lets turn on auction price reporting and move time so that this auction is considered over
     assert localFixture.contracts["Controller"].toggleFeedSource(True)
@@ -172,12 +172,9 @@ def test_reporting_fee_from_auction(localFixture, universe, auction, reputationT
     # Note that the repSalePrice now starts at 4 x the previous auctions derived price
     assert auction.initialRepSalePrice() == 4 * derivedRepPrice
 
-    repAmount = 10 ** 18
+    repAmount = auction.getCurrentAttoRepBalance()
     cost = repAmount * repSalePrice / 10 ** 18
     assert auction.tradeEthForRep(repAmount, value=cost)
-
-    # We can observe that the recorded upper bound weighs this purchase more since more REP was purchased
-    assert auction.currentUpperBoundRepPriceInAttoEth() == repSalePrice
 
     # Now we'll purchase 1 ETH
     ethSalePrice = auction.getEthSalePriceInAttoRep()
@@ -185,25 +182,17 @@ def test_reporting_fee_from_auction(localFixture, universe, auction, reputationT
     # Note that the ethSalePrice is now 4 x the previous auctions derived price in terms of ETH
     assert auction.initialEthSalePrice() == 4 * 10**36 / derivedRepPrice
 
-    ethAmount = 10 ** 18
+    ethAmount = auction.getCurrentAttoEthBalance()
     cost = ethAmount * ethSalePrice / 10 ** 18
     assert auction.tradeRepForEth(ethAmount)
 
-    # We can observe that the recorded lower bound weighs this purchase more since more ETH was purchased
-    lowerBoundRepPrice = 10**36 / ethSalePrice
-    assert auction.currentLowerBoundRepPriceInAttoEth() == lowerBoundRepPrice
-
     # And as before the recorded REP price is the mean of the two bounds
-    newDerivedRepPrice = (auction.currentLowerBoundRepPriceInAttoEth() + auction.currentUpperBoundRepPriceInAttoEth()) / 2
-    assert auction.currentRepPrice() == newDerivedRepPrice
-
-    # Trading EthForRep again will update the derived price correctly yet again
-    repAmount = 10 ** 18
-    cost = repAmount * repSalePrice / 10 ** 18
-    assert auction.tradeEthForRep(repAmount, value=cost)
-
-    newDerivedRepPrice = (auction.currentLowerBoundRepPriceInAttoEth() + auction.currentUpperBoundRepPriceInAttoEth()) / 2
-    assert auction.currentRepPrice() == newDerivedRepPrice
+    repAuctionToken = localFixture.applySignature("AuctionToken", auction.repAuctionToken())
+    ethAuctionToken = localFixture.applySignature("AuctionToken", auction.ethAuctionToken())
+    lowerBoundRepPrice = auction.initialAttoEthBalance() * 10**18 / ethAuctionToken.maxSupply()
+    upperBoundRepPrice = repAuctionToken.maxSupply() * 10**18 / auction.initialAttoRepBalance()
+    newDerivedRepPrice = (lowerBoundRepPrice + upperBoundRepPrice) / 2
+    assert auction.getDerivedRepPriceInAttoEth() == newDerivedRepPrice
 
     # Now lets go to the dormant state and confirm that the reported rep price is still the previous recorded auctions derived REP price
     assert time.setTimestamp(auction.getAuctionEndTime() + 1)
