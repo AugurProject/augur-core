@@ -5,8 +5,6 @@ from decimal import Decimal
 from struct import pack
 
 garbageAddress = '0xdefec8eddefec8eddefec8eddefec8eddefec8ed'
-garbageBytes20 = str(bytearray.fromhex('baadf00dbaadf00dbaadf00dbaadf00dbaadf00d'))
-garbageBytes32 = str(bytearray.fromhex('deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'))
 twentyZeros = str(pack(">l", 0).rjust(20, '\x00'))
 thirtyTwoZeros = str(pack(">l", 0).rjust(32, '\x00'))
 

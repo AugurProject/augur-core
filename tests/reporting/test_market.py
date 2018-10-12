@@ -1,8 +1,9 @@
 from datetime import timedelta
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
-from pytest import raises
-from utils import stringToBytes, AssertLog, bytesToHexString
+from pytest import raises, mark
+from utils import stringToBytes, AssertLog, bytesToHexString, EtherDelta, TokenDelta
+from reporting_utils import proceedToDesignatedReporting
 
 tester.STARTGAS = long(6.7 * 10**6)
 
@@ -85,3 +86,38 @@ def test_transfering_ownership(contractsFixture, universe, market):
     }
     with AssertLog(contractsFixture, "MarketMailboxTransferred", transferLog):
         assert mailbox.transferOwnership(tester.a1)
+
+@mark.parametrize('invalid', [
+    True,
+    False
+])
+def test_variable_validity_bond(invalid, contractsFixture, universe, cash):
+    # We can't make a market with less than the minimum required validity bond
+    minimumValidityBond = universe.getOrCacheMarketCreationCost()
+
+    with raises(TransactionFailed):
+       contractsFixture.createReasonableYesNoMarket(universe, cash, validityBond=minimumValidityBond-1)
+
+    # But we can make one with a greater bond
+    higherValidityBond = minimumValidityBond+1
+    market = contractsFixture.createReasonableYesNoMarket(universe, cash, validityBond=higherValidityBond)
+    assert market.getValidityBondAttoEth() == higherValidityBond
+
+    # If we resolve the market the bond in it's entirety will go to the fee pool or to the market creator if the resolution was not invalid
+    proceedToDesignatedReporting(contractsFixture, market)
+
+    if invalid:
+        market.doInitialReport([market.getNumTicks() / 2, market.getNumTicks() / 2], True, "")
+    else:
+        market.doInitialReport([0, market.getNumTicks()], False, "")
+
+    # Move time forward so we can finalize and see the bond move
+    feeWindow = contractsFixture.applySignature('FeeWindow', market.getFeeWindow())
+    assert contractsFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+
+    if invalid:
+        with TokenDelta(cash, higherValidityBond, universe.getAuction(), "Validity bond did not go to the auction"):
+            market.finalize()
+    else:
+        with EtherDelta(higherValidityBond, market.getMarketCreatorMailbox(), contractsFixture.chain, "Validity bond did not go to the market creator"):
+            market.finalize()

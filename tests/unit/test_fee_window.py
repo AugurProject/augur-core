@@ -64,8 +64,8 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     mockCash = fixture.contracts['MockCash']
     mockAugur = fixture.contracts['MockAugur']
     mockReputationToken = fixture.contracts['MockReputationToken']
-    controller.registerContract(stringToBytes('Cash'), mockCash.address, twentyZeros, thirtyTwoZeros)
-    controller.registerContract(stringToBytes('Augur'), mockAugur.address, twentyZeros, thirtyTwoZeros)
+    controller.registerContract(stringToBytes('Cash'), mockCash.address)
+    controller.registerContract(stringToBytes('Augur'), mockAugur.address)
     feeWindow = fixture.upload('../source/contracts/reporting/FeeWindow.sol', 'feeWindow')
     fixture.contracts["initializedFeeWindow"] = feeWindow
     feeWindow.setController(fixture.contracts["Controller"].address)

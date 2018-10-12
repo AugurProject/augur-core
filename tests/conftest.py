@@ -15,7 +15,7 @@ from os import path, walk, makedirs, listdir, remove as remove_file
 import pytest
 from re import findall
 from solc import compile_standard
-from utils import bytesToHexString, bytesToLong, longToHexString, stringToBytes, garbageBytes20, garbageBytes32, twentyZeros, thirtyTwoZeros
+from utils import bytesToHexString, bytesToLong, longToHexString, stringToBytes, twentyZeros, thirtyTwoZeros
 from copy import deepcopy
 from reporting_utils import proceedToFork, finalizeFork
 
@@ -246,7 +246,7 @@ class ContractsFixture:
         lookupKey = lookupKey if lookupKey else path.splitext(path.basename(relativeFilePath))[0]
         contract = self.upload(relativeFilePath, lookupKey, signatureKey, constructorArgs)
         if not contract: return None
-        self.contracts['Controller'].registerContract(lookupKey.ljust(32, '\x00'), contract.address, garbageBytes20, garbageBytes32)
+        self.contracts['Controller'].registerContract(lookupKey.ljust(32, '\x00'), contract.address)
         return(contract)
 
     def upload(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
@@ -391,7 +391,7 @@ class ContractsFixture:
         # We have to upload Augur first so it can log when contracts are added to the registry
         augur = self.upload("../source/contracts/Augur.sol")
         self.contracts["Augur"].setController(self.contracts['Controller'].address)
-        self.contracts['Controller'].registerContract("Augur".ljust(32, '\x00'), augur.address, garbageBytes20, garbageBytes32)
+        self.contracts['Controller'].registerContract("Augur".ljust(32, '\x00'), augur.address)
         return augur
 
     def uploadShareToken(self, controllerAddress = None):
@@ -420,8 +420,8 @@ class ContractsFixture:
         childUniverse = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Universe']), childUniverseAddress)
         return childUniverse
 
-    def createYesNoMarket(self, universe, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, sender=tester.k0, topic="", description="description", extraInfo=""):
-        marketCreationFee = universe.getOrCacheMarketCreationCost()
+    def createYesNoMarket(self, universe, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, sender=tester.k0, topic="", description="description", extraInfo="", validityBond=0):
+        marketCreationFee = validityBond or universe.getOrCacheMarketCreationCost()
         marketAddress = universe.createYesNoMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, topic, description, extraInfo, value = marketCreationFee, sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
@@ -442,7 +442,7 @@ class ContractsFixture:
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createReasonableYesNoMarket(self, universe, denominationToken, sender=tester.k0, topic="", description="description", extraInfo=""):
+    def createReasonableYesNoMarket(self, universe, denominationToken, sender=tester.k0, topic="", description="description", extraInfo="", validityBond=0):
         return self.createYesNoMarket(
             universe = universe,
             endTime = long(self.contracts["Time"].getTimestamp() + timedelta(days=1).total_seconds()),
@@ -452,7 +452,8 @@ class ContractsFixture:
             sender = sender,
             topic= topic,
             description= description,
-            extraInfo= extraInfo)
+            extraInfo= extraInfo,
+            validityBond= validityBond)
 
     def createReasonableCategoricalMarket(self, universe, numOutcomes, denominationToken, sender=tester.k0):
         return self.createCategoricalMarket(
@@ -508,7 +509,7 @@ def augurInitializedWithMocksSnapshot(fixture, augurInitializedSnapshot):
     fixture.uploadAllMockContracts()
     controller = fixture.contracts['Controller']
     mockAugur = fixture.contracts['MockAugur']
-    controller.registerContract(stringToBytes('Augur'), mockAugur.address, twentyZeros, thirtyTwoZeros)
+    controller.registerContract(stringToBytes('Augur'), mockAugur.address)
     return fixture.createSnapshot()
 
 @pytest.fixture(scope="session")

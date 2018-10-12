@@ -16,8 +16,6 @@ contract Controller is IController {
     struct ContractDetails {
         bytes32 name;
         address contractAddress;
-        bytes20 commitHash;
-        bytes32 bytecodeHash;
     }
 
     mapping(address => bool) public whitelist;
@@ -59,15 +57,10 @@ contract Controller is IController {
         return true;
     }
 
-    function registerContract(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public onlyInDeploymentMode onlyOwnerCaller returns (bool) {
+    function registerContract(bytes32 _key, address _address) public onlyInDeploymentMode onlyOwnerCaller returns (bool) {
         require(registry[_key].contractAddress == address(0));
-        registry[_key] = ContractDetails(_key, _address, _commitHash, _bytecodeHash);
+        registry[_key] = ContractDetails(_key, _address);
         return true;
-    }
-
-    function getContractDetails(bytes32 _key) public view returns (address, bytes20, bytes32) {
-        ContractDetails storage _details = registry[_key];
-        return (_details.contractAddress, _details.commitHash, _details.bytecodeHash);
     }
 
     function lookup(bytes32 _key) public view returns (address) {
