@@ -16,8 +16,6 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseRepor
         market = _market;
         universe = market.getUniverse();
         reputationToken = market.getReputationToken();
-        feeWindow = market.getFeeWindow();
-        cash = market.getDenominationToken();
         size = _size;
         payoutNumerators = _payoutNumerators;
         payoutDistributionHash = _payoutDistributionHash;
@@ -30,19 +28,13 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseRepor
         if (!_isDisavowed && !market.isFinalized()) {
             market.finalize();
         }
-        redeemForAllFeeWindows();
         uint256 _reputationSupply = reputationToken.balanceOf(this);
-        uint256 _cashSupply = cash.balanceOf(this);
         uint256 _supply = totalSupply();
         uint256 _amount = balances[_redeemer];
-        uint256 _feeShare = _cashSupply.mul(_amount).div(_supply);
         uint256 _reputationShare = _reputationSupply.mul(_amount).div(_supply);
         burn(_redeemer, _amount);
         require(reputationToken.transfer(_redeemer, _reputationShare));
-        if (_feeShare > 0) {
-            cash.withdrawEtherTo(_redeemer, _feeShare);
-        }
-        controller.getAugur().logDisputeCrowdsourcerRedeemed(universe, _redeemer, market, _amount, _reputationShare, _feeShare, payoutNumerators);
+        controller.getAugur().logDisputeCrowdsourcerRedeemed(universe, _redeemer, market, _amount, _reputationShare, payoutNumerators);
         return true;
     }
 
@@ -53,7 +45,6 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseRepor
             return 0;
         }
         reputationToken.trustedReportingParticipantTransfer(_participant, this, _amount);
-        feeWindow.mintFeeTokens(_amount);
         mint(_participant, _amount);
         assert(reputationToken.balanceOf(this) >= totalSupply());
         return _amount;
@@ -82,10 +73,6 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseRepor
     function onBurn(address _target, uint256 _amount) internal returns (bool) {
         controller.getAugur().logDisputeCrowdsourcerTokensBurned(universe, _target, _amount);
         return true;
-    }
-
-    function getFeeWindow() public view returns (IFeeWindow) {
-        return feeWindow;
     }
 
     function getReputationToken() public view returns (IReputationToken) {

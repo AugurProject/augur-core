@@ -1,9 +1,7 @@
 pragma solidity 0.4.24;
 
-import 'libraries/Ownable.sol';
 
-
-contract IRepPriceOracle is Ownable {
+contract IRepPriceOracle {
     function setRepPriceInAttoEth(uint256 _repPriceInAttoEth) external returns (bool);
-    function getRepPriceInAttoEth() external view returns (uint256);
+    function getRepPriceInAttoEth() public view returns (uint256);
 }

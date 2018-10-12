@@ -22,8 +22,6 @@ contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, MarketValid
     function claimTradingProceeds(IMarket _market, address _shareHolder) external marketIsLegit(_market) nonReentrant returns(bool) {
         require(_market.isFinalized());
 
-        ICash _denominationToken = _market.getDenominationToken();
-
         for (uint256 _outcome = 0; _outcome < _market.getNumberOfOutcomes(); ++_outcome) {
             IShareToken _shareToken = _market.getShareToken(_outcome);
             uint256 _numberOfShares = _shareToken.balanceOf(_shareHolder);
@@ -38,20 +36,29 @@ contract ClaimTradingProceeds is CashAutoConverter, ReentrancyGuard, MarketValid
                 _shareToken.destroyShares(_shareHolder, _numberOfShares);
                 logTradingProceedsClaimed(_market, _shareToken, _shareHolder, _numberOfShares, _shareHolderShare);
             }
-            if (_shareHolderShare > 0) {
-                require(_denominationToken.transferFrom(_market, this, _shareHolderShare));
-                _denominationToken.withdrawEtherTo(_shareHolder, _shareHolderShare);
-            }
-            if (_creatorShare > 0) {
-                require(_denominationToken.transferFrom(_market, _market.getMarketCreatorMailbox(), _creatorShare));
-            }
-            if (_reporterShare > 0) {
-                require(_denominationToken.transferFrom(_market, _market.getUniverse().getOrCreateNextFeeWindow(), _reporterShare));
-            }
+            distributeProceeds(_market, _shareHolder, _shareHolderShare, _creatorShare, _reporterShare);
         }
 
         _market.assertBalances();
 
+        return true;
+    }
+
+    function distributeProceeds(IMarket _market, address _shareHolder, uint256 _shareHolderShare, uint256 _creatorShare, uint256 _reporterShare) private returns (bool) {
+        ICash _denominationToken = _market.getDenominationToken();
+        IAuction _auction = IAuction(_market.getUniverse().getAuction());
+
+        if (_shareHolderShare > 0) {
+            require(_denominationToken.transferFrom(_market, this, _shareHolderShare));
+            _denominationToken.withdrawEtherTo(_shareHolder, _shareHolderShare);
+        }
+        if (_creatorShare > 0) {
+            require(_denominationToken.transferFrom(_market, _market.getMarketCreatorMailbox(), _creatorShare));
+        }
+        if (_reporterShare > 0) {
+            require(_denominationToken.transferFrom(_market, _auction, _reporterShare));
+            _auction.recordFees(_reporterShare);
+        }
         return true;
     }
 

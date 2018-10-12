@@ -6,8 +6,8 @@ import 'reporting/IReputationToken.sol';
 import 'reporting/IFeeWindow.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IFeeWindow.sol';
-import 'reporting/IFeeToken.sol';
 import 'reporting/IReportingParticipant.sol';
+import 'reporting/IAuction.sol';
 import 'trading/IShareToken.sol';
 
 
@@ -18,6 +18,7 @@ contract IUniverse is ITyped {
     function createChildUniverse(uint256[] _parentPayoutNumerators, bool _invalid) public returns (IUniverse);
     function getChildUniverse(bytes32 _parentPayoutDistributionHash) public view returns (IUniverse);
     function getReputationToken() public view returns (IReputationToken);
+    function getAuction() public view returns (IAuction);
     function getForkingMarket() public view returns (IMarket);
     function getForkEndTime() public view returns (uint256);
     function getForkReputationGoal() public view returns (uint256);
@@ -27,8 +28,8 @@ contract IUniverse is ITyped {
     function getOrCreateCurrentFeeWindow() public returns (IFeeWindow);
     function getOrCreateNextFeeWindow() public returns (IFeeWindow);
     function getOpenInterestInAttoEth() public view returns (uint256);
-    function getRepMarketCapInAttoeth() public view returns (uint256);
-    function getTargetRepMarketCapInAttoeth() public view returns (uint256);
+    function getRepMarketCapInAttoEth() public view returns (uint256);
+    function getTargetRepMarketCapInAttoEth() public view returns (uint256);
     function getOrCacheValidityBond() public returns (uint256);
     function getOrCacheDesignatedReportStake() public returns (uint256);
     function getOrCacheDesignatedReportNoShowBond() public returns (uint256);
@@ -46,7 +47,6 @@ contract IUniverse is ITyped {
     function isContainerForMarket(IMarket _shadyTarget) public view returns (bool);
     function isContainerForReportingParticipant(IReportingParticipant _reportingParticipant) public view returns (bool);
     function isContainerForShareToken(IShareToken _shadyTarget) public view returns (bool);
-    function isContainerForFeeToken(IFeeToken _shadyTarget) public view returns (bool);
     function addMarketTo() public returns (bool);
     function removeMarketFrom() public returns (bool);
     function decrementOpenInterest(uint256 _amount) public returns (bool);

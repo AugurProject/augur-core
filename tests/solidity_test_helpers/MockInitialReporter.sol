@@ -27,10 +27,6 @@ contract MockInitialReporter is IInitialReporter {
         return true;
     }
 
-    function callMintFeeTokens(IFeeWindow _feeWindow, uint256 _amount) public returns (bool) {
-        return _feeWindow.mintFeeTokens(_amount);
-    }
-
     function reportWasCalled() public returns(bool) { return reportWasCalledValue; }
 
     function report(address _reporter, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid, uint256 _initialReportStake) public returns (bool) {

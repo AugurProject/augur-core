@@ -10,6 +10,7 @@ import 'libraries/MarketValidator.sol';
 import 'trading/ICash.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IFeeWindow.sol';
+import 'reporting/IAuction.sol';
 import 'trading/IOrders.sol';
 import 'libraries/CashAutoConverter.sol';
 
@@ -91,8 +92,9 @@ contract CompleteSets is Controlled, CashAutoConverter, ReentrancyGuard, MarketV
             require(_denominationToken.transferFrom(_market, _market.getMarketCreatorMailbox(), _creatorFee));
         }
         if (_reportingFee != 0) {
-            IFeeWindow _feeWindow = _market.getUniverse().getOrCreateNextFeeWindow();
-            require(_denominationToken.transferFrom(_market, _feeWindow, _reportingFee));
+            IAuction _auction = IAuction(_market.getUniverse().getAuction());
+            require(_denominationToken.transferFrom(_market, _auction, _reportingFee));
+            _auction.recordFees(_reportingFee);
         }
         require(_denominationToken.transferFrom(_market, _sender, _payout));
 

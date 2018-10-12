@@ -206,10 +206,6 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
     # confirm that before the fork is finalized we can redeem stake in other markets crowdsourcers, which are disavowable
     categoricalDisputeCrowdsourcer = localFixture.applySignature("DisputeCrowdsourcer", categoricalMarket.getReportingParticipant(1))
 
-    # confirm we cannot migrate it
-    with raises(TransactionFailed):
-        categoricalDisputeCrowdsourcer.migrate()
-
     # confirm we cannot liquidate it
     with raises(TransactionFailed):
         categoricalDisputeCrowdsourcer.liquidateLosing()
@@ -235,8 +231,6 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
     # We cannot purchase new Participation Tokens during a fork
     feeWindowAddress = universe.getCurrentFeeWindow()
     feeWindow = localFixture.applySignature("FeeWindow", feeWindowAddress)
-    with raises(TransactionFailed):
-        feeWindow.buy(1)
 
     # finalize the fork
     marketFinalizedLog = {
@@ -290,9 +284,6 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
     categoricalMarketFeeWindow = localFixture.applySignature("FeeWindow", categoricalMarketFeeWindowAddress)
 
     proceedToNextRound(localFixture, categoricalMarket)
-
-    # We can also purchase Participation Tokens in this fee window
-    assert categoricalMarketFeeWindow.buy(1)
 
     # We will finalize the categorical market in the new universe
     feeWindow = localFixture.applySignature('FeeWindow', categoricalMarket.getFeeWindow())

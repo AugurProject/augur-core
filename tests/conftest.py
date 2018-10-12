@@ -544,6 +544,8 @@ def kitchenSinkSnapshot(fixture, augurInitializedSnapshot):
     snapshot['yesNoMarket'] = yesNoMarket
     snapshot['categoricalMarket'] = categoricalMarket
     snapshot['scalarMarket'] = scalarMarket
+    snapshot['auction'] = fixture.applySignature('Auction', universe.getAuction())
+    snapshot['reputationToken'] = fixture.applySignature('ReputationToken', universe.getReputationToken())
     return snapshot
 
 @pytest.fixture
@@ -578,6 +580,14 @@ def categoricalMarket(kitchenSinkFixture, kitchenSinkSnapshot):
 @pytest.fixture
 def scalarMarket(kitchenSinkFixture, kitchenSinkSnapshot):
     return ABIContract(kitchenSinkFixture.chain, kitchenSinkSnapshot['scalarMarket'].translator, kitchenSinkSnapshot['scalarMarket'].address)
+
+@pytest.fixture
+def auction(kitchenSinkFixture, kitchenSinkSnapshot):
+    return ABIContract(kitchenSinkFixture.chain, kitchenSinkSnapshot['auction'].translator, kitchenSinkSnapshot['auction'].address)
+
+@pytest.fixture
+def reputationToken(kitchenSinkFixture, kitchenSinkSnapshot):
+    return ABIContract(kitchenSinkFixture.chain, kitchenSinkSnapshot['reputationToken'].translator, kitchenSinkSnapshot['reputationToken'].address)
 
 # TODO: globally replace this with `fixture` and `kitchenSinkSnapshot` as appropriate then delete this
 @pytest.fixture(scope="session")

@@ -3,7 +3,6 @@ pragma solidity 0.4.24;
 /**
  * The Controller is used to manage whitelisting of contracts and and halt the normal use of Augur’s contracts (e.g., if there is a vulnerability found in Augur).  There is only one instance of the Controller, and it gets uploaded to the blockchain before all of the other contracts.  The `owner` attribute of the Controller is set to the address that called the constructor of the Controller.  The Augur team can then call functions from this address to interact with the Controller.
  *
- * Initially, Augur will have a “dev mode” that that can be enabled to allow Augur’s team to suicide funds, extract Ether or Tokens from a specific contract (in case funds inadvertently get sent somewhere they shouldn’t have), and update the Controller of a target contract to a new Controller.  Eventually, the plan is to remove this mode so that this functionality will no longer be available to anyone, including the Augur team.  At that point, the `owner` address will only be able to the `emergencyStop` and `release` functions.
  */
 
 import 'IAugur.sol';
@@ -21,10 +20,15 @@ contract Controller is IController {
         bytes32 bytecodeHash;
     }
 
-    address public owner;
     mapping(address => bool) public whitelist;
     mapping(bytes32 => ContractDetails) public registry;
-    bool public stopped = false;
+    // In deployment mode the registration and whitelisting of contracts is permitted. Once turned off it can not be turned back on and no new contracts may be registered or whitelisted.
+    bool public deploymentMode = true;
+
+    modifier onlyInDeploymentMode {
+        require(deploymentMode);
+        _;
+    }
 
     modifier onlyOwnerCaller {
         require(msg.sender == owner);
@@ -40,12 +44,12 @@ contract Controller is IController {
      * Contract Administration
      */
 
-    function addToWhitelist(address _target) public onlyOwnerCaller returns (bool) {
+    function addToWhitelist(address _target) public onlyInDeploymentMode onlyOwnerCaller returns (bool) {
         whitelist[_target] = true;
         return true;
     }
 
-    function removeFromWhitelist(address _target) public onlyOwnerCaller returns (bool) {
+    function removeFromWhitelist(address _target) public onlyInDeploymentMode onlyOwnerCaller returns (bool) {
         whitelist[_target] = false;
         return true;
     }
@@ -55,7 +59,7 @@ contract Controller is IController {
         return true;
     }
 
-    function registerContract(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public onlyOwnerCaller returns (bool) {
+    function registerContract(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public onlyInDeploymentMode onlyOwnerCaller returns (bool) {
         require(registry[_key].contractAddress == address(0));
         registry[_key] = ContractDetails(_key, _address, _commitHash, _bytecodeHash);
         return true;
@@ -72,6 +76,18 @@ contract Controller is IController {
 
     function transferOwnership(address _newOwner) public onlyOwnerCaller returns (bool) {
         owner = _newOwner;
+        return true;
+    }
+
+    function turnOffDeploymentMode() public onlyInDeploymentMode onlyOwnerCaller returns (bool) {
+        deploymentMode = false;
+        return true;
+    }
+
+    // Price Feed Functions
+
+    function toggleFeedSource(bool _useAuction) public onlyOwnerCaller returns (bool) {
+        useAuction = _useAuction;
         return true;
     }
 

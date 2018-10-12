@@ -6,6 +6,7 @@ import 'reporting/IFeeWindow.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/ITyped.sol';
 import 'reporting/IReputationToken.sol';
+import 'reporting/IAuction.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'factories/MarketFactory.sol';
@@ -20,6 +21,7 @@ contract MockUniverse is Initializable, IUniverse {
     IUniverse private setOrCreateChildUniverseValue;
     IUniverse private setChildUniverseValue;
     IReputationToken private setReputationTokenValue;
+    IAuction private setAuctionValue;
     IMarket private setForkingMarketValue;
     uint256 private setForkEndTimeValue;
     bytes32 private setParentPayoutDistributionHashValue;
@@ -30,8 +32,8 @@ contract MockUniverse is Initializable, IUniverse {
     IFeeWindow private setNextFeeWindowValue;
     IFeeWindow private setFeeWindowForForkEndTimeValue;
     uint256 private setOpenInterestInAttoEthValue;
-    uint256 private setRepMarketCapInAttoethValue;
-    uint256 private setTargetRepMarketCapInAttoethValue;
+    uint256 private setRepMarketCapInAttoEthValue;
+    uint256 private setTargetRepMarketCapInAttoEthValue;
     uint256 private setValidityBondValue;
     uint256 private setDesignatedReportStakeValue;
     uint256 private setDesignatedReportNoShowBondValue;
@@ -93,6 +95,10 @@ contract MockUniverse is Initializable, IUniverse {
         setReputationTokenValue = _setReputationTokenValue;
     }
 
+    function setAuction(IAuction _setAuctionValue) public {
+        setAuctionValue = _setAuctionValue;
+    }
+
     function setForkingMarket(IMarket _setForkingMarketValue) public {
         setForkingMarketValue = _setForkingMarketValue;
     }
@@ -133,12 +139,12 @@ contract MockUniverse is Initializable, IUniverse {
         setOpenInterestInAttoEthValue = _setOpenInterestInAttoEthValue;
     }
 
-    function setRepMarketCapInAttoeth(uint256 _setRepMarketCapInAttoethValue) public {
-        setRepMarketCapInAttoethValue = _setRepMarketCapInAttoethValue;
+    function setRepMarketCapInAttoEth(uint256 _setRepMarketCapInAttoEthValue) public {
+        setRepMarketCapInAttoEthValue = _setRepMarketCapInAttoEthValue;
     }
 
-    function setTargetRepMarketCapInAttoeth(uint256 _setTargetRepMarketCapInAttoethValue) public {
-        setTargetRepMarketCapInAttoethValue = _setTargetRepMarketCapInAttoethValue;
+    function setTargetRepMarketCapInAttoEth(uint256 _setTargetRepMarketCapInAttoEthValue) public {
+        setTargetRepMarketCapInAttoEthValue = _setTargetRepMarketCapInAttoEthValue;
     }
 
     function setOrCacheValidityBond(uint256 _setValidityBondValue) public {
@@ -255,6 +261,10 @@ contract MockUniverse is Initializable, IUniverse {
         return setReputationTokenValue;
     }
 
+    function getAuction() public view returns (IAuction) {
+        return setAuctionValue;
+    }
+
     function getForkingMarket() public view returns (IMarket) {
         return setForkingMarketValue;
     }
@@ -298,12 +308,12 @@ contract MockUniverse is Initializable, IUniverse {
         return setOpenInterestInAttoEthValue;
     }
 
-    function getRepMarketCapInAttoeth() public view returns (uint256) {
-        return setRepMarketCapInAttoethValue;
+    function getRepMarketCapInAttoEth() public view returns (uint256) {
+        return setRepMarketCapInAttoEthValue;
     }
 
-    function getTargetRepMarketCapInAttoeth() public view returns (uint256) {
-        return setTargetRepMarketCapInAttoethValue;
+    function getTargetRepMarketCapInAttoEth() public view returns (uint256) {
+        return setTargetRepMarketCapInAttoEthValue;
     }
 
     function getOrCacheValidityBondWallCalled() public returns(bool) { return getOrCacheValidityBondWallCalledValue; }
@@ -465,10 +475,6 @@ contract MockUniverse is Initializable, IUniverse {
 
     function getOrCreateFeeWindowBefore(IFeeWindow _feeWindow) public returns (IFeeWindow) {
         return IFeeWindow(0);
-    }
-
-    function isContainerForFeeToken(IFeeToken _shadyTarget) public view returns (bool) {
-        return true;
     }
 
     function setIsForking(bool _isForking) public { setIsForkingValue = _isForking; }

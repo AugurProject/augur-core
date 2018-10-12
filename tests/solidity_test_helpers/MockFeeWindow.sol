@@ -335,15 +335,7 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
         return true;
     }
 
-    function getFeeToken() public view returns (IFeeToken) {
-        return IFeeToken(0);
-    }
-
     function redeemForReportingParticipant() public returns (bool) {
-        return true;
-    }
-
-    function mintFeeTokens(uint256 _amount) public returns (bool) {
         return true;
     }
 
