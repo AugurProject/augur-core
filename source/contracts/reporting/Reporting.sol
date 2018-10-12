@@ -43,7 +43,7 @@ library Reporting {
     function getMinimumReportingFeeDivisor() internal pure returns (uint256) { return MINIMUM_REPORTING_FEE_DIVISOR; }
     function getDefaultReportingFeeDivisor() internal pure returns (uint256) { return DEFAULT_REPORTING_FEE_DIVISOR; }
     function getInitialREPSupply() internal pure returns (uint256) { return INITIAL_REP_SUPPLY; }
-    function getAuctionInitialRepprice() internal pure returns (uint256) { return AUCTION_INITIAL_REP_PRICE; }
+    function getAuctionInitialRepPrice() internal pure returns (uint256) { return AUCTION_INITIAL_REP_PRICE; }
     function getAuctionTargetSupplyDivisor() internal pure returns (uint256) { return AUCTION_TARGET_SUPPLY_DIVISOR; }
     function getAuctionInitialPriceMultiplier() internal pure returns (uint256) { return AUCTION_INITIAL_PRICE_MULTIPLIER; }
     function getAuctionDuration() internal pure returns (uint256) { return AUCTION_DURATION; }

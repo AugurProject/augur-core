@@ -8,8 +8,6 @@ import 'libraries/ITyped.sol';
 import 'trading/ICash.sol';
 import 'libraries/Initializable.sol';
 import 'reporting/IAuction.sol';
-import 'reporting/IReputationToken.sol';
-import 'trading/ICash.sol';
 
 
 contract AuctionToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IAuctionToken {
@@ -54,7 +52,7 @@ contract AuctionToken is DelegationTarget, ITyped, Initializable, VariableSupply
         return true;
     }
 
-    function retreiveFunds() public returns (bool) {
+    function retrieveFunds() public returns (bool) {
         require(msg.sender == address(auction));
         // If no participants have claim to any funds remaining we send them back to the auction
         if (totalSupply() == 0) {

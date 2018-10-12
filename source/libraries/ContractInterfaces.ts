@@ -48,7 +48,7 @@
         }
     }
 
-    
+
     export class Controlled extends Contract {
         public constructor(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN) {
             super(connector, accountManager, address, defaultGasPrice);
@@ -2651,16 +2651,16 @@
             return <BN>result[0];
         }
 
-        public retreiveFunds = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public retrieveFunds = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"retreiveFunds","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [], "retreiveFunds", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"retrieveFunds","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [], "retrieveFunds", options.sender, options.gasPrice);
             return;
         }
 
-        public retreiveFunds_ = async( options?: { sender?: string }): Promise<boolean> => {
+        public retrieveFunds_ = async( options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"retreiveFunds","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"retrieveFunds","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <boolean>result[0];
         }
@@ -6344,4 +6344,3 @@
     export function ContractFactory(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN): Controlled {
         return new Controlled(connector, accountManager, address, defaultGasPrice);
     }
-    

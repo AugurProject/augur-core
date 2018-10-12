@@ -61,7 +61,7 @@ contract Auction is DelegationTarget, Initializable, IAuction {
         auctionTokenFactory = AuctionTokenFactory(controller.lookup("AuctionTokenFactory"));
         initializationTime = controller.getTimestamp();
         authorizedPriceFeeders[controller.owner()] = true;
-        manualRepPriceInAttoEth = Reporting.getAuctionInitialRepprice();
+        manualRepPriceInAttoEth = Reporting.getAuctionInitialRepPrice();
         lastRepPrice = manualRepPriceInAttoEth;
         repPrice = manualRepPriceInAttoEth;
         bootstrapMode = true;
@@ -86,10 +86,10 @@ contract Auction is DelegationTarget, Initializable, IAuction {
 
         // Get any funds from the previously participated in auction that are set to be distributed
         if (repAuctionToken != IAuctionToken(0)) {
-            repAuctionToken.retreiveFunds();
+            repAuctionToken.retrieveFunds();
         }
         if (ethAuctionToken != IAuctionToken(0)) {
-            ethAuctionToken.retreiveFunds();
+            ethAuctionToken.retrieveFunds();
         }
 
         uint256 _auctionRepBalanceTarget = reputationToken.totalSupply() / Reporting.getAuctionTargetSupplyDivisor();
