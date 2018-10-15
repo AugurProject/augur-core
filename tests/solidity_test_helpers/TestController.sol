@@ -4,8 +4,8 @@ import 'Controller.sol';
 
 contract TestController is Controller {
 
-    function registerContract(bytes32 _key, address _address, bytes20 _commitHash, bytes32 _bytecodeHash) public onlyOwnerCaller returns (bool) {
-        registry[_key] = ContractDetails(_key, _address, _commitHash, _bytecodeHash);
+    function registerContract(bytes32 _key, address _address) public onlyOwnerCaller returns (bool) {
+        registry[_key] = ContractDetails(_key, _address);
         return true;
     }
 }

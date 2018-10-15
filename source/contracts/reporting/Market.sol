@@ -30,7 +30,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     using SafeMathInt256 for int256;
 
     // Constants
-    uint256 private constant MAX_FEE_PER_ETH_IN_ATTOETH = 1 ether / 2;
+    uint256 private constant MAX_FEE_PER_ETH_IN_ATTOETH = 15 * 10**16; // 15%
     uint256 private constant APPROVAL_AMOUNT = 2 ** 256 - 1;
     address private constant NULL_ADDRESS = address(0);
     uint256 private constant MIN_OUTCOMES = 2;
@@ -87,18 +87,14 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
             shareTokens.push(createShareToken(_outcome));
         }
         approveSpenders();
-        // If the value was not at least equal to this fee this will throw. The addition here cannot overflow as these fees are capped
-        uint256 _refund = msg.value.sub(validityBondAttoEth);
-        if (_refund > 0) {
-            owner.transfer(_refund);
-        }
         return true;
     }
 
     function assessFees() private returns (bool) {
         noShowBond = universe.getOrCacheDesignatedReportNoShowBond();
         require(getReputationToken().balanceOf(this) >= noShowBond);
-        validityBondAttoEth = universe.getOrCacheValidityBond();
+        require(msg.value >= universe.getOrCacheValidityBond());
+        validityBondAttoEth = msg.value;
         return true;
     }
 
@@ -256,11 +252,11 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     }
 
     function distributeValidityBond() private returns (bool) {
-        // If the market resolved to invalid the bond gets sent to the fee window. Otherwise it gets returned to the market creator mailbox.
+        // If the market resolved to invalid the bond gets sent to the auction. Otherwise it gets returned to the market creator mailbox.
         if (!isInvalid()) {
             marketCreatorMailbox.depositEther.value(validityBondAttoEth)();
         } else {
-            cash.depositEtherFor.value(validityBondAttoEth)(universe.getCurrentFeeWindow());
+            cash.depositEtherFor.value(validityBondAttoEth)(universe.getAuction());
         }
         return true;
     }

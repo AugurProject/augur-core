@@ -77,7 +77,7 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     fixture.resetToSnapshot(augurInitializedWithMocksSnapshot)
     controller = fixture.contracts['Controller']
     mockLegacyReputationToken = fixture.contracts['MockLegacyReputationToken']
-    controller.registerContract(stringToBytes('LegacyReputationToken'), mockLegacyReputationToken.address, twentyZeros, thirtyTwoZeros)
+    controller.registerContract(stringToBytes('LegacyReputationToken'), mockLegacyReputationToken.address)
     mockLegacyReputationToken.setTotalSupply(100)
     mockLegacyReputationToken.setBalanceOfValueFor(tester.a0, 100)
     return fixture.createSnapshot()

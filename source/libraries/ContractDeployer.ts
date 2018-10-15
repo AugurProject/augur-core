@@ -1,5 +1,4 @@
 import BN = require('bn.js');
-import { hash } from 'crypto-promise';
 import { exists, readFile, writeFile } from "async-file";
 import { encodeParams } from 'ethjs-abi';
 import { TransactionReceipt } from 'ethjs-shared';
@@ -13,8 +12,6 @@ import { NetworkConfiguration } from './NetworkConfiguration';
 import { AccountManager } from './AccountManager';
 import { Contracts, Contract } from './Contracts';
 
-// Remove this after #17109 is done
-const DEPRECATED_COMMIT_HASH_PLACEHOLDER = "0x017047";
 
 export class ContractDeployer {
     private readonly accountManager: AccountManager;
@@ -59,7 +56,7 @@ Deploying to: ${networkConfiguration.networkName}
 
         if (this.configuration.isProduction) {
             console.log(`Registering Legacy Rep Contract at ${this.configuration.legacyRepAddress}`);
-            await this.controller.registerContract(stringTo32ByteHex("LegacyReputationToken"), this.configuration.legacyRepAddress, stringTo32ByteHex(""), stringTo32ByteHex(""));
+            await this.controller.registerContract(stringTo32ByteHex("LegacyReputationToken"), this.configuration.legacyRepAddress);
             const contract = await this.contracts.get("LegacyReputationToken");
             contract.address = this.configuration.legacyRepAddress;
         }
@@ -121,11 +118,6 @@ Deploying to: ${networkConfiguration.networkName}
         return controlled;
     }
 
-    private static async getBytecodeSha(bytecode: Buffer): Promise<string> {
-        const digest = await hash('sha256')(bytecode);
-        return `0x${digest.toString('hex')}`;
-    }
-
     private static getEncodedConstructData(abi: Abi, bytecode: Buffer, constructorArgs: Array<string>): Buffer {
         if (constructorArgs.length === 0) {
             return bytecode;
@@ -164,11 +156,10 @@ Deploying to: ${networkConfiguration.networkName}
         // We have to upload and initialize Augur first so it can log the registration and whitelisting of other contracts
         const contract = await this.contracts.get("Augur");
         const address = await this.construct(contract, [], `Uploading ${contract.contractName}`);
-        const bytecodeHash = await ContractDeployer.getBytecodeSha(contract.bytecode);
         const augur = new Augur(this.connector, this.accountManager, address, this.connector.gasPrice);
         contract.address = address;
         await augur.setController(this.controller.address);
-        await this.controller.registerContract(stringTo32ByteHex("Augur"), address, DEPRECATED_COMMIT_HASH_PLACEHOLDER, bytecodeHash);
+        await this.controller.registerContract(stringTo32ByteHex("Augur"), address);
     }
 
     private async uploadAllContracts(): Promise<void> {
@@ -193,30 +184,10 @@ Deploying to: ${networkConfiguration.networkName}
         if (contract.relativeFilePath.startsWith('legacy_reputation/')) return;
         if (this.configuration.isProduction && contractName === 'LegacyReputationToken') return;
         if (contractName !== 'Map' && contract.relativeFilePath.startsWith('libraries/')) return;
-        // Check to see if we have already uploded this version of the contract
-        if (typeof this.configuration.controllerAddress !== "undefined" && await this.shouldSkipUploadingContract(contract, contractsToDelegate[contractName])) {
-            console.log(`Using existing contract for ${contractName}`);
-            contract.address = await this.getExistingContractAddress(contractName);
-        } else {
-            console.log(`Uploading new version of contract for ${contractName}`);
-            contract.address = contractsToDelegate[contractName]
-                ? await this.uploadAndAddDelegatedToController(contract)
-                : await this.uploadAndAddToController(contract, contractName);
-        }
-    }
-
-    private async shouldSkipUploadingContract(contract: Contract, isDelegated: boolean): Promise<boolean> {
-        const bytecodeHash = await ContractDeployer.getBytecodeSha(contract.bytecode);
-        const key = stringTo32ByteHex(isDelegated ? `${contract.contractName}Target` : contract.contractName);
-        const contractDetails = await this.controller.getContractDetails_(key);
-        const previouslyUploadedBytecodeHash = contractDetails[2];
-        return bytecodeHash === previouslyUploadedBytecodeHash;
-    }
-
-    private async getExistingContractAddress(contractName: string): Promise<string> {
-        const key = stringTo32ByteHex(contractName);
-        const contractDetails = await this.controller.getContractDetails_(key);
-        return contractDetails[0];
+        console.log(`Uploading new version of contract for ${contractName}`);
+        contract.address = contractsToDelegate[contractName]
+            ? await this.uploadAndAddDelegatedToController(contract)
+            : await this.uploadAndAddToController(contract, contractName);
     }
 
     private async uploadAndAddDelegatedToController(contract: Contract): Promise<string> {
@@ -228,8 +199,7 @@ Deploying to: ${networkConfiguration.networkName}
 
     private async uploadAndAddToController(contract: Contract, registrationContractName: string = contract.contractName, constructorArgs: Array<any> = []): Promise<string> {
         const address = await this.construct(contract, constructorArgs, `Uploading ${contract.contractName}`);
-        const bytecodeHash = await ContractDeployer.getBytecodeSha(contract.bytecode);
-        await this.controller.registerContract(stringTo32ByteHex(registrationContractName), address, DEPRECATED_COMMIT_HASH_PLACEHOLDER, bytecodeHash);
+        await this.controller.registerContract(stringTo32ByteHex(registrationContractName), address);
         return address;
     }
 

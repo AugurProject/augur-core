@@ -3,7 +3,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises, fixture
-from utils import AssertLog, longToHexString, bytesToHexString, stringToBytes, longTo32Bytes, garbageAddress, garbageBytes20, garbageBytes32, twentyZeros, thirtyTwoZeros
+from utils import AssertLog, longToHexString, bytesToHexString, stringToBytes, longTo32Bytes, garbageAddress, twentyZeros, thirtyTwoZeros
 from struct import pack
 
 def test_whitelists(localFixture, controller):
@@ -21,31 +21,21 @@ def test_whitelists(localFixture, controller):
 def test_registry(localFixture, controller):
     key1 = 'abc'.ljust(32, '\x00')
     key2 = 'foo'.ljust(32, '\x00')
-    with raises(TransactionFailed): controller.registerContract(key1, 123, garbageBytes20, garbageBytes32, sender = tester.k2)
+    with raises(TransactionFailed): controller.registerContract(key1, 123, sender = tester.k2)
     assert controller.lookup(key1, sender = tester.k2) == longToHexString(0)
     assert controller.addToWhitelist(tester.a1, sender = tester.k0)
 
-    assert controller.registerContract(key1, 123, garbageBytes20, garbageBytes32, sender = tester.k0)
+    assert controller.registerContract(key1, 123, sender = tester.k0)
 
     assert controller.lookup(key1, sender = tester.k2) == longToHexString(123)
 
     # We can't re-upload a contract under the same registry key
-    with raises(TransactionFailed): controller.registerContract(key1, 123, garbageBytes20, garbageBytes32, sender = tester.k0)
+    with raises(TransactionFailed): controller.registerContract(key1, 123, sender = tester.k0)
 
 def test_transferOwnership(controller):
     with raises(TransactionFailed): controller.transferOwnership(tester.a1, sender = tester.k2)
     assert controller.transferOwnership(tester.a1, sender = tester.k0)
     assert controller.owner() == bytesToHexString(tester.a1)
-
-def test_getContractDetails(controller):
-    key = stringToBytes('lookup key')
-    address = garbageAddress
-    commitHash = garbageBytes20
-    fileHash = garbageBytes32
-
-    assert controller.getContractDetails(key, sender = tester.k2) == [ longToHexString(0), twentyZeros, thirtyTwoZeros ]
-    assert controller.registerContract(key, address, commitHash, fileHash, sender = tester.k0)
-    assert controller.getContractDetails(key, sender = tester.k2) == [ address, commitHash, fileHash ]
 
 @fixture(scope='session')
 def localSnapshot(fixture, baseSnapshot):

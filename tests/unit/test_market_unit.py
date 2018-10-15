@@ -209,13 +209,13 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
 
     # pre populate share tokens for max of 8 possible outcomes
     for index in range(8):
-        item = fixture.uploadAndAddToController('solidity_test_helpers/MockShareToken.sol', 'newMockShareToken' + str(index));
+        item = fixture.uploadAndAddToController('solidity_test_helpers/MockShareToken.sol', 'newMockShareToken' + str(index))
         mockShareTokenFactory.pushCreateShareToken(item.address)
 
-    controller.registerContract(stringToBytes('Cash'), mockCash.address, twentyZeros, thirtyTwoZeros)
-    controller.registerContract(stringToBytes('ShareTokenFactory'), mockShareTokenFactory.address, twentyZeros, thirtyTwoZeros)
-    controller.registerContract(stringToBytes('InitialReporterFactory'), mockInitialReporterFactory.address, twentyZeros, thirtyTwoZeros)
-    controller.registerContract(stringToBytes('DisputeCrowdsourcerFactory'), mockDisputeCrowdsourcerFactory.address, twentyZeros, thirtyTwoZeros)
+    controller.registerContract(stringToBytes('Cash'), mockCash.address)
+    controller.registerContract(stringToBytes('ShareTokenFactory'), mockShareTokenFactory.address)
+    controller.registerContract(stringToBytes('InitialReporterFactory'), mockInitialReporterFactory.address)
+    controller.registerContract(stringToBytes('DisputeCrowdsourcerFactory'), mockDisputeCrowdsourcerFactory.address)
     mockShareTokenFactory.resetCreateShareToken()
 
     mockReputationToken = fixture.contracts['MockReputationToken']

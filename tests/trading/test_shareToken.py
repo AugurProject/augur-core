@@ -3,7 +3,7 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import TransactionFailed
 from pytest import raises
-from utils import AssertLog, bytesToHexString, garbageBytes20, garbageBytes32, stringToBytes
+from utils import AssertLog, bytesToHexString, stringToBytes
 
 def test_init(contractsFixture, market):
     shareToken = contractsFixture.applySignature('ShareToken', market.getShareToken())

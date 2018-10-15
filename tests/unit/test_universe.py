@@ -209,10 +209,10 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     mockFeeWindowFactory = fixture.contracts['MockFeeWindowFactory']
     mockMarketFactory = fixture.contracts['MockMarketFactory']
     mockUniverseFactory = fixture.contracts['MockUniverseFactory']
-    controller.registerContract(stringToBytes('MarketFactory'), mockMarketFactory.address, twentyZeros, thirtyTwoZeros)
-    controller.registerContract(stringToBytes('ReputationTokenFactory'), mockReputationTokenFactory.address, twentyZeros, thirtyTwoZeros)
-    controller.registerContract(stringToBytes('FeeWindowFactory'), mockFeeWindowFactory.address, twentyZeros, thirtyTwoZeros)
-    controller.registerContract(stringToBytes('UniverseFactory'), mockUniverseFactory.address, twentyZeros, thirtyTwoZeros)
+    controller.registerContract(stringToBytes('MarketFactory'), mockMarketFactory.address)
+    controller.registerContract(stringToBytes('ReputationTokenFactory'), mockReputationTokenFactory.address)
+    controller.registerContract(stringToBytes('FeeWindowFactory'), mockFeeWindowFactory.address)
+    controller.registerContract(stringToBytes('UniverseFactory'), mockUniverseFactory.address)
 
     mockReputationToken = fixture.contracts['MockReputationToken']
     mockUniverse = fixture.contracts['MockUniverse']
