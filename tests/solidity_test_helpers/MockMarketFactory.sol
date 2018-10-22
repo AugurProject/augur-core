@@ -1,6 +1,6 @@
 pragma solidity 0.4.24;
 
-import 'reporting/IFeeWindow.sol';
+import 'reporting/IDisputeWindow.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IReputationToken.sol';
 import 'trading/ICash.sol';

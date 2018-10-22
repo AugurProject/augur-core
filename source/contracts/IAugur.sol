@@ -39,7 +39,7 @@ contract IAugur {
     function logShareTokenMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool);
     function logDisputeCrowdsourcerTokensBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool);
     function logDisputeCrowdsourcerTokensMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool);
-    function logFeeWindowCreated(IFeeWindow _feeWindow, uint256 _id) public returns (bool);
+    function logDisputeWindowCreated(IDisputeWindow _disputeWindow, uint256 _id) public returns (bool);
     function logTimestampSet(uint256 _newTimestamp) public returns (bool);
     function logInitialReporterTransferred(IUniverse _universe, IMarket _market, address _from, address _to) public returns (bool);
     function logMarketTransferred(IUniverse _universe, address _from, address _to) public returns (bool);

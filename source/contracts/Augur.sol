@@ -6,7 +6,7 @@ import 'libraries/token/ERC20.sol';
 import 'factories/UniverseFactory.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IMarket.sol';
-import 'reporting/IFeeWindow.sol';
+import 'reporting/IDisputeWindow.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IReportingParticipant.sol';
 import 'reporting/IDisputeCrowdsourcer.sol';
@@ -53,7 +53,7 @@ contract Augur is Controlled, IAugur {
     event TokensTransferred(address indexed universe, address indexed token, address indexed from, address to, uint256 value, TokenType tokenType, address market);
     event TokensMinted(address indexed universe, address indexed token, address indexed target, uint256 amount, TokenType tokenType, address market);
     event TokensBurned(address indexed universe, address indexed token, address indexed target, uint256 amount, TokenType tokenType, address market);
-    event FeeWindowCreated(address indexed universe, address feeWindow, uint256 startTime, uint256 endTime, uint256 id);
+    event DisputeWindowCreated(address indexed universe, address disputeWindow, uint256 startTime, uint256 endTime, uint256 id);
     event InitialReporterTransferred(address indexed universe, address indexed market, address from, address to);
     event MarketTransferred(address indexed universe, address indexed market, address from, address to);
     event MarketMailboxTransferred(address indexed universe, address indexed market, address indexed mailbox, address from, address to);
@@ -337,9 +337,9 @@ contract Augur is Controlled, IAugur {
         return true;
     }
 
-    function logFeeWindowCreated(IFeeWindow _feeWindow, uint256 _id) public returns (bool) {
+    function logDisputeWindowCreated(IDisputeWindow _disputeWindow, uint256 _id) public returns (bool) {
         require(universes[msg.sender]);
-        emit FeeWindowCreated(msg.sender, _feeWindow, _feeWindow.getStartTime(), _feeWindow.getEndTime(), _id);
+        emit DisputeWindowCreated(msg.sender, _disputeWindow, _disputeWindow.getStartTime(), _disputeWindow.getEndTime(), _id);
         return true;
     }
 

@@ -14,7 +14,7 @@ source/contracts/reporting/InitialReporter.sol
 source/contracts/reporting/Reporting.sol
 source/contracts/reporting/Universe.sol
 source/contracts/reporting/Market.sol
-source/contracts/reporting/FeeWindow.sol
+source/contracts/reporting/DisputeWindow.sol
 source/contracts/reporting/ReputationToken.sol
 source/contracts/reporting/BaseReportingParticipant.sol
 source/contracts/libraries/collections/Map.sol

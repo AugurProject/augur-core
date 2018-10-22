@@ -2,7 +2,7 @@ pragma solidity ^0.4.24;
 
 import 'reporting/IMarket.sol';
 import 'reporting/IUniverse.sol';
-import 'reporting/IFeeWindow.sol';
+import 'reporting/IDisputeWindow.sol';
 import 'IController.sol';
 import 'libraries/ITyped.sol';
 import 'reporting/IReputationToken.sol';
@@ -10,7 +10,7 @@ import 'libraries/Initializable.sol';
 import 'TEST/MockVariableSupplyToken.sol';
 
 
-contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
+contract MockDisputeWindow is Initializable, MockVariableSupplyToken, IDisputeWindow {
     bool private setMigrateMarketInFromSiblingValue;
     bool private setMigrateMarketInFromNiblingValue;
     bool private setRemoveMarketValue;
@@ -22,30 +22,30 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
     uint256 private setNumMarketsValue;
     uint256 private setNumInvalidMarketsValue;
     uint256 private setNumIncorrectDesignatedReportMarketsValue;
-    IFeeWindow private setNextFeeWindowValue;
-    IFeeWindow private setPreviousFeeWindowValue;
+    IDisputeWindow private setNextDisputeWindowValue;
+    IDisputeWindow private setPreviousDisputeWindowValue;
     uint256 private setNumDesignatedReportNoShowsValue;
     bool private setAllMarketsFinalizedValue;
-    uint256 private setCollectFeeWindowReportingFeesValue;
+    uint256 private setCollectDisputeWindowReportingFeesValue;
     bool private setMigrateFeesDueToForkValue;
     bool private setIsContainerForMarketValue;
     bool private setIsForkingMarketFinalizedValue;
     bool private setIsDisputeActiveValue;
     IMarket private market;
     IUniverse private initializeUniverseValue;
-    uint256 private initializeFeeWindowIdValue;
+    uint256 private initializeDisputeWindowIdValue;
     address private collectReporterAddress;
     bool private collectForgoFees;
     bool private setIsReportingActiveValue;
     bool private setIsActiveValue;
     bool private setIsOverValue;
-    bool private setIsContainerForFeeWindowValue;
+    bool private setIsContainerForDisputeWindowValue;
     bool private setIncreaseTotalStakeValue;
     bool private setIncreaseTotalWinningStakeValue;
     bool private setNoteDesignatedReportValue;
 
     /*
-    * setters to feed the getters and impl of IFeeWindow
+    * setters to feed the getters and impl of IDisputeWindow
     */
     function reset() public {
         setUpdateMarketPhaseValue = false;
@@ -104,12 +104,12 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
         setNumIncorrectDesignatedReportMarketsValue = _setNumIncorrectDesignatedReportMarketsValue;
     }
 
-    function setNextFeeWindow(IFeeWindow _setNextFeeWindowValue) public {
-        setNextFeeWindowValue = _setNextFeeWindowValue;
+    function setNextDisputeWindow(IDisputeWindow _setNextDisputeWindowValue) public {
+        setNextDisputeWindowValue = _setNextDisputeWindowValue;
     }
 
-    function setPreviousFeeWindow(IFeeWindow _setPreviousFeeWindowValue) public {
-        setPreviousFeeWindowValue = _setPreviousFeeWindowValue;
+    function setPreviousDisputeWindow(IDisputeWindow _setPreviousDisputeWindowValue) public {
+        setPreviousDisputeWindowValue = _setPreviousDisputeWindowValue;
     }
 
     function setNumDesignatedReportNoShows(uint256 _setNumDesignatedReportNoShowsValue) public {
@@ -120,8 +120,8 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
         setAllMarketsFinalizedValue = _setAllMarketsFinalizedValue;
     }
 
-    function setCollectFeeWindowReportingFees(uint256 _setCollectFeeWindowReportingFeesValue) public {
-        setCollectFeeWindowReportingFeesValue = _setCollectFeeWindowReportingFeesValue;
+    function setCollectDisputeWindowReportingFees(uint256 _setCollectDisputeWindowReportingFeesValue) public {
+        setCollectDisputeWindowReportingFeesValue = _setCollectDisputeWindowReportingFeesValue;
     }
 
     function setMigrateFeesDueToFork(bool _setMigrateFeesDueToForkValue) public {
@@ -156,8 +156,8 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
         setIsActiveValue = _isActive;
     }
 
-    function setIsContainerForFeeWindow(bool _isContainerForFeeWindow) public {
-        setIsContainerForFeeWindowValue = _isContainerForFeeWindow;
+    function setIsContainerForDisputeWindow(bool _isContainerForDisputeWindow) public {
+        setIsContainerForDisputeWindowValue = _isContainerForDisputeWindow;
     }
 
     function getIncreaseTotalStakeCalled() public returns(bool) {
@@ -172,29 +172,29 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
         return initializeUniverseValue;
     }
 
-    function getinitializeFeeWindowIdValue() public returns(uint256) {
-        return initializeFeeWindowIdValue;
+    function getinitializeDisputeWindowIdValue() public returns(uint256) {
+        return initializeDisputeWindowIdValue;
     }
 
     function getCollectReporterAddress() public returns(address) {
         return collectReporterAddress;
     }
 
-    function callTrustedFeeWindowTransfer(IReputationToken _reputationToken, address _source, address _destination, uint256 _attotokens) public returns (bool) {
-        return _reputationToken.trustedFeeWindowTransfer(_source, _destination, _attotokens);
+    function callTrustedDisputeWindowTransfer(IReputationToken _reputationToken, address _source, address _destination, uint256 _attotokens) public returns (bool) {
+        return _reputationToken.trustedDisputeWindowTransfer(_source, _destination, _attotokens);
     }
 
     /*
-    * Impl of IFeeWindow and ITyped
+    * Impl of IDisputeWindow and ITyped
      */
     function getTypeName() public afterInitialized view returns (bytes32) {
-        return "FeeWindow";
+        return "DisputeWindow";
     }
 
-    function initialize(IUniverse _universe, uint256 _feeWindowId) public returns (bool) {
+    function initialize(IUniverse _universe, uint256 _disputeWindowId) public returns (bool) {
         endInitialization();
         initializeUniverseValue = _universe;
-        initializeFeeWindowIdValue = _feeWindowId;
+        initializeDisputeWindowIdValue = _disputeWindowId;
         return true;
     }
 
@@ -255,12 +255,12 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
         return setNumIncorrectDesignatedReportMarketsValue;
     }
 
-    function getOrCreateNextFeeWindow() public returns (IFeeWindow) {
-        return setNextFeeWindowValue;
+    function getOrCreateNextDisputeWindow() public returns (IDisputeWindow) {
+        return setNextDisputeWindowValue;
     }
 
-    function getOrCreatePreviousFeeWindow() public returns (IFeeWindow) {
-        return setPreviousFeeWindowValue;
+    function getOrCreatePreviousDisputeWindow() public returns (IDisputeWindow) {
+        return setPreviousDisputeWindowValue;
     }
 
     function getNumDesignatedReportNoShows() public view returns (uint256) {
@@ -295,8 +295,8 @@ contract MockFeeWindow is Initializable, MockVariableSupplyToken, IFeeWindow {
         return setIsOverValue;
     }
 
-    function isContainerForFeeWindow(IFeeWindow _shadyTarget) public view returns (bool) {
-        return setIsContainerForFeeWindowValue;
+    function isContainerForDisputeWindow(IDisputeWindow _shadyTarget) public view returns (bool) {
+        return setIsContainerForDisputeWindowValue;
     }
 
     function increaseTotalStake(uint256 _amount) public returns (bool) {

@@ -3,7 +3,7 @@
 pragma solidity 0.4.24;
 
 
-import 'reporting/IFeeWindow.sol';
+import 'reporting/IDisputeWindow.sol';
 import 'libraries/DelegationTarget.sol';
 import 'libraries/Initializable.sol';
 import 'reporting/IUniverse.sol';
@@ -13,10 +13,10 @@ import 'trading/ICash.sol';
 import 'factories/MarketFactory.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/math/SafeMathUint256.sol';
-import 'reporting/IFeeWindow.sol';
+import 'reporting/IDisputeWindow.sol';
 
 
-contract FeeWindow is DelegationTarget, Initializable, IFeeWindow {
+contract DisputeWindow is DelegationTarget, Initializable, IDisputeWindow {
     using SafeMathUint256 for uint256;
 
     IUniverse private universe;
@@ -26,10 +26,10 @@ contract FeeWindow is DelegationTarget, Initializable, IFeeWindow {
     uint256 private incorrectDesignatedReportMarketCount;
     uint256 private designatedReportNoShows;
 
-    function initialize(IUniverse _universe, uint256 _feeWindowId) public beforeInitialized returns (bool) {
+    function initialize(IUniverse _universe, uint256 _disputeWindowId) public beforeInitialized returns (bool) {
         endInitialization();
         universe = _universe;
-        startTime = _feeWindowId.mul(universe.getDisputeRoundDurationInSeconds());
+        startTime = _disputeWindowId.mul(universe.getDisputeRoundDurationInSeconds());
         return true;
     }
 
@@ -50,7 +50,7 @@ contract FeeWindow is DelegationTarget, Initializable, IFeeWindow {
     }
 
     function getTypeName() public afterInitialized view returns (bytes32) {
-        return "FeeWindow";
+        return "DisputeWindow";
     }
 
     function getUniverse() public afterInitialized view returns (IUniverse) {

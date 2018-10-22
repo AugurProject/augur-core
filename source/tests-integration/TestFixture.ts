@@ -7,7 +7,7 @@ import { ContractDeployer } from '../libraries/ContractDeployer';
 import { CompilerConfiguration } from '../libraries/CompilerConfiguration';
 import { DeployerConfiguration } from '../libraries/DeployerConfiguration';
 import { NetworkConfiguration } from '../libraries/NetworkConfiguration';
-import { FeeWindow, ShareToken, ClaimTradingProceeds, CompleteSets, TimeControlled, Cash, Universe, Market, CreateOrder, Orders, Trade, CancelOrder, LegacyReputationToken, DisputeCrowdsourcer, ReputationToken, } from '../libraries/ContractInterfaces';
+import { DisputeWindow, ShareToken, ClaimTradingProceeds, CompleteSets, TimeControlled, Cash, Universe, Market, CreateOrder, Orders, Trade, CancelOrder, LegacyReputationToken, DisputeCrowdsourcer, ReputationToken, } from '../libraries/ContractInterfaces';
 import { stringTo32ByteHex } from '../libraries/HelperFunctions';
 
 export class TestFixture {
@@ -219,10 +219,10 @@ export class TestFixture {
         return await shareToken.balanceOf_(this.accountManager.defaultAddress);
     }
 
-    public async getFeeWindow(market: Market): Promise<FeeWindow> {
-        const feeWindowAddress = await market.getFeeWindow_();
-        await this.linkDebugSymbolsForContract('FeeWindow', feeWindowAddress);
-        return new FeeWindow(this.connector, this.accountManager, feeWindowAddress, TestFixture.GAS_PRICE);
+    public async getDisputeWindow(market: Market): Promise<DisputeWindow> {
+        const disputeWindowAddress = await market.getDisputeWindow_();
+        await this.linkDebugSymbolsForContract('DisputeWindow', disputeWindowAddress);
+        return new DisputeWindow(this.connector, this.accountManager, disputeWindowAddress, TestFixture.GAS_PRICE);
     }
 
     public async getReportingParticipant(reportingParticipantAddress: string): Promise<DisputeCrowdsourcer> {

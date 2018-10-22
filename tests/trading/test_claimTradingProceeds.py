@@ -51,8 +51,8 @@ def finalizeMarket(fixture, market, payoutNumerators, invalid=False):
     # have tester.a0 submit designated report
     market.doInitialReport(payoutNumerators, invalid, "")
     # set timestamp to after designated dispute end
-    feeWindow = fixture.applySignature('FeeWindow', market.getFeeWindow())
-    fixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+    disputeWindow = fixture.applySignature('DisputeWindow', market.getDisputeWindow())
+    fixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)
     # finalize the market
     assert market.finalize()
 
@@ -217,8 +217,8 @@ def test_reedem_failure(kitchenSinkFixture, cash, market):
     # have tester.a0 subimt designated report (75% high, 25% low, range -10*10^18 to 30*10^18)
     market.doInitialReport([0, 10**4], False, "")
     # set timestamp to after designated dispute end
-    feeWindow = kitchenSinkFixture.applySignature('FeeWindow', market.getFeeWindow())
-    kitchenSinkFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+    disputeWindow = kitchenSinkFixture.applySignature('DisputeWindow', market.getDisputeWindow())
+    kitchenSinkFixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)
 
     # market not finalized
     with raises(TransactionFailed):

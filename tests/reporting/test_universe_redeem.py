@@ -25,8 +25,8 @@ def test_redeem_reporting_participants(kitchenSinkFixture, market, categoricalMa
     winningDisputeCrowdsourcer2 = kitchenSinkFixture.applySignature('DisputeCrowdsourcer', market.getReportingParticipant(4))
 
     # Fast forward time until the new fee window is over and we can redeem
-    feeWindow = kitchenSinkFixture.applySignature("FeeWindow", market.getFeeWindow())
-    kitchenSinkFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+    disputeWindow = kitchenSinkFixture.applySignature("DisputeWindow", market.getDisputeWindow())
+    kitchenSinkFixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)
     assert market.finalize()
 
     expectedRep = long(winningDisputeCrowdsourcer2.getStake() + winningDisputeCrowdsourcer1.getStake())

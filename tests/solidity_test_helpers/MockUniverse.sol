@@ -2,7 +2,7 @@ pragma solidity ^0.4.24;
 
 import 'reporting/IMarket.sol';
 import 'reporting/IUniverse.sol';
-import 'reporting/IFeeWindow.sol';
+import 'reporting/IDisputeWindow.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/ITyped.sol';
 import 'reporting/IReputationToken.sol';
@@ -26,11 +26,11 @@ contract MockUniverse is Initializable, IUniverse {
     uint256 private setForkEndTimeValue;
     bytes32 private setParentPayoutDistributionHashValue;
     uint256 private setDisputeRoundDurationInSecondsValue;
-    IFeeWindow private setFeeWindowByTimestampValue;
-    IFeeWindow private setFeeWindowByMarketEndTimeValue;
-    IFeeWindow private setCurrentFeeWindowValue;
-    IFeeWindow private setNextFeeWindowValue;
-    IFeeWindow private setFeeWindowForForkEndTimeValue;
+    IDisputeWindow private setDisputeWindowByTimestampValue;
+    IDisputeWindow private setDisputeWindowByMarketEndTimeValue;
+    IDisputeWindow private setCurrentDisputeWindowValue;
+    IDisputeWindow private setNextDisputeWindowValue;
+    IDisputeWindow private setDisputeWindowForForkEndTimeValue;
     uint256 private setOpenInterestInAttoEthValue;
     uint256 private setRepMarketCapInAttoEthValue;
     uint256 private setTargetRepMarketCapInAttoEthValue;
@@ -45,7 +45,7 @@ contract MockUniverse is Initializable, IUniverse {
     uint256 private setTargetReporterGasCostsValue;
     uint256 private setMarketCreationCostValue;
     bool private setIsParentOfValue;
-    bool private setIsContainerForFeeWindowValue;
+    bool private setIsContainerForDisputeWindowValue;
     bool private setIsContainerForMarketValue;
     bool private setIsContainerForShareTokenValue;
     bool private setDecrementOpenInterestValue;
@@ -61,7 +61,7 @@ contract MockUniverse is Initializable, IUniverse {
     bool private getOrCacheTargetReporterGasCostsWasCalledValue;
     uint256 private setDisputeThresholdForForkValue;
     uint256 private setDisputeThresholdForDisputePacingValue;
-    bool private getOrCreateNextFeeWindowWasCalledValue;
+    bool private getOrCreateNextDisputeWindowWasCalledValue;
     IUniverse private setWinningChildUniverseValue;
     bool private addMarketToWasCalledValue;
     bool private removeMarketFromWasCalledValue;
@@ -70,7 +70,7 @@ contract MockUniverse is Initializable, IUniverse {
     */
     function reset() public {
         setforkValue = false;
-        getOrCreateNextFeeWindowWasCalledValue = false;
+        getOrCreateNextDisputeWindowWasCalledValue = false;
         addMarketToWasCalledValue = false;
         removeMarketFromWasCalledValue = false;
     }
@@ -115,24 +115,24 @@ contract MockUniverse is Initializable, IUniverse {
         setDisputeRoundDurationInSecondsValue = _setDisputeRoundDurationInSecondsValue;
     }
 
-    function setFeeWindowByTimestamp(IFeeWindow _setFeeWindowByTimestampValue) public {
-        setFeeWindowByTimestampValue = _setFeeWindowByTimestampValue;
+    function setDisputeWindowByTimestamp(IDisputeWindow _setDisputeWindowByTimestampValue) public {
+        setDisputeWindowByTimestampValue = _setDisputeWindowByTimestampValue;
     }
 
-    function setFeeWindowByMarketEndTime(IFeeWindow _setFeeWindowByMarketEndTimeValue) public {
-        setFeeWindowByMarketEndTimeValue = _setFeeWindowByMarketEndTimeValue;
+    function setDisputeWindowByMarketEndTime(IDisputeWindow _setDisputeWindowByMarketEndTimeValue) public {
+        setDisputeWindowByMarketEndTimeValue = _setDisputeWindowByMarketEndTimeValue;
     }
 
-    function setCurrentFeeWindow(IFeeWindow _setCurrentFeeWindowValue) public {
-        setCurrentFeeWindowValue = _setCurrentFeeWindowValue;
+    function setCurrentDisputeWindow(IDisputeWindow _setCurrentDisputeWindowValue) public {
+        setCurrentDisputeWindowValue = _setCurrentDisputeWindowValue;
     }
 
-    function setNextFeeWindow(IFeeWindow _setNextFeeWindowValue) public {
-        setNextFeeWindowValue = _setNextFeeWindowValue;
+    function setNextDisputeWindow(IDisputeWindow _setNextDisputeWindowValue) public {
+        setNextDisputeWindowValue = _setNextDisputeWindowValue;
     }
 
-    function setFeeWindowForForkEndTime(IFeeWindow _setFeeWindowForForkEndTimeValue) public {
-        setFeeWindowForForkEndTimeValue = _setFeeWindowForForkEndTimeValue;
+    function setDisputeWindowForForkEndTime(IDisputeWindow _setDisputeWindowForForkEndTimeValue) public {
+        setDisputeWindowForForkEndTimeValue = _setDisputeWindowForForkEndTimeValue;
     }
 
     function setOpenInterestInAttoEth(uint256 _setOpenInterestInAttoEthValue) public {
@@ -199,8 +199,8 @@ contract MockUniverse is Initializable, IUniverse {
         setIsContainerForShareTokenValue = _setIsContainerForShareTokenValue;
     }
 
-    function setIsContainerForFeeWindow(bool _setIsContainerForFeeWindowValue) public {
-        setIsContainerForFeeWindowValue = _setIsContainerForFeeWindowValue;
+    function setIsContainerForDisputeWindow(bool _setIsContainerForDisputeWindowValue) public {
+        setIsContainerForDisputeWindowValue = _setIsContainerForDisputeWindowValue;
     }
 
     function setDecrementOpenInterest(bool _setDecrementOpenInterestValue) public {
@@ -281,27 +281,27 @@ contract MockUniverse is Initializable, IUniverse {
         return setDisputeRoundDurationInSecondsValue;
     }
 
-    function getOrCreateFeeWindowByTimestamp(uint256 _timestamp) public returns (IFeeWindow) {
-        return setFeeWindowByTimestampValue;
+    function getOrCreateDisputeWindowByTimestamp(uint256 _timestamp) public returns (IDisputeWindow) {
+        return setDisputeWindowByTimestampValue;
     }
 
-    function getOrCreateFeeWindowByMarketEndTime(uint256 _endTime) public returns (IFeeWindow) {
-        return setFeeWindowByMarketEndTimeValue;
+    function getOrCreateDisputeWindowByMarketEndTime(uint256 _endTime) public returns (IDisputeWindow) {
+        return setDisputeWindowByMarketEndTimeValue;
     }
 
-    function getOrCreateCurrentFeeWindow() public returns (IFeeWindow) {
-        return setCurrentFeeWindowValue;
+    function getOrCreateCurrentDisputeWindow() public returns (IDisputeWindow) {
+        return setCurrentDisputeWindowValue;
     }
 
-    function getOrCreateNextFeeWindowWasCalled() public returns(bool) { return getOrCreateNextFeeWindowWasCalledValue;}
+    function getOrCreateNextDisputeWindowWasCalled() public returns(bool) { return getOrCreateNextDisputeWindowWasCalledValue;}
 
-    function getOrCreateNextFeeWindow() public returns (IFeeWindow) {
-        getOrCreateNextFeeWindowWasCalledValue = true;
-        return setNextFeeWindowValue;
+    function getOrCreateNextDisputeWindow() public returns (IDisputeWindow) {
+        getOrCreateNextDisputeWindowWasCalledValue = true;
+        return setNextDisputeWindowValue;
     }
 
-    function getOrCreateFeeWindowForForkEndTime() public returns (IFeeWindow) {
-        return setFeeWindowForForkEndTimeValue;
+    function getOrCreateDisputeWindowForForkEndTime() public returns (IDisputeWindow) {
+        return setDisputeWindowForForkEndTimeValue;
     }
 
     function getOpenInterestInAttoEth() public view returns (uint256) {
@@ -394,8 +394,8 @@ contract MockUniverse is Initializable, IUniverse {
         return setIsContainerForShareTokenValue;
     }
 
-    function isContainerForFeeWindow(IFeeWindow _shadyTarget) public view returns (bool) {
-        return setIsContainerForFeeWindowValue;
+    function isContainerForDisputeWindow(IDisputeWindow _shadyTarget) public view returns (bool) {
+        return setIsContainerForDisputeWindowValue;
     }
 
     function decrementOpenInterest(uint256 _amount) public returns (bool) {
@@ -469,12 +469,12 @@ contract MockUniverse is Initializable, IUniverse {
         return setWinningChildUniverseValue;
     }
 
-    function getCurrentFeeWindow() public view returns (IFeeWindow) {
-        return IFeeWindow(0);
+    function getCurrentDisputeWindow() public view returns (IDisputeWindow) {
+        return IDisputeWindow(0);
     }
 
-    function getOrCreateFeeWindowBefore(IFeeWindow _feeWindow) public returns (IFeeWindow) {
-        return IFeeWindow(0);
+    function getOrCreateDisputeWindowBefore(IDisputeWindow _disputeWindow) public returns (IDisputeWindow) {
+        return IDisputeWindow(0);
     }
 
     function setIsForking(bool _isForking) public { setIsForkingValue = _isForking; }

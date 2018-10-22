@@ -11,7 +11,7 @@ contract IReputationToken is ITyped, ERC20 {
     function migrateIn(address _reporter, uint256 _attotokens) public returns (bool);
     function trustedReportingParticipantTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool);
     function trustedMarketTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool);
-    function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool);
+    function trustedDisputeWindowTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool);
     function trustedUniverseTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool);
     function getUniverse() public view returns (IUniverse);
     function getTotalMigrated() public view returns (uint256);

@@ -5,7 +5,7 @@ import 'Controlled.sol';
 import 'libraries/token/ERC20.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IMarket.sol';
-import 'reporting/IFeeWindow.sol';
+import 'reporting/IDisputeWindow.sol';
 import 'reporting/IReputationToken.sol';
 import 'trading/IShareToken.sol';
 import 'trading/Order.sol';
@@ -67,7 +67,7 @@ contract MockAugur is Controlled {
         return true;
     }
 
-    function logFeeWindowRedeemed(IUniverse _universe, address _reporter, uint256 _amountRedeemed, uint256 _reportingFeesReceived) public returns (bool) {
+    function logDisputeWindowRedeemed(IUniverse _universe, address _reporter, uint256 _amountRedeemed, uint256 _reportingFeesReceived) public returns (bool) {
         return true;
     }
 
@@ -141,11 +141,11 @@ contract MockAugur is Controlled {
         return true;
     }
 
-    function logFeeWindowBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+    function logDisputeWindowBurned(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         return true;
     }
 
-    function logFeeWindowMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
+    function logDisputeWindowMinted(IUniverse _universe, address _target, uint256 _amount) public returns (bool) {
         return true;
     }
 
@@ -167,7 +167,7 @@ contract MockAugur is Controlled {
         return true;
     }
 
-    function logFeeWindowsTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
+    function logDisputeWindowsTransferred(IUniverse _universe, address _from, address _to, uint256 _value) public returns (bool) {
         return true;
     }
 
@@ -184,7 +184,7 @@ contract MockAugur is Controlled {
         return true;
     }
 
-    function logFeeWindowCreated(IFeeWindow _feeWindow, uint256 _id) public returns (bool) {
+    function logDisputeWindowCreated(IDisputeWindow _disputeWindow, uint256 _id) public returns (bool) {
         return true;
     }
 

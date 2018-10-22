@@ -1,7 +1,7 @@
 pragma solidity 0.4.24;
 
 import 'reporting/IReportingParticipant.sol';
-import 'reporting/IFeeWindow.sol';
+import 'reporting/IDisputeWindow.sol';
 import 'libraries/token/ERC20.sol';
 
 

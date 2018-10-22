@@ -31,11 +31,11 @@ pytestmark = mark.skip(reason="Just for testing gas cost")
 
 tester.STARTGAS = long(6.7 * 10**6)
 
-def test_feeWindowCreation(localFixture, universe, cash):
+def test_disputeWindowCreation(localFixture, universe, cash):
     endTime = long(localFixture.chain.head_state.timestamp + timedelta(days=365).total_seconds())
 
     with PrintGasUsed(localFixture, "REPORTING_WINDOW_CREATE", REPORTING_WINDOW_CREATE):
-        universe.getOrCreateFeeWindowByTimestamp(endTime)
+        universe.getOrCreateDisputeWindowByTimestamp(endTime)
 
 def test_marketCreation(localFixture, universe, cash):
     marketCreationFee = universe.getOrCacheMarketCreationCost()
@@ -47,14 +47,14 @@ def test_marketCreation(localFixture, universe, cash):
     numTicks = 10 ** 18
     numOutcomes = 2
 
-    with PrintGasUsed(localFixture, "FeeWindow:createMarket", MARKET_CREATION):
+    with PrintGasUsed(localFixture, "DisputeWindow:createMarket", MARKET_CREATION):
         marketAddress = universe.createYesNoMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", "description", "", value = marketCreationFee)
 
 def test_marketFinalization(localFixture, universe, market):
     proceedToNextRound(localFixture, market)
 
-    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
-    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+    disputeWindow = localFixture.applySignature('DisputeWindow', market.getDisputeWindow())
+    localFixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)
 
     with PrintGasUsed(localFixture, "Market:finalize", MARKET_FINALIZATION):
         assert market.finalize()
@@ -139,11 +139,11 @@ def test_redeem(localFixture, universe, cash, market):
 
     initialReporter = localFixture.applySignature('InitialReporter', market.getReportingParticipant(0))
     winningDisputeCrowdsourcer1 = localFixture.applySignature('DisputeCrowdsourcer', market.getReportingParticipant(2))
-    feeWindow = localFixture.applySignature('FeeWindow', market.getFeeWindow())
+    disputeWindow = localFixture.applySignature('DisputeWindow', market.getDisputeWindow())
 
-    assert feeWindow.buy(100)
+    assert disputeWindow.buy(100)
 
-    localFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+    localFixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)
     assert market.finalize()
 
     with PrintGasUsed(localFixture, "InitialReporter:redeem", INITIAL_REPORT_REDEMPTION):
@@ -152,8 +152,8 @@ def test_redeem(localFixture, universe, cash, market):
     with PrintGasUsed(localFixture, "DisputeCrowdsourcer:redeem", CROWDSOURCER_REDEMPTION):
         winningDisputeCrowdsourcer1.redeem(tester.a0)
 
-    with PrintGasUsed(localFixture, "FeeWindow:redeem", PARTICIPATION_TOKEN_REDEMPTION):
-        feeWindow.redeem(tester.a0)
+    with PrintGasUsed(localFixture, "DisputeWindow:redeem", PARTICIPATION_TOKEN_REDEMPTION):
+        disputeWindow.redeem(tester.a0)
 
 
 @fixture(scope="session")

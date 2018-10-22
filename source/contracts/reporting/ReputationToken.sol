@@ -105,8 +105,8 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
-        require(universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
+    function trustedDisputeWindowTransfer(address _source, address _destination, uint256 _attotokens) public afterInitialized returns (bool) {
+        require(universe.isContainerForDisputeWindow(IDisputeWindow(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 

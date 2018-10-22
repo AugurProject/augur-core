@@ -8,8 +8,8 @@ import 'reporting/IReputationToken.sol';
 import 'trading/ICash.sol';
 
 
-contract IFeeWindow is ITyped {
-    function initialize(IUniverse _universe, uint256 _feeWindowId) public returns (bool);
+contract IDisputeWindow is ITyped {
+    function initialize(IUniverse _universe, uint256 _disputeWindowId) public returns (bool);
     function getUniverse() public view returns (IUniverse);
     function getReputationToken() public view returns (IReputationToken);
     function getStartTime() public view returns (uint256);

@@ -38,7 +38,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     // Contract Refs
     IUniverse private universe;
-    IFeeWindow private feeWindow;
+    IDisputeWindow private disputeWindow;
     ICash private cash;
 
     // Attributes
@@ -126,7 +126,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require(_timestamp > endTime);
         uint256 _initialReportStake = distributeInitialReportingRep(_reporter, _initialReporter);
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
-        feeWindow = universe.getOrCreateNextFeeWindow();
+        disputeWindow = universe.getOrCreateNextDisputeWindow();
         _initialReporter.report(_reporter, _payoutDistributionHash, _payoutNumerators, _invalid, _initialReportStake);
         controller.getAugur().logInitialReportSubmitted(universe, _reporter, this, _initialReportStake, _initialReporter.designatedReporterShowed(), _payoutNumerators, _invalid, _description);
         return true;
@@ -150,9 +150,9 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     function contribute(uint256[] _payoutNumerators, bool _invalid, uint256 _amount, string _description) public returns (bool) {
         require(getInitialReporter().getReportTimestamp() != 0);
         if (disputePacingOn) {
-            require(feeWindow.isActive());
+            require(disputeWindow.isActive());
         } else {
-            require(!feeWindow.isOver());
+            require(!disputeWindow.isOver());
         }
         require(!universe.isForking());
         bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
@@ -176,7 +176,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
             if (_crowdsourcerSize >= universe.getDisputeThresholdForDisputePacing()) {
                 disputePacingOn = true;
             }
-            feeWindow = universe.getOrCreateNextFeeWindow();
+            disputeWindow = universe.getOrCreateNextDisputeWindow();
         }
         controller.getAugur().logDisputeCrowdsourcerCompleted(universe, this, _reportingParticipant);
         return true;
@@ -190,10 +190,10 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require(winningPayoutDistributionHash == bytes32(0));
 
         require(getInitialReporter().getReportTimestamp() != 0);
-        require(feeWindow.isOver());
+        require(disputeWindow.isOver());
         require(!universe.isForking());
         winningPayoutDistributionHash = participants[participants.length-1].getPayoutDistributionHash();
-        feeWindow.onMarketFinalized();
+        disputeWindow.onMarketFinalized();
         universe.decrementOpenInterestFromMarket(shareTokens[0].totalSupply().mul(numTicks));
         redistributeLosingReputation();
         distributeValidityBond();
@@ -290,8 +290,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         universe.decrementOpenInterestFromMarket(_marketOI);
 
         // follow the forking market to its universe
-        if (feeWindow != IFeeWindow(0)) {
-            feeWindow = _destinationUniverse.getOrCreateNextFeeWindow();
+        if (disputeWindow != IDisputeWindow(0)) {
+            disputeWindow = _destinationUniverse.getOrCreateNextDisputeWindow();
         }
         _destinationUniverse.addMarketTo();
         _currentUniverse.removeMarketFrom();
@@ -433,8 +433,8 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return universe;
     }
 
-    function getFeeWindow() public view returns (IFeeWindow) {
-        return feeWindow;
+    function getDisputeWindow() public view returns (IDisputeWindow) {
+        return disputeWindow;
     }
 
     function getFinalizationTime() public view returns (uint256) {
