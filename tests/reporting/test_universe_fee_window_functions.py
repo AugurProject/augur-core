@@ -7,23 +7,23 @@ NULL_ADDRESS = longToHexString(0)
 def test_reporting_window_functions(kitchenSinkFixture):
     universe = kitchenSinkFixture.createUniverse()
 
-    # We have many getters and getOrCreate method on the universe for retreiving and creating fee windows. We'll confirm first that all the getters simply return 0 when the requested window does not yet exist
-    assert universe.getFeeWindowByTimestamp(0) == NULL_ADDRESS
-    assert universe.getPreviousFeeWindow() == NULL_ADDRESS
-    assert universe.getCurrentFeeWindow() == NULL_ADDRESS
-    assert universe.getNextFeeWindow() == NULL_ADDRESS
+    # We have many getters and getOrCreate method on the universe for retreiving and creating dispute windows. We'll confirm first that all the getters simply return 0 when the requested window does not yet exist
+    assert universe.getDisputeWindowByTimestamp(0) == NULL_ADDRESS
+    assert universe.getPreviousDisputeWindow() == NULL_ADDRESS
+    assert universe.getCurrentDisputeWindow() == NULL_ADDRESS
+    assert universe.getNextDisputeWindow() == NULL_ADDRESS
 
     # Now lets use the getOrCreate variants to actually generate these windows
-    assert universe.getOrCreateFeeWindowByTimestamp(0) != NULL_ADDRESS
-    assert universe.getOrCreatePreviousFeeWindow() != NULL_ADDRESS
-    assert universe.getOrCreateCurrentFeeWindow() != NULL_ADDRESS
-    assert universe.getOrCreateNextFeeWindow() != NULL_ADDRESS
+    assert universe.getOrCreateDisputeWindowByTimestamp(0) != NULL_ADDRESS
+    assert universe.getOrCreatePreviousDisputeWindow() != NULL_ADDRESS
+    assert universe.getOrCreateCurrentDisputeWindow() != NULL_ADDRESS
+    assert universe.getOrCreateNextDisputeWindow() != NULL_ADDRESS
 
     # And now confirm the getters return the correct windows
-    assert universe.getFeeWindowByTimestamp(0) != NULL_ADDRESS
-    assert universe.getPreviousFeeWindow() != NULL_ADDRESS
-    assert universe.getCurrentFeeWindow() != NULL_ADDRESS
-    assert universe.getNextFeeWindow() != NULL_ADDRESS
+    assert universe.getDisputeWindowByTimestamp(0) != NULL_ADDRESS
+    assert universe.getPreviousDisputeWindow() != NULL_ADDRESS
+    assert universe.getCurrentDisputeWindow() != NULL_ADDRESS
+    assert universe.getNextDisputeWindow() != NULL_ADDRESS
 
 def test_market_creation_fee(kitchenSinkFixture):
     universe = kitchenSinkFixture.createUniverse()

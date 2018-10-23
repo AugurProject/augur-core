@@ -9,7 +9,7 @@ import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/MarketValidator.sol';
 import 'trading/ICash.sol';
 import 'reporting/IMarket.sol';
-import 'reporting/IFeeWindow.sol';
+import 'reporting/IDisputeWindow.sol';
 import 'reporting/IAuction.sol';
 import 'trading/IOrders.sol';
 import 'libraries/CashAutoConverter.sol';

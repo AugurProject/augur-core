@@ -38,22 +38,22 @@ def test_reputation_token_migrate_in(localFixture, mockUniverse, initializedRepu
     mockReputationToken.callMigrateIn(initializedReputationToken.address, tester.a2, 100)
     assert initializedReputationToken.totalSupply() == 300
 
-def test_reputation_token_trusted_transfer(localFixture, mockUniverse, initializedReputationToken, mockMarket, mockFeeWindow, mockLegacyReputationToken):
-    with raises(TransactionFailed, message="universe does not contain fee window and caller has to be a IFeeWindow"):
-        initializedReputationToken.trustedFeeWindowTransfer(tester.a1, tester.a2, 100)
+def test_reputation_token_trusted_transfer(localFixture, mockUniverse, initializedReputationToken, mockMarket, mockDisputeWindow, mockLegacyReputationToken):
+    with raises(TransactionFailed, message="universe does not contain dispute window and caller has to be a IDisputeWindow"):
+        initializedReputationToken.trustedDisputeWindowTransfer(tester.a1, tester.a2, 100)
 
-    with raises(TransactionFailed, message="universe does not contain fee window"):
-        mockFeeWindow.callTrustedFeeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
+    with raises(TransactionFailed, message="universe does not contain dispute window"):
+        mockDisputeWindow.callTrustedDisputeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
 
     with raises(TransactionFailed, message="universe does not contain market"):
         mockMarket.callTrustedMarketTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
 
     with raises(TransactionFailed, message="universe does not contain participation token"):
-        mockFeeWindow.callTrustedFeeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
+        mockDisputeWindow.callTrustedDisputeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
 
-    mockUniverse.setIsContainerForFeeWindow(True)
+    mockUniverse.setIsContainerForDisputeWindow(True)
     with raises(TransactionFailed, message="source balance can not be 0"):
-        mockFeeWindow.callTrustedFeeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
+        mockDisputeWindow.callTrustedDisputeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
 
 
     assert initializedReputationToken.totalSupply() == 100
@@ -64,9 +64,9 @@ def test_reputation_token_trusted_transfer(localFixture, mockUniverse, initializ
     assert initializedReputationToken.balanceOf(tester.a1) == 35
 
     with raises(TransactionFailed, message="transfer has to be approved"):
-        mockFeeWindow.callTrustedFeeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
+        mockDisputeWindow.callTrustedDisputeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
 
-    assert mockFeeWindow.callTrustedFeeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 35)
+    assert mockDisputeWindow.callTrustedDisputeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 35)
     # TODO find out why total supply grows
     assert initializedReputationToken.totalSupply() == 100
     assert initializedReputationToken.balanceOf(tester.a2) == 35
@@ -103,12 +103,12 @@ def mockMarket(localFixture):
     return mockMarket
 
 @fixture
-def mockFeeWindow(localFixture):
-    return localFixture.contracts['MockFeeWindow']
+def mockDisputeWindow(localFixture):
+    return localFixture.contracts['MockDisputeWindow']
 
 @fixture
-def mockFeeWindow(localFixture):
-    return localFixture.contracts['MockFeeWindow']
+def mockDisputeWindow(localFixture):
+    return localFixture.contracts['MockDisputeWindow']
 
 @fixture
 def mockLegacyReputationToken(localFixture):

@@ -126,8 +126,8 @@ contract OldLegacyReputationToken is DelegationTarget, ITyped, Initializable, Va
         return internalTransfer(_source, _destination, _attotokens);
     }
 
-    function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
-        require(universe.isContainerForFeeWindow(IFeeWindow(msg.sender)));
+    function trustedDisputeWindowTransfer(address _source, address _destination, uint256 _attotokens) public whenNotMigratingFromLegacy afterInitialized returns (bool) {
+        require(universe.isContainerForDisputeWindow(IDisputeWindow(msg.sender)));
         return internalTransfer(_source, _destination, _attotokens);
     }
 

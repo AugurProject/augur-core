@@ -6,13 +6,13 @@ import 'libraries/DelegationTarget.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'factories/ReputationTokenFactory.sol';
-import 'factories/FeeWindowFactory.sol';
+import 'factories/DisputeWindowFactory.sol';
 import 'factories/MarketFactory.sol';
 import 'factories/AuctionFactory.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IAuction.sol';
-import 'reporting/IFeeWindow.sol';
+import 'reporting/IDisputeWindow.sol';
 import 'reporting/Reporting.sol';
 import 'reporting/IRepPriceOracle.sol';
 import 'libraries/math/SafeMathUint256.sol';
@@ -33,7 +33,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     uint256 private disputeThresholdForFork;
     uint256 private disputeThresholdForDisputePacing;
     uint256 private initialReportMinValue;
-    mapping(uint256 => IFeeWindow) private feeWindows;
+    mapping(uint256 => IDisputeWindow) private disputeWindows;
     mapping(address => bool) private markets;
     mapping(bytes32 => IUniverse) private childUniverses;
     uint256 private openInterestInAttoEth;
@@ -117,8 +117,8 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return initialReportMinValue;
     }
 
-    function getFeeWindow(uint256 _feeWindowId) public view returns (IFeeWindow) {
-        return feeWindows[_feeWindowId];
+    function getDisputeWindow(uint256 _disputeWindowId) public view returns (IDisputeWindow) {
+        return disputeWindows[_disputeWindowId];
     }
 
     function isForking() public view returns (bool) {
@@ -129,7 +129,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return childUniverses[_parentPayoutDistributionHash];
     }
 
-    function getFeeWindowId(uint256 _timestamp) public view returns (uint256) {
+    function getDisputeWindowId(uint256 _timestamp) public view returns (uint256) {
         return _timestamp.div(getDisputeRoundDurationInSeconds());
     }
 
@@ -137,51 +137,51 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return Reporting.getDisputeRoundDurationSeconds();
     }
 
-    function getOrCreateFeeWindowByTimestamp(uint256 _timestamp) public returns (IFeeWindow) {
-        uint256 _windowId = getFeeWindowId(_timestamp);
-        if (feeWindows[_windowId] == address(0)) {
-            IFeeWindow _feeWindow = FeeWindowFactory(controller.lookup("FeeWindowFactory")).createFeeWindow(controller, this, _windowId);
-            feeWindows[_windowId] = _feeWindow;
-            controller.getAugur().logFeeWindowCreated(_feeWindow, _windowId);
+    function getOrCreateDisputeWindowByTimestamp(uint256 _timestamp) public returns (IDisputeWindow) {
+        uint256 _windowId = getDisputeWindowId(_timestamp);
+        if (disputeWindows[_windowId] == address(0)) {
+            IDisputeWindow _disputeWindow = DisputeWindowFactory(controller.lookup("DisputeWindowFactory")).createDisputeWindow(controller, this, _windowId);
+            disputeWindows[_windowId] = _disputeWindow;
+            controller.getAugur().logDisputeWindowCreated(_disputeWindow, _windowId);
         }
-        return feeWindows[_windowId];
+        return disputeWindows[_windowId];
     }
 
-    function getFeeWindowByTimestamp(uint256 _timestamp) public view returns (IFeeWindow) {
-        uint256 _windowId = getFeeWindowId(_timestamp);
-        return feeWindows[_windowId];
+    function getDisputeWindowByTimestamp(uint256 _timestamp) public view returns (IDisputeWindow) {
+        uint256 _windowId = getDisputeWindowId(_timestamp);
+        return disputeWindows[_windowId];
     }
 
-    function getOrCreatePreviousPreviousFeeWindow() public returns (IFeeWindow) {
-        return getOrCreateFeeWindowByTimestamp(controller.getTimestamp().sub(getDisputeRoundDurationInSeconds().mul(2)));
+    function getOrCreatePreviousPreviousDisputeWindow() public returns (IDisputeWindow) {
+        return getOrCreateDisputeWindowByTimestamp(controller.getTimestamp().sub(getDisputeRoundDurationInSeconds().mul(2)));
     }
 
-    function getOrCreatePreviousFeeWindow() public returns (IFeeWindow) {
-        return getOrCreateFeeWindowByTimestamp(controller.getTimestamp().sub(getDisputeRoundDurationInSeconds()));
+    function getOrCreatePreviousDisputeWindow() public returns (IDisputeWindow) {
+        return getOrCreateDisputeWindowByTimestamp(controller.getTimestamp().sub(getDisputeRoundDurationInSeconds()));
     }
 
-    function getPreviousFeeWindow() public view returns (IFeeWindow) {
-        return getFeeWindowByTimestamp(controller.getTimestamp().sub(getDisputeRoundDurationInSeconds()));
+    function getPreviousDisputeWindow() public view returns (IDisputeWindow) {
+        return getDisputeWindowByTimestamp(controller.getTimestamp().sub(getDisputeRoundDurationInSeconds()));
     }
 
-    function getOrCreateCurrentFeeWindow() public returns (IFeeWindow) {
-        return getOrCreateFeeWindowByTimestamp(controller.getTimestamp());
+    function getOrCreateCurrentDisputeWindow() public returns (IDisputeWindow) {
+        return getOrCreateDisputeWindowByTimestamp(controller.getTimestamp());
     }
 
-    function getCurrentFeeWindow() public view returns (IFeeWindow) {
-        return getFeeWindowByTimestamp(controller.getTimestamp());
+    function getCurrentDisputeWindow() public view returns (IDisputeWindow) {
+        return getDisputeWindowByTimestamp(controller.getTimestamp());
     }
 
-    function getOrCreateNextFeeWindow() public returns (IFeeWindow) {
-        return getOrCreateFeeWindowByTimestamp(controller.getTimestamp().add(getDisputeRoundDurationInSeconds()));
+    function getOrCreateNextDisputeWindow() public returns (IDisputeWindow) {
+        return getOrCreateDisputeWindowByTimestamp(controller.getTimestamp().add(getDisputeRoundDurationInSeconds()));
     }
 
-    function getNextFeeWindow() public view returns (IFeeWindow) {
-        return getFeeWindowByTimestamp(controller.getTimestamp().add(getDisputeRoundDurationInSeconds()));
+    function getNextDisputeWindow() public view returns (IDisputeWindow) {
+        return getDisputeWindowByTimestamp(controller.getTimestamp().add(getDisputeRoundDurationInSeconds()));
     }
 
-    function getOrCreateFeeWindowBefore(IFeeWindow _feeWindow) public returns (IFeeWindow) {
-        return getOrCreateFeeWindowByTimestamp(_feeWindow.getStartTime().sub(2));
+    function getOrCreateDisputeWindowBefore(IDisputeWindow _disputeWindow) public returns (IDisputeWindow) {
+        return getOrCreateDisputeWindowByTimestamp(_disputeWindow.getStartTime().sub(2));
     }
 
     function createChildUniverse(uint256[] _parentPayoutNumerators, bool _parentInvalid) public returns (IUniverse) {
@@ -221,14 +221,14 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return _tentativeWinningUniverse;
     }
 
-    function isContainerForFeeWindow(IFeeWindow _shadyFeeWindow) public view returns (bool) {
-        uint256 _startTime = _shadyFeeWindow.getStartTime();
+    function isContainerForDisputeWindow(IDisputeWindow _shadyDisputeWindow) public view returns (bool) {
+        uint256 _startTime = _shadyDisputeWindow.getStartTime();
         if (_startTime == 0) {
             return false;
         }
-        uint256 _feeWindowId = getFeeWindowId(_startTime);
-        IFeeWindow _legitFeeWindow = feeWindows[_feeWindowId];
-        return _shadyFeeWindow == _legitFeeWindow;
+        uint256 _disputeWindowId = getDisputeWindowId(_startTime);
+        IDisputeWindow _legitDisputeWindow = disputeWindows[_disputeWindowId];
+        return _shadyDisputeWindow == _legitDisputeWindow;
     }
 
     function isContainerForMarket(IMarket _shadyMarket) public view returns (bool) {
@@ -314,49 +314,49 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     }
 
     function getOrCacheValidityBond() public returns (uint256) {
-        IFeeWindow _feeWindow = getOrCreateCurrentFeeWindow();
-        IFeeWindow  _previousFeeWindow = getOrCreatePreviousPreviousFeeWindow();
-        uint256 _currentValidityBondInAttoEth = validityBondInAttoEth[_feeWindow];
+        IDisputeWindow _disputeWindow = getOrCreateCurrentDisputeWindow();
+        IDisputeWindow  _previousDisputeWindow = getOrCreatePreviousPreviousDisputeWindow();
+        uint256 _currentValidityBondInAttoEth = validityBondInAttoEth[_disputeWindow];
         if (_currentValidityBondInAttoEth != 0) {
             return _currentValidityBondInAttoEth;
         }
-        uint256 _totalMarketsInPreviousWindow = _previousFeeWindow.getNumMarkets();
-        uint256 _invalidMarketsInPreviousWindow = _previousFeeWindow.getNumInvalidMarkets();
-        uint256 _previousValidityBondInAttoEth = validityBondInAttoEth[_previousFeeWindow];
+        uint256 _totalMarketsInPreviousWindow = _previousDisputeWindow.getNumMarkets();
+        uint256 _invalidMarketsInPreviousWindow = _previousDisputeWindow.getNumInvalidMarkets();
+        uint256 _previousValidityBondInAttoEth = validityBondInAttoEth[_previousDisputeWindow];
         _currentValidityBondInAttoEth = calculateFloatingValue(_invalidMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.getTargetInvalidMarketsDivisor(), _previousValidityBondInAttoEth, Reporting.getDefaultValidityBond(), Reporting.getValidityBondFloor());
-        validityBondInAttoEth[_feeWindow] = _currentValidityBondInAttoEth;
+        validityBondInAttoEth[_disputeWindow] = _currentValidityBondInAttoEth;
         return _currentValidityBondInAttoEth;
     }
 
     function getOrCacheDesignatedReportStake() public returns (uint256) {
-        IFeeWindow _feeWindow = getOrCreateCurrentFeeWindow();
-        IFeeWindow _previousFeeWindow = getOrCreatePreviousPreviousFeeWindow();
-        uint256 _currentDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_feeWindow];
+        IDisputeWindow _disputeWindow = getOrCreateCurrentDisputeWindow();
+        IDisputeWindow _previousDisputeWindow = getOrCreatePreviousPreviousDisputeWindow();
+        uint256 _currentDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_disputeWindow];
         if (_currentDesignatedReportStakeInAttoRep != 0) {
             return _currentDesignatedReportStakeInAttoRep;
         }
-        uint256 _totalMarketsInPreviousWindow = _previousFeeWindow.getNumMarkets();
-        uint256 _incorrectDesignatedReportMarketsInPreviousWindow = _previousFeeWindow.getNumIncorrectDesignatedReportMarkets();
-        uint256 _previousDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_previousFeeWindow];
+        uint256 _totalMarketsInPreviousWindow = _previousDisputeWindow.getNumMarkets();
+        uint256 _incorrectDesignatedReportMarketsInPreviousWindow = _previousDisputeWindow.getNumIncorrectDesignatedReportMarkets();
+        uint256 _previousDesignatedReportStakeInAttoRep = designatedReportStakeInAttoRep[_previousDisputeWindow];
 
         _currentDesignatedReportStakeInAttoRep = calculateFloatingValue(_incorrectDesignatedReportMarketsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.getTargetIncorrectDesignatedReportMarketsDivisor(), _previousDesignatedReportStakeInAttoRep, initialReportMinValue, initialReportMinValue);
-        designatedReportStakeInAttoRep[_feeWindow] = _currentDesignatedReportStakeInAttoRep;
+        designatedReportStakeInAttoRep[_disputeWindow] = _currentDesignatedReportStakeInAttoRep;
         return _currentDesignatedReportStakeInAttoRep;
     }
 
     function getOrCacheDesignatedReportNoShowBond() public returns (uint256) {
-        IFeeWindow _feeWindow = getOrCreateCurrentFeeWindow();
-        IFeeWindow _previousFeeWindow = getOrCreatePreviousPreviousFeeWindow();
-        uint256 _currentDesignatedReportNoShowBondInAttoRep = designatedReportNoShowBondInAttoRep[_feeWindow];
+        IDisputeWindow _disputeWindow = getOrCreateCurrentDisputeWindow();
+        IDisputeWindow _previousDisputeWindow = getOrCreatePreviousPreviousDisputeWindow();
+        uint256 _currentDesignatedReportNoShowBondInAttoRep = designatedReportNoShowBondInAttoRep[_disputeWindow];
         if (_currentDesignatedReportNoShowBondInAttoRep != 0) {
             return _currentDesignatedReportNoShowBondInAttoRep;
         }
-        uint256 _totalMarketsInPreviousWindow = _previousFeeWindow.getNumMarkets();
-        uint256 _designatedReportNoShowsInPreviousWindow = _previousFeeWindow.getNumDesignatedReportNoShows();
-        uint256 _previousDesignatedReportNoShowBondInAttoRep = designatedReportNoShowBondInAttoRep[_previousFeeWindow];
+        uint256 _totalMarketsInPreviousWindow = _previousDisputeWindow.getNumMarkets();
+        uint256 _designatedReportNoShowsInPreviousWindow = _previousDisputeWindow.getNumDesignatedReportNoShows();
+        uint256 _previousDesignatedReportNoShowBondInAttoRep = designatedReportNoShowBondInAttoRep[_previousDisputeWindow];
 
         _currentDesignatedReportNoShowBondInAttoRep = calculateFloatingValue(_designatedReportNoShowsInPreviousWindow, _totalMarketsInPreviousWindow, Reporting.getTargetDesignatedReportNoShowsDivisor(), _previousDesignatedReportNoShowBondInAttoRep, initialReportMinValue, initialReportMinValue);
-        designatedReportNoShowBondInAttoRep[_feeWindow] = _currentDesignatedReportNoShowBondInAttoRep;
+        designatedReportNoShowBondInAttoRep[_disputeWindow] = _currentDesignatedReportNoShowBondInAttoRep;
         return _currentDesignatedReportNoShowBondInAttoRep;
     }
 
@@ -394,15 +394,15 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
     }
 
     function getOrCacheReportingFeeDivisor() public returns (uint256) {
-        IFeeWindow _feeWindow = getOrCreateCurrentFeeWindow();
-        IFeeWindow _previousFeeWindow = getOrCreatePreviousFeeWindow();
-        uint256 _currentFeeDivisor = shareSettlementFeeDivisor[_feeWindow];
+        IDisputeWindow _disputeWindow = getOrCreateCurrentDisputeWindow();
+        IDisputeWindow _previousDisputeWindow = getOrCreatePreviousDisputeWindow();
+        uint256 _currentFeeDivisor = shareSettlementFeeDivisor[_disputeWindow];
         if (_currentFeeDivisor != 0) {
             return _currentFeeDivisor;
         }
         uint256 _repMarketCapInAttoEth = getRepMarketCapInAttoEth();
         uint256 _targetRepMarketCapInAttoEth = getTargetRepMarketCapInAttoEth();
-        uint256 _previousFeeDivisor = shareSettlementFeeDivisor[_previousFeeWindow];
+        uint256 _previousFeeDivisor = shareSettlementFeeDivisor[_previousDisputeWindow];
         if (_previousFeeDivisor == 0) {
             _currentFeeDivisor = Reporting.getDefaultReportingFeeDivisor();
         } else if (_targetRepMarketCapInAttoEth == 0) {
@@ -415,7 +415,7 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
             .max(Reporting.getMinimumReportingFeeDivisor())
             .min(Reporting.getMaximumReportingFeeDivisor());
 
-        shareSettlementFeeDivisor[_feeWindow] = _currentFeeDivisor;
+        shareSettlementFeeDivisor[_disputeWindow] = _currentFeeDivisor;
         return _currentFeeDivisor;
     }
 

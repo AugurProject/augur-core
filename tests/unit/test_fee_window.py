@@ -4,28 +4,28 @@ from pytest import fixture, raises
 from ethereum.tools.tester import TransactionFailed
 
 numTicks = 10 ** 10
-feeWindowId = 1467446882
+disputeWindowId = 1467446882
 
-def test_fee_window_creation(localFixture, initializedFeeWindow, mockReputationToken, mockUniverse, constants, Time):
-    assert initializedFeeWindow.getTypeName() == stringToBytes("FeeWindow")
-    assert initializedFeeWindow.getReputationToken() == mockReputationToken.address
-    assert initializedFeeWindow.getStartTime() == feeWindowId * mockUniverse.getDisputeRoundDurationInSeconds()
-    assert initializedFeeWindow.getUniverse() == mockUniverse.address
-    assert initializedFeeWindow.getEndTime() == feeWindowId * mockUniverse.getDisputeRoundDurationInSeconds() + constants.DISPUTE_ROUND_DURATION_SECONDS()
-    assert initializedFeeWindow.getNumInvalidMarkets() == 0
-    assert initializedFeeWindow.getNumIncorrectDesignatedReportMarkets() == 0
-    assert initializedFeeWindow.getNumDesignatedReportNoShows() == 0
-    assert initializedFeeWindow.isActive() == False
-    assert initializedFeeWindow.isOver() == False
-    Time.setTimestamp(feeWindowId * mockUniverse.getDisputeRoundDurationInSeconds() + 1)
-    assert initializedFeeWindow.isActive() == True
-    Time.setTimestamp(feeWindowId * mockUniverse.getDisputeRoundDurationInSeconds() + constants.DISPUTE_ROUND_DURATION_SECONDS())
-    assert initializedFeeWindow.isActive() == False
-    assert initializedFeeWindow.isOver() == True
+def test_fee_window_creation(localFixture, initializedDisputeWindow, mockReputationToken, mockUniverse, constants, Time):
+    assert initializedDisputeWindow.getTypeName() == stringToBytes("DisputeWindow")
+    assert initializedDisputeWindow.getReputationToken() == mockReputationToken.address
+    assert initializedDisputeWindow.getStartTime() == disputeWindowId * mockUniverse.getDisputeRoundDurationInSeconds()
+    assert initializedDisputeWindow.getUniverse() == mockUniverse.address
+    assert initializedDisputeWindow.getEndTime() == disputeWindowId * mockUniverse.getDisputeRoundDurationInSeconds() + constants.DISPUTE_ROUND_DURATION_SECONDS()
+    assert initializedDisputeWindow.getNumInvalidMarkets() == 0
+    assert initializedDisputeWindow.getNumIncorrectDesignatedReportMarkets() == 0
+    assert initializedDisputeWindow.getNumDesignatedReportNoShows() == 0
+    assert initializedDisputeWindow.isActive() == False
+    assert initializedDisputeWindow.isOver() == False
+    Time.setTimestamp(disputeWindowId * mockUniverse.getDisputeRoundDurationInSeconds() + 1)
+    assert initializedDisputeWindow.isActive() == True
+    Time.setTimestamp(disputeWindowId * mockUniverse.getDisputeRoundDurationInSeconds() + constants.DISPUTE_ROUND_DURATION_SECONDS())
+    assert initializedDisputeWindow.isActive() == False
+    assert initializedDisputeWindow.isOver() == True
 
-def test_fee_window_on_market_finalization(localFixture, initializedFeeWindow, mockUniverse, mockMarket):
+def test_fee_window_on_market_finalization(localFixture, initializedDisputeWindow, mockUniverse, mockMarket):
     with raises(TransactionFailed, message="on market finalized needs to be called from market"):
-        initializedFeeWindow.onMarketFinalized()
+        initializedDisputeWindow.onMarketFinalized()
 
     with raises(TransactionFailed, message="market needs to be in same universe"):
         mockMarket.callOnMarketFinalized()
@@ -35,27 +35,27 @@ def test_fee_window_on_market_finalization(localFixture, initializedFeeWindow, m
     mockMarket.setDesignatedReporterWasCorrect(True)
     mockMarket.setDesignatedReporterShowed(True)
 
-    numMarkets = initializedFeeWindow.getNumMarkets()
-    invalidMarkets = initializedFeeWindow.getNumInvalidMarkets()
-    incorrectDRMarkets = initializedFeeWindow.getNumIncorrectDesignatedReportMarkets()
+    numMarkets = initializedDisputeWindow.getNumMarkets()
+    invalidMarkets = initializedDisputeWindow.getNumInvalidMarkets()
+    incorrectDRMarkets = initializedDisputeWindow.getNumIncorrectDesignatedReportMarkets()
 
-    assert mockMarket.callOnMarketFinalized(initializedFeeWindow.address) == True
-    assert initializedFeeWindow.getNumMarkets() == numMarkets + 1
-    assert initializedFeeWindow.getNumInvalidMarkets() == invalidMarkets
-    assert initializedFeeWindow.getNumIncorrectDesignatedReportMarkets() == incorrectDRMarkets
+    assert mockMarket.callOnMarketFinalized(initializedDisputeWindow.address) == True
+    assert initializedDisputeWindow.getNumMarkets() == numMarkets + 1
+    assert initializedDisputeWindow.getNumInvalidMarkets() == invalidMarkets
+    assert initializedDisputeWindow.getNumIncorrectDesignatedReportMarkets() == incorrectDRMarkets
 
     mockMarket.setIsInvalid(True)
     mockMarket.setDesignatedReporterWasCorrect(False)
     mockMarket.setDesignatedReporterShowed(False)
 
-    numMarkets = initializedFeeWindow.getNumMarkets()
-    invalidMarkets = initializedFeeWindow.getNumInvalidMarkets()
-    incorrectDRMarkets = initializedFeeWindow.getNumIncorrectDesignatedReportMarkets()
+    numMarkets = initializedDisputeWindow.getNumMarkets()
+    invalidMarkets = initializedDisputeWindow.getNumInvalidMarkets()
+    incorrectDRMarkets = initializedDisputeWindow.getNumIncorrectDesignatedReportMarkets()
 
-    assert mockMarket.callOnMarketFinalized(initializedFeeWindow.address) == True
-    assert initializedFeeWindow.getNumMarkets() == numMarkets + 1
-    assert initializedFeeWindow.getNumInvalidMarkets() == invalidMarkets + 1
-    assert initializedFeeWindow.getNumIncorrectDesignatedReportMarkets() == incorrectDRMarkets + 1
+    assert mockMarket.callOnMarketFinalized(initializedDisputeWindow.address) == True
+    assert initializedDisputeWindow.getNumMarkets() == numMarkets + 1
+    assert initializedDisputeWindow.getNumInvalidMarkets() == invalidMarkets + 1
+    assert initializedDisputeWindow.getNumIncorrectDesignatedReportMarkets() == incorrectDRMarkets + 1
 
 @fixture(scope="module")
 def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
@@ -66,9 +66,9 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     mockReputationToken = fixture.contracts['MockReputationToken']
     controller.registerContract(stringToBytes('Cash'), mockCash.address)
     controller.registerContract(stringToBytes('Augur'), mockAugur.address)
-    feeWindow = fixture.upload('../source/contracts/reporting/FeeWindow.sol', 'feeWindow')
-    fixture.contracts["initializedFeeWindow"] = feeWindow
-    feeWindow.setController(fixture.contracts["Controller"].address)
+    disputeWindow = fixture.upload('../source/contracts/reporting/DisputeWindow.sol', 'disputeWindow')
+    fixture.contracts["initializedDisputeWindow"] = disputeWindow
+    disputeWindow.setController(fixture.contracts["Controller"].address)
 
     mockUniverse = fixture.contracts['MockUniverse']
     mockUniverse.setReputationToken(mockReputationToken.address)
@@ -76,8 +76,8 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     mockUniverse.setForkingMarket(5040)
     mockUniverse.setForkingMarket(longToHexString(0))
     mockUniverse.setIsForking(False)
-    fixture.contracts["Time"].setTimestamp(feeWindowId)
-    feeWindow.initialize(mockUniverse.address, feeWindowId)
+    fixture.contracts["Time"].setTimestamp(disputeWindowId)
+    disputeWindow.initialize(mockUniverse.address, disputeWindowId)
     return fixture.createSnapshot()
 
 @fixture
@@ -102,8 +102,8 @@ def mockReputationToken(localFixture):
     return localFixture.contracts['MockReputationToken']
 
 @fixture
-def initializedFeeWindow(localFixture):
-    return localFixture.contracts["initializedFeeWindow"]
+def initializedDisputeWindow(localFixture):
+    return localFixture.contracts["initializedDisputeWindow"]
 
 @fixture
 def constants(localFixture):

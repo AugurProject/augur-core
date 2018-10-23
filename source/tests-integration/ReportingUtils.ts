@@ -25,7 +25,7 @@ export class ReportingUtils {
             await fixture.setTimestamp(marketDesignatedReportingEndTime.add(new BN(1)));
         }
 
-        const feeWindowAddress = await market.getFeeWindow_();
+        const disputeWindowAddress = await market.getDisputeWindow_();
 
         const numberOfOutcomes = await market.getNumberOfOutcomes_();
         const numTicks = await market.getNumTicks_();
@@ -33,9 +33,9 @@ export class ReportingUtils {
         payoutNumerators[0] = numTicks;
 
         let winningPayoutHash = "";
-        if (feeWindowAddress === ZERO_ADDRESS) {
+        if (disputeWindowAddress === ZERO_ADDRESS) {
             await market.doInitialReport(payoutNumerators, false, "");
-            expect(await market.getFeeWindow_() === ZERO_ADDRESS).to.be.false;
+            expect(await market.getDisputeWindow_() === ZERO_ADDRESS).to.be.false;
             console.log("Submitted initial report");
 
             // Buy and sell complete sets to generate reporting fees
@@ -60,9 +60,9 @@ export class ReportingUtils {
             numOwnedSharesBefore = await fixture.getNumSharesInMarket(market, outcome);
             console.log("numOwnedShares after selling complete set", numOwnedSharesBefore.toString(10));
         } else {
-            const feeWindow = await fixture.getFeeWindow(market);
-            const feeWindowStartTime = await feeWindow.getStartTime_();
-            await fixture.setTimestamp(feeWindowStartTime.add(new BN(1)));
+            const disputeWindow = await fixture.getDisputeWindow(market);
+            const disputeWindowStartTime = await disputeWindow.getStartTime_();
+            await fixture.setTimestamp(disputeWindowStartTime.add(new BN(1)));
             // This will also use the InitialReporter which is not a DisputeCrowdsourcer, but has the called function from abstract inheritance
             const winningReport = await fixture.getWinningReportingParticipant(market);
             winningPayoutHash = await winningReport.getPayoutDistributionHash_();
@@ -89,8 +89,8 @@ export class ReportingUtils {
             console.log("Staked", amount.toString(10));
             console.log("Payout numerators", chosenPayoutNumerators);
             const forkingMarket = await market.getForkingMarket_();
-            const marketFeeWindow = await market.getFeeWindow_();
-            expect(forkingMarket !== ZERO_ADDRESS || marketFeeWindow !== feeWindowAddress).to.be.true;
+            const marketDisputeWindow = await market.getDisputeWindow_();
+            expect(forkingMarket !== ZERO_ADDRESS || marketDisputeWindow !== disputeWindowAddress).to.be.true;
         }
 
         if (doGenerateFees) {
@@ -98,9 +98,9 @@ export class ReportingUtils {
         }
 
         if (moveTimeForward) {
-            let feeWindow = await fixture.getFeeWindow(market);
-            let feeWindowStartTime = await feeWindow.getStartTime_();
-            await fixture.setTimestamp(feeWindowStartTime.add(new BN(1)));
+            let disputeWindow = await fixture.getDisputeWindow(market);
+            let disputeWindowStartTime = await disputeWindow.getStartTime_();
+            await fixture.setTimestamp(disputeWindowStartTime.add(new BN(1)));
         }
     }
 

@@ -48,7 +48,7 @@
         }
     }
 
-    
+
     export class Controlled extends Contract {
         public constructor(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN) {
             super(connector, accountManager, address, defaultGasPrice);
@@ -411,17 +411,17 @@
             return <boolean>result[0];
         }
 
-        public logFeeWindowCreated = async(feeWindow: string, id: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public logDisputeWindowCreated = async(disputeWindow: string, id: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_feeWindow","type":"address"},{"name":"_id","type":"uint256"}],"name":"logFeeWindowCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [feeWindow, id], "logFeeWindowCreated", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_disputeWindow","type":"address"},{"name":"_id","type":"uint256"}],"name":"logDisputeWindowCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [disputeWindow, id], "logDisputeWindowCreated", options.sender, options.gasPrice);
             return;
         }
 
-        public logFeeWindowCreated_ = async(feeWindow: string, id: BN, options?: { sender?: string }): Promise<boolean> => {
+        public logDisputeWindowCreated_ = async(disputeWindow: string, id: BN, options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_feeWindow","type":"address"},{"name":"_id","type":"uint256"}],"name":"logFeeWindowCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [feeWindow, id], options.sender);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_disputeWindow","type":"address"},{"name":"_id","type":"uint256"}],"name":"logDisputeWindowCreated","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [disputeWindow, id], options.sender);
             return <boolean>result[0];
         }
 
@@ -1006,16 +1006,16 @@
             return <string>result[0];
         }
 
-        public trustedFeeWindowTransfer = async(source: string, destination: string, attotokens: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public trustedDisputeWindowTransfer = async(source: string, destination: string, attotokens: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_source","type":"address"},{"name":"_destination","type":"address"},{"name":"_attotokens","type":"uint256"}],"name":"trustedFeeWindowTransfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [source, destination, attotokens], "trustedFeeWindowTransfer", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_source","type":"address"},{"name":"_destination","type":"address"},{"name":"_attotokens","type":"uint256"}],"name":"trustedDisputeWindowTransfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [source, destination, attotokens], "trustedDisputeWindowTransfer", options.sender, options.gasPrice);
             return;
         }
 
-        public trustedFeeWindowTransfer_ = async(source: string, destination: string, attotokens: BN, options?: { sender?: string }): Promise<boolean> => {
+        public trustedDisputeWindowTransfer_ = async(source: string, destination: string, attotokens: BN, options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_source","type":"address"},{"name":"_destination","type":"address"},{"name":"_attotokens","type":"uint256"}],"name":"trustedFeeWindowTransfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_source","type":"address"},{"name":"_destination","type":"address"},{"name":"_attotokens","type":"uint256"}],"name":"trustedDisputeWindowTransfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [source, destination, attotokens], options.sender);
             return <boolean>result[0];
         }
@@ -1419,16 +1419,16 @@
             return <string>result[0];
         }
 
-        public trustedFeeWindowTransfer = async(source: string, destination: string, attotokens: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public trustedDisputeWindowTransfer = async(source: string, destination: string, attotokens: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_source","type":"address"},{"name":"_destination","type":"address"},{"name":"_attotokens","type":"uint256"}],"name":"trustedFeeWindowTransfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [source, destination, attotokens], "trustedFeeWindowTransfer", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_source","type":"address"},{"name":"_destination","type":"address"},{"name":"_attotokens","type":"uint256"}],"name":"trustedDisputeWindowTransfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [source, destination, attotokens], "trustedDisputeWindowTransfer", options.sender, options.gasPrice);
             return;
         }
 
-        public trustedFeeWindowTransfer_ = async(source: string, destination: string, attotokens: BN, options?: { sender?: string }): Promise<boolean> => {
+        public trustedDisputeWindowTransfer_ = async(source: string, destination: string, attotokens: BN, options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_source","type":"address"},{"name":"_destination","type":"address"},{"name":"_attotokens","type":"uint256"}],"name":"trustedFeeWindowTransfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_source","type":"address"},{"name":"_destination","type":"address"},{"name":"_attotokens","type":"uint256"}],"name":"trustedDisputeWindowTransfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [source, destination, attotokens], options.sender);
             return <boolean>result[0];
         }
@@ -1841,22 +1841,22 @@
     }
 
 
-    export class FeeWindowFactory extends Contract {
+    export class DisputeWindowFactory extends Contract {
         public constructor(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN) {
             super(connector, accountManager, address, defaultGasPrice);
         }
 
-        public createFeeWindow = async(controller: string, universe: string, feeWindowId: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public createDisputeWindow = async(controller: string, universe: string, disputeWindowId: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"},{"name":"_universe","type":"address"},{"name":"_feeWindowId","type":"uint256"}],"name":"createFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [controller, universe, feeWindowId], "createFeeWindow", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"},{"name":"_universe","type":"address"},{"name":"_disputeWindowId","type":"uint256"}],"name":"createDisputeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [controller, universe, disputeWindowId], "createDisputeWindow", options.sender, options.gasPrice);
             return;
         }
 
-        public createFeeWindow_ = async(controller: string, universe: string, feeWindowId: BN, options?: { sender?: string }): Promise<string> => {
+        public createDisputeWindow_ = async(controller: string, universe: string, disputeWindowId: BN, options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"},{"name":"_universe","type":"address"},{"name":"_feeWindowId","type":"uint256"}],"name":"createFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [controller, universe, feeWindowId], options.sender);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_controller","type":"address"},{"name":"_universe","type":"address"},{"name":"_disputeWindowId","type":"uint256"}],"name":"createDisputeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [controller, universe, disputeWindowId], options.sender);
             return <string>result[0];
         }
     }
@@ -3115,7 +3115,7 @@
     }
 
 
-    export class FeeWindow extends Controlled {
+    export class DisputeWindow extends Controlled {
         public constructor(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN) {
             super(connector, accountManager, address, defaultGasPrice);
         }
@@ -3218,17 +3218,17 @@
             return <BN>result[0];
         }
 
-        public initialize = async(universe: string, feeWindowId: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public initialize = async(universe: string, disputeWindowId: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_feeWindowId","type":"uint256"}],"name":"initialize","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [universe, feeWindowId], "initialize", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_disputeWindowId","type":"uint256"}],"name":"initialize","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [universe, disputeWindowId], "initialize", options.sender, options.gasPrice);
             return;
         }
 
-        public initialize_ = async(universe: string, feeWindowId: BN, options?: { sender?: string }): Promise<boolean> => {
+        public initialize_ = async(universe: string, disputeWindowId: BN, options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_feeWindowId","type":"uint256"}],"name":"initialize","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [universe, feeWindowId], options.sender);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_disputeWindowId","type":"uint256"}],"name":"initialize","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [universe, disputeWindowId], options.sender);
             return <boolean>result[0];
         }
 
@@ -4044,9 +4044,9 @@
             return <boolean>result[0];
         }
 
-        public getFeeWindow_ = async( options?: { sender?: string }): Promise<string> => {
+        public getDisputeWindow_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getDisputeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
         }
@@ -4233,16 +4233,16 @@
             return <string>result[0];
         }
 
-        public trustedFeeWindowTransfer = async(source: string, destination: string, attotokens: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public trustedDisputeWindowTransfer = async(source: string, destination: string, attotokens: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_source","type":"address"},{"name":"_destination","type":"address"},{"name":"_attotokens","type":"uint256"}],"name":"trustedFeeWindowTransfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [source, destination, attotokens], "trustedFeeWindowTransfer", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_source","type":"address"},{"name":"_destination","type":"address"},{"name":"_attotokens","type":"uint256"}],"name":"trustedDisputeWindowTransfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [source, destination, attotokens], "trustedDisputeWindowTransfer", options.sender, options.gasPrice);
             return;
         }
 
-        public trustedFeeWindowTransfer_ = async(source: string, destination: string, attotokens: BN, options?: { sender?: string }): Promise<boolean> => {
+        public trustedDisputeWindowTransfer_ = async(source: string, destination: string, attotokens: BN, options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_source","type":"address"},{"name":"_destination","type":"address"},{"name":"_attotokens","type":"uint256"}],"name":"trustedFeeWindowTransfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_source","type":"address"},{"name":"_destination","type":"address"},{"name":"_attotokens","type":"uint256"}],"name":"trustedDisputeWindowTransfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [source, destination, attotokens], options.sender);
             return <boolean>result[0];
         }
@@ -4485,16 +4485,16 @@
             return <boolean>result[0];
         }
 
-        public getOrCreateNextFeeWindow = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public getOrCreateNextDisputeWindow = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreateNextFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [], "getOrCreateNextFeeWindow", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreateNextDisputeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [], "getOrCreateNextDisputeWindow", options.sender, options.gasPrice);
             return;
         }
 
-        public getOrCreateNextFeeWindow_ = async( options?: { sender?: string }): Promise<string> => {
+        public getOrCreateNextDisputeWindow_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreateNextFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreateNextDisputeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
         }
@@ -4520,16 +4520,16 @@
             return <BN>result[0];
         }
 
-        public getOrCreatePreviousFeeWindow = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public getOrCreatePreviousDisputeWindow = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreatePreviousFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [], "getOrCreatePreviousFeeWindow", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreatePreviousDisputeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [], "getOrCreatePreviousDisputeWindow", options.sender, options.gasPrice);
             return;
         }
 
-        public getOrCreatePreviousFeeWindow_ = async( options?: { sender?: string }): Promise<string> => {
+        public getOrCreatePreviousDisputeWindow_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreatePreviousFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreatePreviousDisputeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
         }
@@ -4548,10 +4548,10 @@
             return <BN>result[0];
         }
 
-        public getFeeWindow_ = async(feeWindowId: BN, options?: { sender?: string }): Promise<string> => {
+        public getDisputeWindow_ = async(disputeWindowId: BN, options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_feeWindowId","type":"uint256"}],"name":"getFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [feeWindowId], options.sender);
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_disputeWindowId","type":"uint256"}],"name":"getDisputeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [disputeWindowId], options.sender);
             return <string>result[0];
         }
 
@@ -4569,16 +4569,16 @@
             return <boolean>result[0];
         }
 
-        public getOrCreatePreviousPreviousFeeWindow = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public getOrCreatePreviousPreviousDisputeWindow = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreatePreviousPreviousFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [], "getOrCreatePreviousPreviousFeeWindow", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreatePreviousPreviousDisputeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [], "getOrCreatePreviousPreviousDisputeWindow", options.sender, options.gasPrice);
             return;
         }
 
-        public getOrCreatePreviousPreviousFeeWindow_ = async( options?: { sender?: string }): Promise<string> => {
+        public getOrCreatePreviousPreviousDisputeWindow_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreatePreviousPreviousFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreatePreviousPreviousDisputeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
         }
@@ -4604,16 +4604,16 @@
             return <BN>result[0];
         }
 
-        public getOrCreateCurrentFeeWindow = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public getOrCreateCurrentDisputeWindow = async( options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreateCurrentFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [], "getOrCreateCurrentFeeWindow", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreateCurrentDisputeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [], "getOrCreateCurrentDisputeWindow", options.sender, options.gasPrice);
             return;
         }
 
-        public getOrCreateCurrentFeeWindow_ = async( options?: { sender?: string }): Promise<string> => {
+        public getOrCreateCurrentDisputeWindow_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreateCurrentFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[],"name":"getOrCreateCurrentDisputeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
         }
@@ -4632,9 +4632,9 @@
             return <BN>result[0];
         }
 
-        public getPreviousFeeWindow_ = async( options?: { sender?: string }): Promise<string> => {
+        public getPreviousDisputeWindow_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getPreviousFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getPreviousDisputeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
         }
@@ -4688,9 +4688,9 @@
             return <BN>result[0];
         }
 
-        public getCurrentFeeWindow_ = async( options?: { sender?: string }): Promise<string> => {
+        public getCurrentDisputeWindow_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getCurrentFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getCurrentDisputeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
         }
@@ -4765,9 +4765,9 @@
             return <string>result[0];
         }
 
-        public getFeeWindowByTimestamp_ = async(timestamp: BN, options?: { sender?: string }): Promise<string> => {
+        public getDisputeWindowByTimestamp_ = async(timestamp: BN, options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_timestamp","type":"uint256"}],"name":"getFeeWindowByTimestamp","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_timestamp","type":"uint256"}],"name":"getDisputeWindowByTimestamp","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [timestamp], options.sender);
             return <string>result[0];
         }
@@ -4814,16 +4814,16 @@
             return <boolean>result[0];
         }
 
-        public getOrCreateFeeWindowByTimestamp = async(timestamp: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public getOrCreateDisputeWindowByTimestamp = async(timestamp: BN, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_timestamp","type":"uint256"}],"name":"getOrCreateFeeWindowByTimestamp","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [timestamp], "getOrCreateFeeWindowByTimestamp", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_timestamp","type":"uint256"}],"name":"getOrCreateDisputeWindowByTimestamp","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [timestamp], "getOrCreateDisputeWindowByTimestamp", options.sender, options.gasPrice);
             return;
         }
 
-        public getOrCreateFeeWindowByTimestamp_ = async(timestamp: BN, options?: { sender?: string }): Promise<string> => {
+        public getOrCreateDisputeWindowByTimestamp_ = async(timestamp: BN, options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_timestamp","type":"uint256"}],"name":"getOrCreateFeeWindowByTimestamp","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_timestamp","type":"uint256"}],"name":"getOrCreateDisputeWindowByTimestamp","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [timestamp], options.sender);
             return <string>result[0];
         }
@@ -4870,10 +4870,10 @@
             return <string>result[0];
         }
 
-        public isContainerForFeeWindow_ = async(shadyFeeWindow: string, options?: { sender?: string }): Promise<boolean> => {
+        public isContainerForDisputeWindow_ = async(shadyDisputeWindow: string, options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_shadyFeeWindow","type":"address"}],"name":"isContainerForFeeWindow","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [shadyFeeWindow], options.sender);
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_shadyDisputeWindow","type":"address"}],"name":"isContainerForDisputeWindow","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [shadyDisputeWindow], options.sender);
             return <boolean>result[0];
         }
 
@@ -4926,9 +4926,9 @@
             return <string>result[0];
         }
 
-        public getFeeWindowId_ = async(timestamp: BN, options?: { sender?: string }): Promise<BN> => {
+        public getDisputeWindowId_ = async(timestamp: BN, options?: { sender?: string }): Promise<BN> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_timestamp","type":"uint256"}],"name":"getFeeWindowId","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_timestamp","type":"uint256"}],"name":"getDisputeWindowId","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [timestamp], options.sender);
             return <BN>result[0];
         }
@@ -4968,17 +4968,17 @@
             return <string>result[0];
         }
 
-        public getOrCreateFeeWindowBefore = async(feeWindow: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+        public getOrCreateDisputeWindowBefore = async(disputeWindow: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_feeWindow","type":"address"}],"name":"getOrCreateFeeWindowBefore","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            await this.remoteCall(abi, [feeWindow], "getOrCreateFeeWindowBefore", options.sender, options.gasPrice);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_disputeWindow","type":"address"}],"name":"getOrCreateDisputeWindowBefore","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [disputeWindow], "getOrCreateDisputeWindowBefore", options.sender, options.gasPrice);
             return;
         }
 
-        public getOrCreateFeeWindowBefore_ = async(feeWindow: string, options?: { sender?: string }): Promise<string> => {
+        public getOrCreateDisputeWindowBefore_ = async(disputeWindow: string, options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_feeWindow","type":"address"}],"name":"getOrCreateFeeWindowBefore","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
-            const result = await this.localCall(abi, [feeWindow], options.sender);
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_disputeWindow","type":"address"}],"name":"getOrCreateDisputeWindowBefore","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [disputeWindow], options.sender);
             return <string>result[0];
         }
 
@@ -5017,9 +5017,9 @@
             return <string>result[0];
         }
 
-        public getNextFeeWindow_ = async( options?: { sender?: string }): Promise<string> => {
+        public getNextDisputeWindow_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getNextFeeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getNextDisputeWindow","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
             const result = await this.localCall(abi, [], options.sender);
             return <string>result[0];
         }
@@ -6337,4 +6337,3 @@
     export function ContractFactory(connector: Connector, accountManager: AccountManager, address: string, defaultGasPrice: BN): Controlled {
         return new Controlled(connector, accountManager, address, defaultGasPrice);
     }
-    

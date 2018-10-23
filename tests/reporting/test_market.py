@@ -112,8 +112,8 @@ def test_variable_validity_bond(invalid, contractsFixture, universe, cash):
         market.doInitialReport([0, market.getNumTicks()], False, "")
 
     # Move time forward so we can finalize and see the bond move
-    feeWindow = contractsFixture.applySignature('FeeWindow', market.getFeeWindow())
-    assert contractsFixture.contracts["Time"].setTimestamp(feeWindow.getEndTime() + 1)
+    disputeWindow = contractsFixture.applySignature('DisputeWindow', market.getDisputeWindow())
+    assert contractsFixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)
 
     if invalid:
         with TokenDelta(cash, higherValidityBond, universe.getAuction(), "Validity bond did not go to the auction"):

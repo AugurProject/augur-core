@@ -6,7 +6,7 @@ import 'libraries/IOwnable.sol';
 import 'trading/ICash.sol';
 import 'trading/IShareToken.sol';
 import 'reporting/IUniverse.sol';
-import 'reporting/IFeeWindow.sol';
+import 'reporting/IDisputeWindow.sol';
 import 'trading/IShareToken.sol';
 import 'reporting/IReportingParticipant.sol';
 import 'reporting/IReputationToken.sol';
@@ -24,7 +24,7 @@ contract IMarket is ITyped, IOwnable {
     function initialize(IUniverse _universe, uint256 _endTime, uint256 _feePerEthInAttoEth, ICash _cash, address _designatedReporterAddress, address _creator, uint256 _numOutcomes, uint256 _numTicks) public payable returns (bool _success);
     function derivePayoutDistributionHash(uint256[] _payoutNumerators, bool _invalid) public view returns (bytes32);
     function getUniverse() public view returns (IUniverse);
-    function getFeeWindow() public view returns (IFeeWindow);
+    function getDisputeWindow() public view returns (IDisputeWindow);
     function getNumberOfOutcomes() public view returns (uint256);
     function getNumTicks() public view returns (uint256);
     function getDenominationToken() public view returns (ICash);

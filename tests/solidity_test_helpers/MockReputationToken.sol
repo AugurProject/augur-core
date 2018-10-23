@@ -145,7 +145,7 @@ contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVar
         return setTrustedTransferValue;
     }
 
-    function trustedFeeWindowTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
+    function trustedDisputeWindowTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool) {
         trustedTransferSourceValue = _source;
         trustedTransferDestinationValue = _destination;
         trustedTransferAttotokensValue = _attotokens;
