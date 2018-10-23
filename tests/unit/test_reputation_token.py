@@ -39,10 +39,10 @@ def test_reputation_token_migrate_in(localFixture, mockUniverse, initializedRepu
     assert initializedReputationToken.totalSupply() == 300
 
 def test_reputation_token_trusted_transfer(localFixture, mockUniverse, initializedReputationToken, mockMarket, mockDisputeWindow, mockLegacyReputationToken):
-    with raises(TransactionFailed, message="universe does not contain fee window and caller has to be a IDisputeWindow"):
+    with raises(TransactionFailed, message="universe does not contain dispute window and caller has to be a IDisputeWindow"):
         initializedReputationToken.trustedDisputeWindowTransfer(tester.a1, tester.a2, 100)
 
-    with raises(TransactionFailed, message="universe does not contain fee window"):
+    with raises(TransactionFailed, message="universe does not contain dispute window"):
         mockDisputeWindow.callTrustedDisputeWindowTransfer(initializedReputationToken.address, tester.a1, tester.a2, 100)
 
     with raises(TransactionFailed, message="universe does not contain market"):

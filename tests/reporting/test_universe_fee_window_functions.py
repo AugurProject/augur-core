@@ -7,7 +7,7 @@ NULL_ADDRESS = longToHexString(0)
 def test_reporting_window_functions(kitchenSinkFixture):
     universe = kitchenSinkFixture.createUniverse()
 
-    # We have many getters and getOrCreate method on the universe for retreiving and creating fee windows. We'll confirm first that all the getters simply return 0 when the requested window does not yet exist
+    # We have many getters and getOrCreate method on the universe for retreiving and creating dispute windows. We'll confirm first that all the getters simply return 0 when the requested window does not yet exist
     assert universe.getDisputeWindowByTimestamp(0) == NULL_ADDRESS
     assert universe.getPreviousDisputeWindow() == NULL_ADDRESS
     assert universe.getCurrentDisputeWindow() == NULL_ADDRESS

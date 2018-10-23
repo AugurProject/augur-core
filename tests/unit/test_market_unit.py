@@ -156,7 +156,7 @@ def test_finalize(localFixture, chain, initializedMarket, mockInitialReporter, m
     assert initializedMarket.doInitialReport([initializedMarket.getNumTicks(), 0, 0, 0, 0], False, "", sender=tester.k1)
     mockInitialReporter.setReportTimestamp(1)
 
-    with raises(TransactionFailed, message="can't finalize before the fee window is over"):
+    with raises(TransactionFailed, message="can't finalize before the dispute window is over"):
         initializedMarket.finalize()
 
     mockNextDisputeWindow.setIsOver(True)

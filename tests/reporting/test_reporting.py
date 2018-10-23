@@ -36,7 +36,7 @@ def test_designatedReportHappyPath(localFixture, universe, market):
     with raises(TransactionFailed, message="Cannot initial report twice"):
         assert market.doInitialReport([0, market.getNumTicks()], False, "Obviously I'm right")
 
-    # the market is now assigned a fee window
+    # the market is now assigned a dispute window
     newDisputeWindowAddress = market.getDisputeWindow()
     assert newDisputeWindowAddress
     disputeWindow = localFixture.applySignature('DisputeWindow', newDisputeWindowAddress)
@@ -65,7 +65,7 @@ def test_initialReportHappyPath(reportByDesignatedReporter, localFixture, univer
     sender = tester.k0 if reportByDesignatedReporter else tester.k1
     assert market.doInitialReport([0, market.getNumTicks()], False, "", sender=sender)
 
-    # the market is now assigned a fee window
+    # the market is now assigned a dispute window
     newDisputeWindowAddress = market.getDisputeWindow()
     assert newDisputeWindowAddress
     disputeWindow = localFixture.applySignature('DisputeWindow', newDisputeWindowAddress)
@@ -83,7 +83,7 @@ def test_initialReport_methods(localFixture, universe, market, cash, constants):
     # do an initial report as someone other than the designated reporter
     assert market.doInitialReport([0, market.getNumTicks()], False, "", sender=tester.k1)
 
-    # the market is now assigned a fee window
+    # the market is now assigned a dispute window
     newDisputeWindowAddress = market.getDisputeWindow()
     assert newDisputeWindowAddress
     disputeWindow = localFixture.applySignature('DisputeWindow', newDisputeWindowAddress)
@@ -279,7 +279,7 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
     assert not universe.isContainerForReportingParticipant(categoricalInitialReport.address)
     assert newUniverse.isContainerForReportingParticipant(categoricalInitialReport.address)
 
-    # The categorical market has a new fee window since it was initially reported on and may be disputed now
+    # The categorical market has a new dispute window since it was initially reported on and may be disputed now
     categoricalMarketDisputeWindowAddress = categoricalMarket.getDisputeWindow()
     categoricalMarketDisputeWindow = localFixture.applySignature("DisputeWindow", categoricalMarketDisputeWindowAddress)
 
@@ -486,7 +486,7 @@ def test_fee_window_record_keeping(localFixture, universe, cash, market, categor
     assert scalarMarket.finalize()
 
     # Now we'll confirm the record keeping was updated
-    # Fee Window cadence is different in the subFork Univese tests so we account for that
+    # Dispute Window cadence is different in the subFork Univese tests so we account for that
     assert disputeWindow.getNumMarkets() == 3 if localFixture.subFork else 2
     assert disputeWindow.getNumInvalidMarkets() == 1
     assert disputeWindow.getNumIncorrectDesignatedReportMarkets() == 2
@@ -522,11 +522,11 @@ def test_dispute_pacing_threshold(localFixture, universe, market):
     while not market.getDisputePacingOn():
         proceedToNextRound(localFixture, market, moveTimeForward = False)
 
-    # Now if we try to immediately dispute without the newly assgiend fee window being active the tx will fail
+    # Now if we try to immediately dispute without the newly assgiend dispute window being active the tx will fail
     with raises(TransactionFailed):
         market.contribute([market.getNumTicks(), 0], False, 1, "")
 
-    # If we move time forward to the fee window start we succeed
+    # If we move time forward to the dispute window start we succeed
     disputeWindow = localFixture.applySignature('DisputeWindow', market.getDisputeWindow())
     assert localFixture.contracts["Time"].setTimestamp(disputeWindow.getStartTime() + 1)
     assert market.contribute([market.getNumTicks(), 0], False, 1, "")

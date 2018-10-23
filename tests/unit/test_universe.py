@@ -56,17 +56,17 @@ def test_get_reporting_window(localFixture, populatedUniverse, chain):
     assert populatedUniverse.getDisputeWindowId(timestamp) == reportingPeriodDurationForTimestamp
     assert populatedUniverse.getDisputeRoundDurationInSeconds() == duration
 
-    # fee window not stored internally, only read-only method
+    # dispute window not stored internally, only read-only method
     assert populatedUniverse.getDisputeWindow(reportingPeriodDurationForTimestamp) == longToHexString(0)
     report_window = populatedUniverse.getOrCreateDisputeWindowByTimestamp(timestamp)
 
-    # Now fee window is in internal collection
+    # Now dispute window is in internal collection
     assert populatedUniverse.getDisputeWindow(reportingPeriodDurationForTimestamp) == report_window
 
     # Make up end timestamp for testing internal calculations
     end_timestamp = localFixture.contracts["Time"].getTimestamp() + 1
 
-    # Test getting same calculated end fee window
+    # Test getting same calculated end dispute window
     assert populatedUniverse.getOrCreatePreviousDisputeWindow() == populatedUniverse.getOrCreateDisputeWindowByTimestamp(chain.head_state.timestamp - duration)
     assert populatedUniverse.getOrCreateCurrentDisputeWindow() == populatedUniverse.getOrCreateDisputeWindowByTimestamp(chain.head_state.timestamp)
     assert populatedUniverse.getOrCreateNextDisputeWindow() == populatedUniverse.getOrCreateDisputeWindowByTimestamp(chain.head_state.timestamp + duration)
@@ -115,11 +115,11 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     currentDisputeWindow = mockDisputeWindow
     nextDisputeWindow = localFixture.upload('solidity_test_helpers/MockDisputeWindow.sol', 'nextDisputeWindow')
     newCurrentDisputeWindow = localFixture.upload('solidity_test_helpers/MockDisputeWindow.sol', 'newCurrentDisputeWindow')
-    # set current fee window
+    # set current dispute window
     mockDisputeWindowFactory.setCreateDisputeWindowValue(mockDisputeWindow.address)
     assert populatedUniverse.getOrCreateCurrentDisputeWindow() == mockDisputeWindow.address
 
-    # set next fee window
+    # set next dispute window
     mockDisputeWindowFactory.setCreateDisputeWindowValue(nextDisputeWindow.address)
     assert populatedUniverse.getOrCreateNextDisputeWindow() == nextDisputeWindow.address
 
@@ -137,7 +137,7 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     noshow_floor = initial_report_min
 
 
-    # current fee window
+    # current dispute window
     designatedStakeValue = populatedUniverse.calculateFloatingValue(0, 0, designated_divisor, 0, designated_default, designated_floor)
     validityBondValue = populatedUniverse.calculateFloatingValue(0, 0, validity_divisor, 0, validity_default, validity_floor)
     noshowBondValue = populatedUniverse.calculateFloatingValue(0, 0, noshow_divisor, 0, noshow_default, noshow_floor)
@@ -149,7 +149,7 @@ def test_universe_calculate_bonds_stakes(localFixture, chain, populatedUniverse,
     assert populatedUniverse.getOrCacheDesignatedReportNoShowBond() == noshowBondValue
     assert populatedUniverse.getOrCacheDesignatedReportNoShowBond() == noshowBondValue
 
-    # push fee window forward
+    # push dispute window forward
     localFixture.contracts["Time"].incrementTimestamp(populatedUniverse.getDisputeRoundDurationInSeconds())
     assert populatedUniverse.getOrCreatePreviousDisputeWindow() == currentDisputeWindow.address
 
@@ -183,11 +183,11 @@ def test_universe_create_market(localFixture, chain, populatedUniverse, mockMark
     designatedReporterAddressValue = tester.a2
     mockDisputeWindow.setCreateMarket(mockMarket.address)
 
-    # set current fee window
+    # set current dispute window
     mockDisputeWindowFactory.setCreateDisputeWindowValue(mockDisputeWindow.address)
     assert populatedUniverse.getOrCreateCurrentDisputeWindow() == mockDisputeWindow.address
 
-    # set previous fee window
+    # set previous dispute window
     mockDisputeWindowFactory.setCreateDisputeWindowValue(mockDisputeWindow.address)
     assert populatedUniverse.getOrCreatePreviousDisputeWindow() == mockDisputeWindow.address
 

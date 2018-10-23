@@ -68,7 +68,7 @@ def test_failed_crowdsourcer(finalize, localFixture, universe, market, cash, rep
         failedCrowdsourcer.contribute(tester.a0, 1)
 
     if finalize:
-        # Fast forward time until the fee window is over and we can redeem to recieve the REP back
+        # Fast forward time until the dispute window is over and we can redeem to recieve the REP back
         localFixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)
     else:
         # Continue to the next round which will disavow failed crowdsourcers and let us redeem once the window is over
@@ -101,7 +101,7 @@ def test_one_round_crowdsourcer(localFixture, universe, market, cash, reputation
     disputeWindow = localFixture.applySignature('DisputeWindow', newDisputeWindowAddress)
     localFixture.contracts["Time"].setTimestamp(disputeWindow.getStartTime() + 1)
 
-    # Fast forward time until the new fee window is over and we can redeem our winning stake, and dispute bond tokens
+    # Fast forward time until the new dispute window is over and we can redeem our winning stake, and dispute bond tokens
     localFixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)
     assert market.finalize()
 
@@ -155,7 +155,7 @@ def test_multiple_round_crowdsourcer(localFixture, universe, market, cash, reput
     with raises(TransactionFailed):
         winningDisputeCrowdsourcer1.redeem(tester.a2)
 
-    # Fast forward time until the new fee window is over
+    # Fast forward time until the new dispute window is over
     disputeWindow = localFixture.applySignature("DisputeWindow", market.getDisputeWindow())
     localFixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)
     assert market.finalize()
@@ -199,7 +199,7 @@ def test_multiple_contributors_crowdsourcer(localFixture, universe, market, cash
     disputeWindow = localFixture.applySignature('DisputeWindow', newDisputeWindowAddress)
     localFixture.contracts["Time"].setTimestamp(disputeWindow.getStartTime() + 1)
 
-    # Fast forward time until the new fee window is over and we can redeem our winning stake, and dispute bond tokens
+    # Fast forward time until the new dispute window is over and we can redeem our winning stake, and dispute bond tokens
     localFixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)
     assert market.finalize()
 
