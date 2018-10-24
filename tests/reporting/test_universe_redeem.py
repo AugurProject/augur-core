@@ -29,9 +29,9 @@ def test_redeem_reporting_participants(kitchenSinkFixture, market, categoricalMa
     kitchenSinkFixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)
     assert market.finalize()
 
-    expectedRep = long(winningDisputeCrowdsourcer2.getStake() + winningDisputeCrowdsourcer1.getStake())
-    expectedRep = long(expectedRep + expectedRep / 2)
-    expectedRep += long(initialReporter.getStake() + initialReporter.getStake() / 2)
+    expectedRep = winningDisputeCrowdsourcer2.getStake() + winningDisputeCrowdsourcer1.getStake() + initialReporter.getStake()
+    expectedRep = expectedRep + expectedRep * 2 / 5
+    expectedRep -= 1 # Rounding error
     with TokenDelta(reputationToken, expectedRep, tester.a0, "Redeeming didn't refund REP"):
         with PrintGasUsed(kitchenSinkFixture, "Universe Redeem:", 0):
             assert universe.redeemStake([initialReporter.address, winningDisputeCrowdsourcer1.address, winningDisputeCrowdsourcer2.address])

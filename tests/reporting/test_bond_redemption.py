@@ -108,8 +108,7 @@ def test_one_round_crowdsourcer(localFixture, universe, market, cash, reputation
     initialReporter = localFixture.applySignature('InitialReporter', market.getReportingParticipant(0))
     marketDisputeCrowdsourcer = localFixture.applySignature('DisputeCrowdsourcer', market.getReportingParticipant(1))
 
-    expectedRep = market.getParticipantStake()
-    assert expectedRep == long(marketDisputeCrowdsourcer.getStake() + marketDisputeCrowdsourcer.getStake() / 2)
+    expectedRep = reputationToken.balanceOf(marketDisputeCrowdsourcer.address)
     disputeCrowdsourcerRedeemedLog = {
         "reporter": bytesToHexString(tester.a1),
         "disputeCrowdsourcer": marketDisputeCrowdsourcer.address,
@@ -160,15 +159,15 @@ def test_multiple_round_crowdsourcer(localFixture, universe, market, cash, reput
     localFixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)
     assert market.finalize()
 
-    expectedRep = long(initialReporter.getStake() + initialReporter.getStake() / 2)
+    expectedRep = initialReporter.getStake() + initialReporter.getStake() * 2 / 5
     with TokenDelta(reputationToken, expectedRep, tester.a0, "Redeeming didn't refund REP"):
         assert initialReporter.redeem(tester.a0)
 
-    expectedRep = long(winningDisputeCrowdsourcer1.getStake() + winningDisputeCrowdsourcer1.getStake() / 2)
+    expectedRep = winningDisputeCrowdsourcer1.getStake() + winningDisputeCrowdsourcer1.getStake() * 2 / 5
     with TokenDelta(reputationToken, expectedRep, tester.a2, "Redeeming didn't refund REP"):
         assert winningDisputeCrowdsourcer1.redeem(tester.a2)
 
-    expectedRep = long(winningDisputeCrowdsourcer2.getStake() + winningDisputeCrowdsourcer2.getStake() / 2)
+    expectedRep = winningDisputeCrowdsourcer2.getStake() + winningDisputeCrowdsourcer2.getStake() * 2 / 5
     with TokenDelta(reputationToken, expectedRep, tester.a3, "Redeeming didn't refund REP"):
         assert winningDisputeCrowdsourcer2.redeem(tester.a3)
 
@@ -205,7 +204,7 @@ def test_multiple_contributors_crowdsourcer(localFixture, universe, market, cash
 
     marketDisputeCrowdsourcer = localFixture.applySignature('DisputeCrowdsourcer', market.getReportingParticipant(1))
 
-    expectedRep = long(amount + amount / 2)
+    expectedRep = amount + amount * 2 / 5
     with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't refund REP"):
         assert marketDisputeCrowdsourcer.redeem(tester.a1)
 
@@ -254,8 +253,7 @@ def test_forkAndRedeem(localFixture, universe, market, categoricalMarket, cash, 
         account = localFixture.testerAddress[i % 4]
         key = localFixture.testerKey[i % 4]
         reportingParticipant = localFixture.applySignature("DisputeCrowdsourcer", market.getReportingParticipant(i))
-        expectedRep = reportingParticipant.getStake()
-        expectedRep += reportingParticipant.getStake() / 2
+        expectedRep = reputationToken.balanceOf(reportingParticipant.address) * 7 / 5 # * 1.4 to account for the minting reward of 40%
         repToken = noUniverseReputationToken if i % 2 == 0 else yesUniverseReputationToken
         with TokenDelta(repToken, expectedRep, account, "Redeeming didn't increase REP correctly for " + str(i)):
             assert reportingParticipant.forkAndRedeem(sender=key)

@@ -9,7 +9,7 @@ import 'factories/DisputeWindowFactory.sol';
 import 'factories/MarketFactory.sol';
 import 'factories/IAuctionFactory.sol';
 import 'reporting/IMarket.sol';
-import 'reporting/IReputationToken.sol';
+import 'reporting/IV2ReputationToken.sol';
 import 'reporting/IAuction.sol';
 import 'reporting/IDisputeWindow.sol';
 import 'reporting/Reporting.sol';
@@ -23,7 +23,7 @@ contract Universe is Controlled, ITyped, IUniverse {
 
     IUniverse private parentUniverse;
     bytes32 private parentPayoutDistributionHash;
-    IReputationToken private reputationToken;
+    IV2ReputationToken private reputationToken;
     IAuction private auction;
     IMarket private forkingMarket;
     bytes32 private tentativeWinningChildUniversePayoutDistributionHash;
@@ -83,7 +83,7 @@ contract Universe is Controlled, ITyped, IUniverse {
         return parentPayoutDistributionHash;
     }
 
-    function getReputationToken() public view returns (IReputationToken) {
+    function getReputationToken() public view returns (IV2ReputationToken) {
         return reputationToken;
     }
 

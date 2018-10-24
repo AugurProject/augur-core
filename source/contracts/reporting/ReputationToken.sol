@@ -65,7 +65,7 @@ contract ReputationToken is Controlled, ITyped, VariableSupplyToken, IV2Reputati
         IUniverse _parentUniverse = universe.getParentUniverse();
         IReportingParticipant _reportingParticipant = IReportingParticipant(msg.sender);
         require(_parentUniverse.isContainerForReportingParticipant(_reportingParticipant));
-        uint256 _bonus = _amountMigrated.div(2);
+        uint256 _bonus = _amountMigrated.mul(2) / 5;
         mint(_reportingParticipant, _bonus);
         return true;
     }
@@ -78,6 +78,12 @@ contract ReputationToken is Controlled, ITyped, VariableSupplyToken, IV2Reputati
 
     function burnForAuction(uint256 _amountToBurn) public returns (bool) {
         require(universe.getAuction() == IAuction(msg.sender));
+        burn(msg.sender, _amountToBurn);
+        return true;
+    }
+
+    function burnForMarket(uint256 _amountToBurn) public afterInitialized returns (bool) {
+        require(universe.isContainerForMarket(IMarket(msg.sender)));
         burn(msg.sender, _amountToBurn);
         return true;
     }

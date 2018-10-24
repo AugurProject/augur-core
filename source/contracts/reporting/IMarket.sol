@@ -9,7 +9,7 @@ import 'reporting/IUniverse.sol';
 import 'reporting/IDisputeWindow.sol';
 import 'trading/IShareToken.sol';
 import 'reporting/IReportingParticipant.sol';
-import 'reporting/IReputationToken.sol';
+import 'reporting/IV2ReputationToken.sol';
 import 'reporting/IMailbox.sol';
 
 
@@ -34,7 +34,7 @@ contract IMarket is ITyped, IOwnable {
     function getMarketCreatorMailbox() public view returns (IMailbox);
     function getWinningPayoutDistributionHash() public view returns (bytes32);
     function getWinningPayoutNumerator(uint256 _outcome) public view returns (uint256);
-    function getReputationToken() public view returns (IReputationToken);
+    function getReputationToken() public view returns (IV2ReputationToken);
     function getFinalizationTime() public view returns (uint256);
     function getInitialReporterAddress() public view returns (address);
     function getDesignatedReportingEndTime() public view returns (uint256);

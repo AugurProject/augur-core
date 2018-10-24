@@ -5,7 +5,7 @@ import 'reporting/IUniverse.sol';
 import 'reporting/IDisputeWindow.sol';
 import 'reporting/Reporting.sol';
 import 'libraries/ITyped.sol';
-import 'reporting/IReputationToken.sol';
+import 'reporting/IV2ReputationToken.sol';
 import 'reporting/IAuction.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/math/SafeMathUint256.sol';
@@ -20,7 +20,7 @@ contract MockUniverse is Initializable, IUniverse {
     IUniverse private setParentUniverseValue;
     IUniverse private setOrCreateChildUniverseValue;
     IUniverse private setChildUniverseValue;
-    IReputationToken private setReputationTokenValue;
+    IV2ReputationToken private setReputationTokenValue;
     IAuction private setAuctionValue;
     IMarket private setForkingMarketValue;
     uint256 private setForkEndTimeValue;
@@ -91,7 +91,7 @@ contract MockUniverse is Initializable, IUniverse {
         setChildUniverseValue = _setChildUniverseValue;
     }
 
-    function setReputationToken(IReputationToken _setReputationTokenValue) public {
+    function setReputationToken(IV2ReputationToken _setReputationTokenValue) public {
         setReputationTokenValue = _setReputationTokenValue;
     }
 
@@ -257,7 +257,7 @@ contract MockUniverse is Initializable, IUniverse {
         return setChildUniverseValue;
     }
 
-    function getReputationToken() public view returns (IReputationToken) {
+    function getReputationToken() public view returns (IV2ReputationToken) {
         return setReputationTokenValue;
     }
 

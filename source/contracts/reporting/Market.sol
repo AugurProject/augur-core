@@ -9,7 +9,7 @@ import 'libraries/collections/Map.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IReportingParticipant.sol';
 import 'reporting/IDisputeCrowdsourcer.sol';
-import 'reporting/IReputationToken.sol';
+import 'reporting/IV2ReputationToken.sol';
 import 'factories/DisputeCrowdsourcerFactory.sol';
 import 'trading/ICash.sol';
 import 'trading/IShareToken.sol';
@@ -135,7 +135,7 @@ contract Market is Controlled, ITyped, Initializable, Ownable, IMarket {
     }
 
     function distributeInitialReportingRep(address _reporter, IInitialReporter _initialReporter) private returns (uint256) {
-        IReputationToken _reputationToken = getReputationToken();
+        IV2ReputationToken _reputationToken = getReputationToken();
         uint256 _initialReportStake = noShowBond;
         // If the designated reporter showed up return the no show bond to the bond owner. Otherwise it will be used as stake in the first report.
         if (_reporter == _initialReporter.getDesignatedReporter()) {
@@ -231,15 +231,18 @@ contract Market is Controlled, ITyped, Initializable, Ownable, IMarket {
             }
         }
 
-        IReputationToken _reputationToken = getReputationToken();
+        IV2ReputationToken _reputationToken = getReputationToken();
 
-        // Now redistribute REP. Participants is implicitly bounded by the floor of the initial report REP cost to be no more than 21
+        // Now redistribute REP. Participants is implicitly bounded by the floor of the initial report REP cost to be no more than 21.
         for (uint256 j = 0; j < participants.length; j++) {
             _reportingParticipant = participants[j];
             if (_reportingParticipant.getPayoutDistributionHash() == winningPayoutDistributionHash) {
-                require(_reputationToken.transfer(_reportingParticipant, _reportingParticipant.getSize() / 2));
+                require(_reputationToken.transfer(_reportingParticipant, _reportingParticipant.getSize().mul(2) / 5));
             }
         }
+
+        // We burn 20% of the REP to prevent griefing attacks which rely on getting back lost REP
+        _reputationToken.burnForMarket(_reputationToken.balanceOf(this));
         return true;
     }
 
@@ -334,7 +337,7 @@ contract Market is Controlled, ITyped, Initializable, Ownable, IMarket {
         participants.push(_initialParticipant);
         // Send REP from the no show bond back to the address that placed it. If a report has been made tell the InitialReporter to return that REP and reset
         if (noShowBond > 0) {
-            IReputationToken _reputationToken = getReputationToken();
+            IV2ReputationToken _reputationToken = getReputationToken();
             require(_reputationToken.transfer(noShowBondOwner, noShowBond));
             noShowBond = 0;
         } else {
@@ -444,7 +447,7 @@ contract Market is Controlled, ITyped, Initializable, Ownable, IMarket {
         return finalizationTime;
     }
 
-    function getReputationToken() public view returns (IReputationToken) {
+    function getReputationToken() public view returns (IV2ReputationToken) {
         return universe.getReputationToken();
     }
 
