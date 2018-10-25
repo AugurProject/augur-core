@@ -27,7 +27,7 @@ contract MockDisputeCrowdsourcerFactory {
         return createdPayoutNumeratorsValue;
     }
 
-    function createDisputeCrowdsourcer(IController _controller, IMarket _market, uint256 _size, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) public returns (IDisputeCrowdsourcer) {
+    function createDisputeCrowdsourcer(IController _controller, IMarket _market, uint256 _size, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators) public returns (IDisputeCrowdsourcer) {
         createdPayoutDistributionHashValue = _payoutDistributionHash;
         createdPayoutNumeratorsValue = _payoutNumerators;
         // set for later testing use

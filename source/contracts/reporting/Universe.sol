@@ -184,12 +184,12 @@ contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
         return getOrCreateDisputeWindowByTimestamp(_disputeWindow.getStartTime().sub(2));
     }
 
-    function createChildUniverse(uint256[] _parentPayoutNumerators, bool _parentInvalid) public returns (IUniverse) {
-        bytes32 _parentPayoutDistributionHash = forkingMarket.derivePayoutDistributionHash(_parentPayoutNumerators, _parentInvalid);
+    function createChildUniverse(uint256[] _parentPayoutNumerators) public returns (IUniverse) {
+        bytes32 _parentPayoutDistributionHash = forkingMarket.derivePayoutDistributionHash(_parentPayoutNumerators);
         IUniverse _childUniverse = getChildUniverse(_parentPayoutDistributionHash);
         IAugur _augur = controller.getAugur();
         if (_childUniverse == IUniverse(0)) {
-            _childUniverse = _augur.createChildUniverse(_parentPayoutDistributionHash, _parentPayoutNumerators, _parentInvalid);
+            _childUniverse = _augur.createChildUniverse(_parentPayoutDistributionHash, _parentPayoutNumerators);
             childUniverses[_parentPayoutDistributionHash] = _childUniverse;
         }
         return _childUniverse;

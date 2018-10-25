@@ -13,7 +13,7 @@ contract MockDisputeCrowdsourcer is IDisputeCrowdsourcer, MockVariableSupplyToke
     uint256[] private payoutNumeratorsValue;
     uint256 private setSizeValue;
 
-    function initialize(IMarket market, uint256 _size, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) public returns (bool) {
+    function initialize(IMarket market, uint256 _size, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators) public returns (bool) {
         return true;
     }
 

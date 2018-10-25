@@ -21,7 +21,7 @@ def test_market_creation(contractsFixture, universe, cash, market):
         market = contractsFixture.createReasonableYesNoMarket(universe, cash, extraInfo="so extra")
 
     assert market.getUniverse() == universe.address
-    assert market.getNumberOfOutcomes() == 2
+    assert market.getNumberOfOutcomes() == 3
     assert numTicks == 10000
     assert market.getReputationToken() == universe.getReputationToken()
     assert market.getWinningPayoutDistributionHash() == stringToBytes("")
@@ -58,7 +58,9 @@ def test_categorical_market_creation(contractsFixture, universe, cash):
     assert contractsFixture.createCategoricalMarket(universe, 5, endTime, 1, cash, tester.a0)
     assert contractsFixture.createCategoricalMarket(universe, 6, endTime, 1, cash, tester.a0)
     assert contractsFixture.createCategoricalMarket(universe, 7, endTime, 1, cash, tester.a0)
-    assert contractsFixture.createCategoricalMarket(universe, 8, endTime, 1, cash, tester.a0)
+
+    with raises(TransactionFailed):
+        contractsFixture.createCategoricalMarket(universe, 8, endTime, 1, cash, tester.a0)
 
 def test_num_ticks_validation(contractsFixture, universe, cash):
     # Require numTicks != 0
@@ -107,9 +109,9 @@ def test_variable_validity_bond(invalid, contractsFixture, universe, cash):
     proceedToDesignatedReporting(contractsFixture, market)
 
     if invalid:
-        market.doInitialReport([market.getNumTicks() / 2, market.getNumTicks() / 2], True, "")
+        market.doInitialReport([0, 0, market.getNumTicks()], "")
     else:
-        market.doInitialReport([0, market.getNumTicks()], False, "")
+        market.doInitialReport([0, market.getNumTicks(), 0], "")
 
     # Move time forward so we can finalize and see the bond move
     disputeWindow = contractsFixture.applySignature('DisputeWindow', market.getDisputeWindow())

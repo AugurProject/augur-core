@@ -109,16 +109,16 @@ def test_initial_report(localFixture, universe, cash, market):
     proceedToDesignatedReporting(localFixture, market)
 
     with PrintGasUsed(localFixture, "Market:doInitialReport", INITIAL_REPORT):
-        market.doInitialReport([0, market.getNumTicks()], False, "")
+        market.doInitialReport([0, market.getNumTicks(), 0], "")
 
 def test_contribute(localFixture, universe, cash, market):
     proceedToNextRound(localFixture, market)
 
     with PrintGasUsed(localFixture, "Market.contribute", FIRST_CONTRIBUTE):
-        market.contribute([0, market.getNumTicks()], False, 1, "")
+        market.contribute([0, market.getNumTicks(), 0], 1, "")
 
     with PrintGasUsed(localFixture, "Market.contribute", FIRST_COMPLETED_CONTRIBUTE):
-        market.contribute([0, market.getNumTicks()], False, market.getParticipantStake(), "")
+        market.contribute([0, market.getNumTicks(), 0], market.getParticipantStake(), "")
 
     for i in range(9):
         proceedToNextRound(localFixture, market, randomPayoutNumerators = True)
@@ -127,7 +127,7 @@ def test_contribute(localFixture, universe, cash, market):
         proceedToNextRound(localFixture, market, randomPayoutNumerators = True)
 
     with PrintGasUsed(localFixture, "Market.contribute", FORKING_CONTRIBUTE):
-        market.contribute([market.getNumTicks() / 2, market.getNumTicks() / 2], False, market.getParticipantStake(), "")
+        market.contribute([market.getNumTicks() / 2, market.getNumTicks() / 2, 0], market.getParticipantStake(), "")
 
 def test_redeem(localFixture, universe, cash, market):
     # Initial report

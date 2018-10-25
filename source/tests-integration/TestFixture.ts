@@ -195,21 +195,21 @@ export class TestFixture {
         return;
     }
 
-    public async contribute(market: Market, payoutNumerators: Array<BN>, invalid: boolean, amount: BN): Promise<void> {
-        await market.contribute(payoutNumerators, invalid, amount, "");
+    public async contribute(market: Market, payoutNumerators: Array<BN>, amount: BN): Promise<void> {
+        await market.contribute(payoutNumerators, amount, "");
         return;
     }
 
-    public async derivePayoutDistributionHash(market: Market, payoutNumerators: Array<BN>, invalid: boolean): Promise<string> {
-        return await market.derivePayoutDistributionHash_(payoutNumerators, invalid);
+    public async derivePayoutDistributionHash(market: Market, payoutNumerators: Array<BN>): Promise<string> {
+        return await market.derivePayoutDistributionHash_(payoutNumerators);
     }
 
     public async isForking(): Promise<boolean> {
         return await this.universe.isForking_();
     }
 
-    public async migrateOutByPayout(reputationToken: ReputationToken, payoutNumerators: Array<BN>, invalid: boolean, attotokens: BN) {
-        await reputationToken.migrateOutByPayout(payoutNumerators, invalid, attotokens);
+    public async migrateOutByPayout(reputationToken: ReputationToken, payoutNumerators: Array<BN>, attotokens: BN) {
+        await reputationToken.migrateOutByPayout(payoutNumerators, attotokens);
         return;
     }
 
@@ -250,8 +250,8 @@ export class TestFixture {
         return this.contractDeployer.controller.getTimestamp_();
     }
 
-    public async doInitialReport(market: Market, payoutNumerators: Array<BN>, invalid: boolean): Promise<void> {
-        await market.doInitialReport(payoutNumerators, invalid, "");
+    public async doInitialReport(market: Market, payoutNumerators: Array<BN>): Promise<void> {
+        await market.doInitialReport(payoutNumerators, "");
         return;
     }
 

@@ -34,7 +34,7 @@ export class ReportingUtils {
 
         let winningPayoutHash = "";
         if (disputeWindowAddress === ZERO_ADDRESS) {
-            await market.doInitialReport(payoutNumerators, false, "");
+            await market.doInitialReport(payoutNumerators, "");
             expect(await market.getDisputeWindow_() === ZERO_ADDRESS).to.be.false;
             console.log("Submitted initial report");
 
@@ -67,25 +67,25 @@ export class ReportingUtils {
             const winningReport = await fixture.getWinningReportingParticipant(market);
             winningPayoutHash = await winningReport.getPayoutDistributionHash_();
 
-            let chosenPayoutNumerators = [];
+            let chosenPayoutNumerators = new Array(numberOfOutcomes).fill(new BN(0));
+            chosenPayoutNumerators[0] = numTicks;
             if (randomPayoutNumerators) {
-                chosenPayoutNumerators = new Array(numberOfOutcomes).fill(new BN(0));
                 // Set chosenPayoutNumerators[0] to number >= 0 and <= numTicks
                 chosenPayoutNumerators[0] = new BN(Math.floor(Math.random() * Math.floor(numTicks.toNumber() + 1)));
                 chosenPayoutNumerators[1] = numTicks.sub(chosenPayoutNumerators[0]);
             } else {
-                const firstReportWinning = await market.derivePayoutDistributionHash_(payoutNumerators, false) === winningPayoutHash;
-                chosenPayoutNumerators = payoutNumerators;
+                const firstReportWinning = await market.derivePayoutDistributionHash_(payoutNumerators) === winningPayoutHash;
                 if (firstReportWinning) {
-                    payoutNumerators.reverse();
+                    chosenPayoutNumerators[0] = new BN(0);
+                    chosenPayoutNumerators[1] = numTicks;
                 }
             }
 
-            const chosenPayoutHash = await market.derivePayoutDistributionHash_(chosenPayoutNumerators, false);
+            const chosenPayoutHash = await market.derivePayoutDistributionHash_(chosenPayoutNumerators);
             const participantStake = await market.getParticipantStake_();
             const stakeInOutcome = await market.getStakeInOutcome_(chosenPayoutHash);
             const amount = participantStake.mul(new BN(2)).sub(stakeInOutcome.mul(new BN(3)));
-            await fixture.contribute(market, chosenPayoutNumerators, false, amount);
+            await fixture.contribute(market, chosenPayoutNumerators, amount);
             console.log("Staked", amount.toString(10));
             console.log("Payout numerators", chosenPayoutNumerators);
             const forkingMarket = await market.getForkingMarket_();
