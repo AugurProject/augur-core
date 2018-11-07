@@ -10,8 +10,6 @@ import 'reporting/IDisputeWindow.sol';
 import 'trading/IShareToken.sol';
 import 'reporting/IReportingParticipant.sol';
 import 'reporting/IReputationToken.sol';
-import 'IController.sol';
-import 'IControlled.sol';
 import 'reporting/IMailbox.sol';
 
 
