@@ -7865,20 +7865,6 @@
 		},
 		{
 			"constant": true,
-			"inputs": [],
-			"name": "invalidOutcomeIndex",
-			"outputs": [
-				{
-					"name": "",
-					"type": "uint256"
-				}
-			],
-			"payable": false,
-			"stateMutability": "view",
-			"type": "function"
-		},
-		{
-			"constant": true,
 			"inputs": [
 				{
 					"name": "_shadyShareToken",

@@ -3750,13 +3750,6 @@
             return <boolean>result[0];
         }
 
-        public invalidOutcomeIndex_ = async( options?: { sender?: string }): Promise<BN> => {
-            options = options || {};
-            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"invalidOutcomeIndex","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"};
-            const result = await this.localCall(abi, [], options.sender);
-            return <BN>result[0];
-        }
-
         public isContainerForShareToken_ = async(shadyShareToken: string, options?: { sender?: string }): Promise<boolean> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[{"name":"_shadyShareToken","type":"address"}],"name":"isContainerForShareToken","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};

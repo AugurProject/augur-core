@@ -94,7 +94,7 @@ def test_initial_report(localFixture, initializedMarket, mockReputationToken, mo
 def test_contribute(localFixture, initializedMarket, mockNextDisputeWindow, mockInitialReporter, mockDisputeCrowdsourcer, mockDisputeCrowdsourcerFactory):
     # We can't contribute until there is an initial report to dispute
     with raises(TransactionFailed, message="can't contribute until there is an initial report to dispute"):
-        initializedMarket.contribute([0, 0, 0, 0, initializedMarket.getNumTicks(), 0], 1, "")
+        initializedMarket.contribute([0, 0, 0, 0, 0, initializedMarket.getNumTicks()], 1, "")
 
     localFixture.contracts["Time"].setTimestamp(initializedMarket.getEndTime() + 1)
 
@@ -108,7 +108,7 @@ def test_contribute(localFixture, initializedMarket, mockNextDisputeWindow, mock
     with raises(TransactionFailed, message="can't contribute to current winning outcome"):
         initializedMarket.contribute([initializedMarket.getNumTicks(), 0, 0, 0, 0, 0], 1, "")
 
-    assert initializedMarket.contribute([0, 0, 0, 0, initializedMarket.getNumTicks(), 0], 1, "")
+    assert initializedMarket.contribute([0, 0, 0, 0, 0, initializedMarket.getNumTicks()], 1, "")
     assert mockDisputeCrowdsourcer.contributeWasCalled() == True
     assert mockDisputeCrowdsourcer.getContributeParticipant() == bytesToHexString(tester.a0)
     assert mockDisputeCrowdsourcer.getContributeAmount() == 1
@@ -123,13 +123,13 @@ def test_market_finish_crowdsourcing_dispute_bond_fork(localFixture, initialized
     mockDisputeCrowdsourcer.setTotalSupply(1)
     mockDisputeCrowdsourcer.setSize(200)
 
-    assert initializedMarket.contribute([0, 0, 0, 0, initializedMarket.getNumTicks(), 0], 1, "")
+    assert initializedMarket.contribute([0, 0, 0, 0, 0, initializedMarket.getNumTicks()], 1, "")
 
     assert mockUniverse.getForkCalled() == False
 
     mockDisputeCrowdsourcer.setTotalSupply(200)
 
-    assert initializedMarket.contribute([0, 0, 0, 0, initializedMarket.getNumTicks(), 0], 1, "")
+    assert initializedMarket.contribute([0, 0, 0, 0, 0, initializedMarket.getNumTicks()], 1, "")
 
     assert mockUniverse.getForkCalled() == True
 

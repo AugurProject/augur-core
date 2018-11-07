@@ -528,7 +528,7 @@ def kitchenSinkSnapshot(fixture, augurInitializedSnapshot):
         proceedToFork(fixture, forkingMarket, universe)
         fixture.contracts["Time"].setTimestamp(universe.getForkEndTime() + 1)
         reputationToken = fixture.applySignature('ReputationToken', universe.getReputationToken())
-        yesPayoutNumerators = [0, forkingMarket.getNumTicks(), 0]
+        yesPayoutNumerators = [0, 0, forkingMarket.getNumTicks()]
         reputationToken.migrateOutByPayout(yesPayoutNumerators, reputationToken.balanceOf(tester.a0))
         universe = fixture.applySignature('Universe', universe.createChildUniverse(yesPayoutNumerators))
 

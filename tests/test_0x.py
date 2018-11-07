@@ -77,7 +77,7 @@ def test_fill_order_with_shares(localFixture, zeroX, market, cash, controller):
 
     yesShareAddress = market.getShareToken(YES)
     noShareAddress = market.getShareToken(NO)
-    invalidShareAddress = market.getShareToken(2)
+    invalidShareAddress = market.getShareToken(0)
     yesShareToken = localFixture.applySignature('ShareToken', yesShareAddress)
     noShareToken = localFixture.applySignature('ShareToken', noShareAddress)
     invalidShareToken = localFixture.applySignature('ShareToken', invalidShareAddress)

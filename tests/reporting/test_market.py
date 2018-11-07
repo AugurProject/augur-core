@@ -109,9 +109,9 @@ def test_variable_validity_bond(invalid, contractsFixture, universe, cash):
     proceedToDesignatedReporting(contractsFixture, market)
 
     if invalid:
-        market.doInitialReport([0, 0, market.getNumTicks()], "")
+        market.doInitialReport([market.getNumTicks(), 0, 0], "")
     else:
-        market.doInitialReport([0, market.getNumTicks(), 0], "")
+        market.doInitialReport([0, 0, market.getNumTicks()], "")
 
     # Move time forward so we can finalize and see the bond move
     disputeWindow = contractsFixture.applySignature('DisputeWindow', market.getDisputeWindow())

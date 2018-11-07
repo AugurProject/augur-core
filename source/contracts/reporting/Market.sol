@@ -53,7 +53,6 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     uint256 private noShowBond;
     bool private disputePacingOn;
     address private noShowBondOwner;
-    uint256 public invalidOutcomeIndex;
 
     // Collections
     IReportingParticipant[] public participants;
@@ -62,8 +61,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function initialize(IUniverse _universe, uint256 _endTime, uint256 _feePerEthInAttoEth, ICash _cash, address _designatedReporterAddress, address _creator, uint256 _numOutcomes, uint256 _numTicks) public payable beforeInitialized returns (bool _success) {
         endInitialization();
-        invalidOutcomeIndex = _numOutcomes;
-        _numOutcomes += 1; // The INVALID outcome is always last
+        _numOutcomes += 1; // The INVALID outcome is always first
         require(MIN_OUTCOMES <= _numOutcomes && _numOutcomes <= MAX_OUTCOMES);
         require(_designatedReporterAddress != NULL_ADDRESS);
         require((_numTicks >= _numOutcomes));
@@ -406,7 +404,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function isInvalid() public view returns (bool) {
         require(isFinalized());
-        return getWinningReportingParticipant().getPayoutNumerator(invalidOutcomeIndex) > 0;
+        return getWinningReportingParticipant().getPayoutNumerator(0) > 0;
     }
 
     function getInitialReporter() public view returns (IInitialReporter) {
@@ -485,7 +483,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     function derivePayoutDistributionHash(uint256[] _payoutNumerators) public view returns (bytes32) {
         uint256 _sum = 0;
         uint256 _previousValue = _payoutNumerators[0];
-        require(_payoutNumerators[invalidOutcomeIndex] == 0 || _payoutNumerators[invalidOutcomeIndex] == numTicks);
+        require(_payoutNumerators[0] == 0 || _payoutNumerators[0] == numTicks);
         require(_payoutNumerators.length == numOutcomes);
         for (uint256 i = 0; i < _payoutNumerators.length; i++) {
             uint256 _value = _payoutNumerators[i];

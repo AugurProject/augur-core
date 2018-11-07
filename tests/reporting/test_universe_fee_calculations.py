@@ -68,7 +68,7 @@ def test_validity_bond_up(contractsFixture, universe, market):
     proceedToInitialReporting(contractsFixture, market)
 
     # The DR will admit the market is invalid
-    payoutNumerators = [0, 0, 10000]
+    payoutNumerators = [10000, 0, 0]
     assert market.doInitialReport(payoutNumerators, "")
 
     # Move time forward to finalize the market
@@ -89,7 +89,7 @@ def test_validity_bond_min(contractsFixture, universe, market):
     proceedToInitialReporting(contractsFixture, market)
 
     # The DR will report the market had a normal resolution
-    payoutNumerators = [0, 10000, 0]
+    payoutNumerators = [0, 0, 10000]
     assert market.doInitialReport(payoutNumerators, "")
 
     # Move time forward to finalize the market
@@ -110,13 +110,13 @@ def test_validity_bond_down(contractsFixture, universe, market, scalarMarket, ca
     proceedToInitialReporting(contractsFixture, market)
 
     # The DR will admit the market is invalid
-    payoutNumerators = [0, 0, 10000]
+    payoutNumerators = [10000, 0, 0]
     assert market.doInitialReport(payoutNumerators, "")
 
     # Move time forward into the dispute window and report on the other market
     disputeWindow = contractsFixture.applySignature('DisputeWindow', market.getDisputeWindow())
     contractsFixture.contracts["Time"].setTimestamp(disputeWindow.getStartTime() + 1)
-    payoutNumerators = [200000, 200000, 0]
+    payoutNumerators = [0, 200000, 200000]
     assert scalarMarket.doInitialReport(payoutNumerators, "")
 
     # And then move time forward further and finalize the first market
@@ -148,13 +148,13 @@ def test_dr_report_stake_up(contractsFixture, universe, market):
 
     # The DR will report
     numTicks = market.getNumTicks()
-    payoutNumerators = [numTicks, 0, 0]
+    payoutNumerators = [0, numTicks, 0]
     assert market.doInitialReport(payoutNumerators, "")
 
     # Proceed to the next round so we can dispute the DR
     disputeWindow = contractsFixture.applySignature('DisputeWindow', market.getDisputeWindow())
     contractsFixture.contracts["Time"].setTimestamp(disputeWindow.getStartTime() + 1)
-    payoutNumerators = [0, numTicks, 0]
+    payoutNumerators = [0, 0, numTicks]
     chosenPayoutHash = market.derivePayoutDistributionHash(payoutNumerators)
     amount = 2 * market.getParticipantStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
     assert market.contribute(payoutNumerators, amount, "")
@@ -178,7 +178,7 @@ def test_dr_report_stake_min(contractsFixture, universe, market):
 
     # The DR will report
     numTicks = market.getNumTicks()
-    payoutNumerators = [numTicks, 0, 0]
+    payoutNumerators = [0, numTicks, 0]
     assert market.doInitialReport(payoutNumerators, "")
 
     # Move time forward to finalize the market
@@ -200,13 +200,13 @@ def test_dr_report_stake_down(contractsFixture, universe, market, cash):
 
     # The DR will report
     numTicks = market.getNumTicks()
-    payoutNumerators = [numTicks, 0, 0]
+    payoutNumerators = [0, numTicks, 0]
     assert market.doInitialReport(payoutNumerators, "")
 
     # Proceed to the next round so we can dispute the DR
     disputeWindow = contractsFixture.applySignature('DisputeWindow', market.getDisputeWindow())
     contractsFixture.contracts["Time"].setTimestamp(disputeWindow.getStartTime() + 1)
-    payoutNumerators = [0, numTicks, 0]
+    payoutNumerators = [0, 0, numTicks]
     chosenPayoutHash = market.derivePayoutDistributionHash(payoutNumerators)
     amount = 2 * market.getParticipantStake() - 3 * market.getStakeInOutcome(chosenPayoutHash)
     assert market.contribute(payoutNumerators, amount, "")
@@ -235,7 +235,7 @@ def test_no_show_bond_up(contractsFixture, universe, market):
 
     # The DR will be absent and we'll do an initial report as another user
     numTicks = market.getNumTicks()
-    payoutNumerators = [numTicks, 0, 0]
+    payoutNumerators = [0, numTicks, 0]
     assert market.doInitialReport(payoutNumerators, "", sender=tester.k1)
 
     # Move time forward to finalize the market
@@ -257,7 +257,7 @@ def test_no_show_bond_min(contractsFixture, universe, market):
 
     # The DR will show up
     numTicks = market.getNumTicks()
-    payoutNumerators = [numTicks, 0, 0]
+    payoutNumerators = [0, numTicks, 0]
     assert market.doInitialReport(payoutNumerators, "")
 
     # Move time forward to finalize the market
@@ -279,7 +279,7 @@ def test_no_show_bond_down(contractsFixture, universe, market, cash):
 
     # The DR will be absent and we'll do an initial report as another user
     numTicks = market.getNumTicks()
-    payoutNumerators = [numTicks, 0, 0]
+    payoutNumerators = [0, numTicks, 0]
     assert market.doInitialReport(payoutNumerators, "", sender=tester.k1)
 
     # Move time forward to finalize the market

@@ -24,7 +24,7 @@ def test_initial_report(localFixture, universe, market, categoricalMarket, scala
         "reporter": bytesToHexString(tester.a0),
         "amountRedeemed": marketStake,
         "repReceived": marketStake,
-        "payoutNumerators": [market.getNumTicks(), 0, 0],
+        "payoutNumerators": [0, market.getNumTicks(), 0],
         "universe": universe.address,
         "market": market.address
     }
@@ -50,17 +50,17 @@ def test_failed_crowdsourcer(finalize, localFixture, universe, market, cash, rep
     amount = market.getParticipantStake()
 
     # confirm we can contribute 0
-    assert market.contribute([1, market.getNumTicks()-1, 0], 0, "", sender=tester.k1)
+    assert market.contribute([0, 1, market.getNumTicks()-1], 0, "", sender=tester.k1)
 
     with TokenDelta(reputationToken, -amount + 1, tester.a1, "Disputing did not reduce REP balance correctly"):
-        assert market.contribute([1, market.getNumTicks()-1, 0], amount - 1, "", sender=tester.k1)
+        assert market.contribute([0, 1, market.getNumTicks()-1], amount - 1, "", sender=tester.k1)
 
     with TokenDelta(reputationToken, -amount + 1, tester.a2, "Disputing did not reduce REP balance correctly"):
-        assert market.contribute([1, market.getNumTicks()-1, 0], amount - 1, "", sender=tester.k2)
+        assert market.contribute([0, 1, market.getNumTicks()-1], amount - 1, "", sender=tester.k2)
 
     assert market.getDisputeWindow() == disputeWindow.address
 
-    payoutDistributionHash = market.derivePayoutDistributionHash([1, market.getNumTicks()-1, 0])
+    payoutDistributionHash = market.derivePayoutDistributionHash([0, 1, market.getNumTicks()-1])
     failedCrowdsourcer = localFixture.applySignature("DisputeCrowdsourcer", market.getCrowdsourcer(payoutDistributionHash))
 
     # confirm we cannot contribute directly to a crowdsourcer without going through the market
@@ -72,7 +72,7 @@ def test_failed_crowdsourcer(finalize, localFixture, universe, market, cash, rep
         localFixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)
     else:
         # Continue to the next round which will disavow failed crowdsourcers and let us redeem once the window is over
-        market.contribute([0, market.getNumTicks(), 0], amount * 2, "")
+        market.contribute([0, 0, market.getNumTicks()], amount * 2, "")
         assert market.getDisputeWindow() != disputeWindow.address
         localFixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)
 
@@ -92,7 +92,7 @@ def test_one_round_crowdsourcer(localFixture, universe, market, cash, reputation
     # We'll have testers push markets into the next round by funding dispute crowdsourcers
     amount = 2 * market.getParticipantStake()
     with TokenDelta(reputationToken, -amount, tester.a1, "Disputing did not reduce REP balance correctly"):
-        assert market.contribute([0, market.getNumTicks(), 0], amount, "", sender=tester.k1)
+        assert market.contribute([0, 0, market.getNumTicks()], amount, "", sender=tester.k1)
 
     newDisputeWindowAddress = market.getDisputeWindow()
     assert newDisputeWindowAddress != disputeWindow.address
@@ -115,7 +115,7 @@ def test_one_round_crowdsourcer(localFixture, universe, market, cash, reputation
         "disputeCrowdsourcer": marketDisputeCrowdsourcer.address,
         "amountRedeemed": marketDisputeCrowdsourcer.getStake(),
         "repReceived": expectedRep,
-        "payoutNumerators": [0, market.getNumTicks(), 0],
+        "payoutNumerators": [0, 0, market.getNumTicks()],
         "universe": universe.address,
         "market": market.address
     }
@@ -188,9 +188,9 @@ def test_multiple_contributors_crowdsourcer(localFixture, universe, market, cash
     # We'll have testers push markets into the next round by funding dispute crowdsourcers
     amount = market.getParticipantStake()
     with TokenDelta(reputationToken, -amount, tester.a1, "Disputing did not reduce REP balance correctly"):
-        assert market.contribute([0, market.getNumTicks(), 0], amount, "", sender=tester.k1)
+        assert market.contribute([0, 0, market.getNumTicks()], amount, "", sender=tester.k1)
     with TokenDelta(reputationToken, -amount, tester.a2, "Disputing did not reduce REP balance correctly"):
-        assert market.contribute([0, market.getNumTicks(), 0], amount, "", sender=tester.k2)
+        assert market.contribute([0, 0, market.getNumTicks()], amount, "", sender=tester.k2)
 
     newDisputeWindowAddress = market.getDisputeWindow()
     assert newDisputeWindowAddress != disputeWindow.address
@@ -234,16 +234,16 @@ def test_forkAndRedeem(localFixture, universe, market, categoricalMarket, cash, 
     categoricalDisputeCrowdsourcer = localFixture.applySignature("DisputeCrowdsourcer", categoricalMarket.getReportingParticipant(1))
 
     # Migrate the categorical market into the winning universe. This will disavow the dispute crowdsourcer on it, letting us redeem for original universe rep
-    assert categoricalMarket.migrateThroughOneFork([0,0,categoricalMarket.getNumTicks(), 0], "")
+    assert categoricalMarket.migrateThroughOneFork([0,0,0,categoricalMarket.getNumTicks()], "")
 
     expectedRep = categoricalDisputeCrowdsourcer.getStake()
     with TokenDelta(reputationToken, expectedRep, tester.a1, "Redeeming didn't increase REP correctly"):
         categoricalDisputeCrowdsourcer.redeem(tester.a1)
 
     noPayoutNumerators = [0] * market.getNumberOfOutcomes()
-    noPayoutNumerators[0] = market.getNumTicks()
+    noPayoutNumerators[1] = market.getNumTicks()
     yesPayoutNumerators = [0] * market.getNumberOfOutcomes()
-    yesPayoutNumerators[1] = market.getNumTicks()
+    yesPayoutNumerators[2] = market.getNumTicks()
     noUniverse =  localFixture.applySignature('Universe', universe.createChildUniverse(noPayoutNumerators))
     yesUniverse =  localFixture.applySignature('Universe', universe.createChildUniverse(yesPayoutNumerators))
     noUniverseReputationToken = localFixture.applySignature('ReputationToken', noUniverse.getReputationToken())
@@ -279,9 +279,9 @@ def localSnapshot(fixture, kitchenSinkSnapshot):
     # Designated Report on the markets
     designatedReportCost = universe.getOrCacheDesignatedReportStake()
     with TokenDelta(reputationToken, 0, tester.a0, "Doing the designated report didn't deduct REP correctly or didn't award the no show bond"):
-        market.doInitialReport([market.getNumTicks(), 0, 0], "")
-        categoricalMarket.doInitialReport([categoricalMarket.getNumTicks(), 0, 0, 0], "")
-        scalarMarket.doInitialReport([scalarMarket.getNumTicks(), 0, 0], "")
+        market.doInitialReport([0, market.getNumTicks(), 0], "")
+        categoricalMarket.doInitialReport([0, categoricalMarket.getNumTicks(), 0, 0], "")
+        scalarMarket.doInitialReport([0, scalarMarket.getNumTicks(), 0], "")
 
     return fixture.createSnapshot()
 
