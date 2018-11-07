@@ -1,6 +1,6 @@
 pragma solidity 0.4.24;
 
-import 'libraries/DelegationTarget.sol';
+import 'Controlled.sol';
 import 'libraries/Ownable.sol';
 import 'libraries/token/ERC20Basic.sol';
 import 'libraries/Initializable.sol';
@@ -9,7 +9,7 @@ import 'reporting/IMarket.sol';
 import 'trading/ICash.sol';
 
 
-contract Mailbox is DelegationTarget, Ownable, Initializable, IMailbox {
+contract Mailbox is Controlled, Ownable, Initializable, IMailbox {
     IMarket private market;
 
     function initialize(address _owner, IMarket _market) public beforeInitialized returns (bool) {

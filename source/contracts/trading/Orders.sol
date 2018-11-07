@@ -2,7 +2,7 @@ pragma solidity 0.4.24;
 
 
 import 'trading/IOrders.sol';
-import 'libraries/DelegationTarget.sol';
+import 'Controlled.sol';
 import 'libraries/math/SafeMathUint256.sol';
 import 'libraries/math/SafeMathInt256.sol';
 import 'trading/Order.sol';
@@ -14,7 +14,7 @@ import 'trading/IOrdersFetcher.sol';
  * @title Orders
  * @dev Storage of all data associated with orders
  */
-contract Orders is DelegationTarget, IOrders {
+contract Orders is Controlled, IOrders {
     using Order for Order.Data;
     using SafeMathUint256 for uint256;
 

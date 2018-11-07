@@ -1,7 +1,7 @@
 pragma solidity 0.4.24;
 
 
-import 'libraries/Delegator.sol';
+import 'Controller.sol';
 import 'reporting/IMarket.sol';
 import 'IController.sol';
 

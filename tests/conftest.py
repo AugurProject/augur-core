@@ -319,12 +319,6 @@ class ContractsFixture:
                 if name == 'controller': continue
                 if name == 'Augur': continue
                 if name == 'Time': continue # In testing and development we swap the Time library for a ControlledTime version which lets us manage block timestamp
-                contractsToDelegate = ['Orders', 'TradingEscapeHatch', 'Cash']
-                if name in contractsToDelegate:
-                    delegationTargetName = "".join([name, "Target"])
-                    self.uploadAndAddToController(path.join(directory, filename), delegationTargetName, name)
-                    self.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", name, "delegator", constructorArgs=[self.contracts['Controller'].address, delegationTargetName.ljust(32, '\x00')])
-                    self.contracts[name] = self.applySignature(name, self.contracts[name].address)
                 elif name == "TimeControlled":
                     self.uploadAndAddToController(path.join(directory, filename), lookupKey = "Time", signatureKey = "TimeControlled")
                 else:
@@ -361,7 +355,7 @@ class ContractsFixture:
             self.contracts['Controller'].addToWhitelist(self.contracts[name].address)
 
     def initializeAllContracts(self):
-        contractsToInitialize = ['CompleteSets','CreateOrder','FillOrder','CancelOrder','Trade','ClaimTradingProceeds','OrdersFetcher', 'Time']
+        contractsToInitialize = ['CompleteSets','CreateOrder','FillOrder','CancelOrder','Trade','ClaimTradingProceeds','OrdersFetcher', 'Time','Cash','Orders']
         for contractName in contractsToInitialize:
             if getattr(self.contracts[contractName], "setController", None):
                 self.contracts[contractName].setController(self.contracts['Controller'].address)

@@ -2,7 +2,7 @@ pragma solidity 0.4.24;
 
 import 'reporting/IUniverse.sol';
 import 'reporting/IAuctionToken.sol';
-import 'libraries/DelegationTarget.sol';
+import 'Controlled.sol';
 import 'libraries/token/VariableSupplyToken.sol';
 import 'libraries/ITyped.sol';
 import 'trading/ICash.sol';
@@ -10,7 +10,7 @@ import 'libraries/Initializable.sol';
 import 'reporting/IAuction.sol';
 
 
-contract AuctionToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IAuctionToken {
+contract AuctionToken is Controlled, ITyped, Initializable, VariableSupplyToken, IAuctionToken {
 
     string constant public name = "Auction Token";
     uint8 constant public decimals = 18;

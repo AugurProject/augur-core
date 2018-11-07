@@ -20,7 +20,7 @@ contract Controlled is IControlled {
     }
 
     modifier onlyControllerCaller {
-        require(IController(msg.sender) == controller);
+        require(IController(msg.sender) == controller || controller == address(0));
         _;
     }
 

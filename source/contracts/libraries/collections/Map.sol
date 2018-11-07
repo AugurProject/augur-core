@@ -1,12 +1,12 @@
 pragma solidity 0.4.24;
 
-import 'libraries/DelegationTarget.sol';
+import 'Controlled.sol';
 import 'libraries/Ownable.sol';
 import 'libraries/Initializable.sol';
 
 
 // Provides a mapping that has a count and more control over the behavior of Key errors. Additionally allows for a clean way to clear an existing map by simply creating a new one on owning contracts.
-contract Map is DelegationTarget, Ownable, Initializable {
+contract Map is Controlled, Ownable, Initializable {
     mapping(bytes32 => bytes32) private items;
     uint256 private count;
 

@@ -1,15 +1,16 @@
 pragma solidity 0.4.24;
 
-import 'libraries/Delegator.sol';
+import 'libraries/CloneFactory.sol';
 import 'reporting/IDisputeCrowdsourcer.sol';
 import 'reporting/IMarket.sol';
 import 'IController.sol';
+import 'IControlled.sol';
 
 
-contract DisputeCrowdsourcerFactory {
+contract DisputeCrowdsourcerFactory is CloneFactory {
     function createDisputeCrowdsourcer(IController _controller, IMarket _market, uint256 _size, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators) public returns (IDisputeCrowdsourcer) {
-        Delegator _delegator = new Delegator(_controller, "DisputeCrowdsourcer");
-        IDisputeCrowdsourcer _disputeCrowdsourcer = IDisputeCrowdsourcer(_delegator);
+        IDisputeCrowdsourcer _disputeCrowdsourcer = IDisputeCrowdsourcer(createClone(_controller.lookup("DisputeCrowdsourcer")));
+        IControlled(_disputeCrowdsourcer).setController(_controller);
         _disputeCrowdsourcer.initialize(_market, _size, _payoutDistributionHash, _payoutNumerators);
         return _disputeCrowdsourcer;
     }

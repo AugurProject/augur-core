@@ -1,15 +1,15 @@
 pragma solidity 0.4.24;
 
 
-import 'libraries/Delegator.sol';
+import 'libraries/CloneFactory.sol';
 import 'IController.sol';
 import 'reporting/IUniverse.sol';
 
 
-contract UniverseFactory {
+contract UniverseFactory is CloneFactory {
     function createUniverse(IController _controller, IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
-        Delegator _delegator = new Delegator(_controller, "Universe");
-        IUniverse _universe = IUniverse(_delegator);
+        IUniverse _universe = IUniverse(createClone(_controller.lookup("Universe")));
+        IControlled(_universe).setController(_controller);
         _universe.initialize(_parentUniverse, _parentPayoutDistributionHash);
         return _universe;
     }

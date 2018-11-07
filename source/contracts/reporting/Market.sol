@@ -1,7 +1,7 @@
 pragma solidity 0.4.24;
 
 import 'reporting/IMarket.sol';
-import 'libraries/DelegationTarget.sol';
+import 'Controlled.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/Ownable.sol';
@@ -25,7 +25,7 @@ import 'reporting/Reporting.sol';
 import 'reporting/IInitialReporter.sol';
 
 
-contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
+contract Market is Controlled, ITyped, Initializable, Ownable, IMarket {
     using SafeMathUint256 for uint256;
     using SafeMathInt256 for int256;
 

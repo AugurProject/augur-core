@@ -1,6 +1,6 @@
 pragma solidity 0.4.24;
 
-import 'libraries/DelegationTarget.sol';
+import 'Controlled.sol';
 import 'reporting/IAuction.sol';
 import 'libraries/Initializable.sol';
 import 'reporting/IUniverse.sol';
@@ -13,7 +13,7 @@ import 'reporting/IAuctionToken.sol';
 import 'factories/AuctionTokenFactory.sol';
 
 
-contract Auction is DelegationTarget, Initializable, IAuction {
+contract Auction is Controlled, Initializable, IAuction {
     using SafeMathUint256 for uint256;
 
     enum RoundType {

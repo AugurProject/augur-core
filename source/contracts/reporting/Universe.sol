@@ -2,7 +2,7 @@ pragma solidity 0.4.24;
 
 
 import 'reporting/IUniverse.sol';
-import 'libraries/DelegationTarget.sol';
+import 'Controlled.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'factories/ReputationTokenFactory.sol';
@@ -19,7 +19,7 @@ import 'libraries/math/SafeMathUint256.sol';
 import 'IAugur.sol';
 
 
-contract Universe is DelegationTarget, ITyped, Initializable, IUniverse {
+contract Universe is Controlled, ITyped, Initializable, IUniverse {
     using SafeMathUint256 for uint256;
 
     IUniverse private parentUniverse;

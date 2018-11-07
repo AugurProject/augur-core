@@ -1,7 +1,7 @@
 pragma solidity 0.4.24;
 
 import 'reporting/IV2ReputationToken.sol';
-import 'libraries/DelegationTarget.sol';
+import 'Controlled.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/token/VariableSupplyToken.sol';
@@ -13,7 +13,7 @@ import 'reporting/IDisputeCrowdsourcer.sol';
 import 'libraries/math/SafeMathUint256.sol';
 
 
-contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IV2ReputationToken {
+contract ReputationToken is Controlled, ITyped, Initializable, VariableSupplyToken, IV2ReputationToken {
     using SafeMathUint256 for uint256;
 
     string constant public name = "Reputation";

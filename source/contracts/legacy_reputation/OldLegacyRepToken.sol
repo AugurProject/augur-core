@@ -2,7 +2,7 @@ pragma solidity 0.4.24;
 
 
 import 'reporting/IReputationToken.sol';
-import 'libraries/DelegationTarget.sol';
+import 'legacy_reputation/DelegationTarget.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/token/VariableSupplyToken.sol';

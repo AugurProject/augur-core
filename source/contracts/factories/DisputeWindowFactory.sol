@@ -1,15 +1,16 @@
 pragma solidity 0.4.24;
 
-import 'libraries/Delegator.sol';
+import 'libraries/CloneFactory.sol';
 import 'IController.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IDisputeWindow.sol';
+import 'IControlled.sol';
 
 
-contract DisputeWindowFactory {
+contract DisputeWindowFactory is CloneFactory {
     function createDisputeWindow(IController _controller, IUniverse _universe, uint256 _disputeWindowId) public returns (IDisputeWindow) {
-        Delegator _delegator = new Delegator(_controller, "DisputeWindow");
-        IDisputeWindow _disputeWindow = IDisputeWindow(_delegator);
+        IDisputeWindow _disputeWindow = IDisputeWindow(createClone(_controller.lookup("DisputeWindow")));
+        IControlled(_disputeWindow).setController(_controller);
         _disputeWindow.initialize(_universe, _disputeWindowId);
         return _disputeWindow;
     }

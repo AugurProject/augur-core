@@ -1,14 +1,14 @@
 pragma solidity 0.4.24;
 
 import 'libraries/Initializable.sol';
-import 'libraries/DelegationTarget.sol';
+import 'Controlled.sol';
 import 'reporting/IInitialReporter.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/BaseReportingParticipant.sol';
 import 'libraries/Ownable.sol';
 
 
-contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant, Initializable, IInitialReporter {
+contract InitialReporter is Controlled, Ownable, BaseReportingParticipant, Initializable, IInitialReporter {
     address private designatedReporter;
     address private actualReporter;
     uint256 private reportTimestamp;

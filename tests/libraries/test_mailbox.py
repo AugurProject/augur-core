@@ -74,12 +74,10 @@ def localSnapshot(fixture, controllerSnapshot):
     cash.setController(fixture.contracts['Controller'].address)
 
     # Upload the mailbox
-    name = "Mailbox"
-    targetName = "MailboxTarget"
-    fixture.uploadAndAddToController("../source/contracts/reporting/Mailbox.sol", targetName, name)
-    fixture.uploadAndAddToController("../source/contracts/libraries/Delegator.sol", name, "delegator", constructorArgs=[fixture.contracts['Controller'].address, stringToBytes(targetName)])
-    fixture.contracts[name] = fixture.applySignature(name, fixture.contracts[name].address)
-    fixture.contracts[name].initialize(tester.a0)
+    fixture.uploadAndAddToController("../source/contracts/reporting/Mailbox.sol")
+    mailboxFactory = fixture.uploadAndAddToController("../source/contracts/factories/MailboxFactory.sol")
+    mailboxAddress = mailboxFactory.createMailbox(fixture.contracts["Controller"].address, tester.a0, 0)
+    fixture.contracts["Mailbox"] = fixture.applySignature("Mailbox", mailboxAddress)
     return fixture.createSnapshot()
 
 @fixture
