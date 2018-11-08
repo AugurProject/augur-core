@@ -268,15 +268,14 @@ def test_order_filling_double_reverse(numOutcomes, localFixture, markets):
 def localSnapshot(fixture, kitchenSinkSnapshot):
     fixture.resetToSnapshot(kitchenSinkSnapshot)
     universe = ABIContract(fixture.chain, kitchenSinkSnapshot['universe'].translator, kitchenSinkSnapshot['universe'].address)
-    cash = ABIContract(fixture.chain, kitchenSinkSnapshot['cash'].translator, kitchenSinkSnapshot['cash'].address)
     fixture.markets = [
-        fixture.createReasonableCategoricalMarket(universe, 2, cash),
-        fixture.createReasonableCategoricalMarket(universe, 3, cash),
-        fixture.createReasonableCategoricalMarket(universe, 4, cash),
-        fixture.createReasonableCategoricalMarket(universe, 5, cash),
-        fixture.createReasonableCategoricalMarket(universe, 6, cash),
-        fixture.createReasonableCategoricalMarket(universe, 7, cash),
-        fixture.createReasonableCategoricalMarket(universe, 8, cash)
+        fixture.createReasonableCategoricalMarket(universe, 2),
+        fixture.createReasonableCategoricalMarket(universe, 3),
+        fixture.createReasonableCategoricalMarket(universe, 4),
+        fixture.createReasonableCategoricalMarket(universe, 5),
+        fixture.createReasonableCategoricalMarket(universe, 6),
+        fixture.createReasonableCategoricalMarket(universe, 7),
+        fixture.createReasonableCategoricalMarket(universe, 8)
     ]
 
     return fixture.createSnapshot()

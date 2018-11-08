@@ -420,34 +420,33 @@ class ContractsFixture:
         childUniverse = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Universe']), childUniverseAddress)
         return childUniverse
 
-    def createYesNoMarket(self, universe, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, sender=tester.k0, topic="", description="description", extraInfo="", validityBond=0):
+    def createYesNoMarket(self, universe, endTime, feePerEthInWei, designatedReporterAddress, sender=tester.k0, topic="", description="description", extraInfo="", validityBond=0):
         marketCreationFee = validityBond or universe.getOrCacheMarketCreationCost()
-        marketAddress = universe.createYesNoMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, topic, description, extraInfo, value = marketCreationFee, sender=sender)
+        marketAddress = universe.createYesNoMarket(endTime, feePerEthInWei, designatedReporterAddress, topic, description, extraInfo, value = marketCreationFee, sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, denominationToken, designatedReporterAddress, sender=tester.k0, topic="", description="description", extraInfo=""):
+    def createCategoricalMarket(self, universe, numOutcomes, endTime, feePerEthInWei, designatedReporterAddress, sender=tester.k0, topic="", description="description", extraInfo=""):
         marketCreationFee = universe.getOrCacheMarketCreationCost()
         outcomes = [" "] * numOutcomes
-        marketAddress = universe.createCategoricalMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, outcomes, topic, description, extraInfo, value = marketCreationFee, sender=sender)
+        marketAddress = universe.createCategoricalMarket(endTime, feePerEthInWei, designatedReporterAddress, outcomes, topic, description, extraInfo, value = marketCreationFee, sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createScalarMarket(self, universe, endTime, feePerEthInWei, denominationToken, maxPrice, minPrice, numTicks, designatedReporterAddress, sender=tester.k0, description="description", extraInfo=""):
+    def createScalarMarket(self, universe, endTime, feePerEthInWei, maxPrice, minPrice, numTicks, designatedReporterAddress, sender=tester.k0, description="description", extraInfo=""):
         marketCreationFee = universe.getOrCacheMarketCreationCost()
-        marketAddress = universe.createScalarMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, minPrice, maxPrice, numTicks, "", description, extraInfo, value = marketCreationFee, sender=sender)
+        marketAddress = universe.createScalarMarket(endTime, feePerEthInWei, designatedReporterAddress, minPrice, maxPrice, numTicks, "", description, extraInfo, value = marketCreationFee, sender=sender)
         assert marketAddress
         market = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Market']), marketAddress)
         return market
 
-    def createReasonableYesNoMarket(self, universe, denominationToken, sender=tester.k0, topic="", description="description", extraInfo="", validityBond=0):
+    def createReasonableYesNoMarket(self, universe, sender=tester.k0, topic="", description="description", extraInfo="", validityBond=0):
         return self.createYesNoMarket(
             universe = universe,
             endTime = long(self.contracts["Time"].getTimestamp() + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
-            denominationToken = denominationToken,
             designatedReporterAddress = tester.a0,
             sender = sender,
             topic= topic,
@@ -455,22 +454,20 @@ class ContractsFixture:
             extraInfo= extraInfo,
             validityBond= validityBond)
 
-    def createReasonableCategoricalMarket(self, universe, numOutcomes, denominationToken, sender=tester.k0):
+    def createReasonableCategoricalMarket(self, universe, numOutcomes, sender=tester.k0):
         return self.createCategoricalMarket(
             universe = universe,
             numOutcomes = numOutcomes,
             endTime = long(self.contracts["Time"].getTimestamp() + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
-            denominationToken = denominationToken,
             designatedReporterAddress = tester.a0,
             sender = sender)
 
-    def createReasonableScalarMarket(self, universe, maxPrice, minPrice, numTicks, denominationToken, sender=tester.k0):
+    def createReasonableScalarMarket(self, universe, maxPrice, minPrice, numTicks, sender=tester.k0):
         return self.createScalarMarket(
             universe = universe,
             endTime = long(self.contracts["Time"].getTimestamp() + timedelta(days=1).total_seconds()),
             feePerEthInWei = 10**16,
-            denominationToken = denominationToken,
             maxPrice= maxPrice,
             minPrice= minPrice,
             numTicks= numTicks,
@@ -524,7 +521,7 @@ def kitchenSinkSnapshot(fixture, augurInitializedSnapshot):
     fixture.distributeRep(universe)
 
     if fixture.subFork:
-        forkingMarket = fixture.createReasonableYesNoMarket(universe, cash)
+        forkingMarket = fixture.createReasonableYesNoMarket(universe)
         proceedToFork(fixture, forkingMarket, universe)
         fixture.contracts["Time"].setTimestamp(universe.getForkEndTime() + 1)
         reputationToken = fixture.applySignature('ReputationToken', universe.getReputationToken())
@@ -532,11 +529,11 @@ def kitchenSinkSnapshot(fixture, augurInitializedSnapshot):
         reputationToken.migrateOutByPayout(yesPayoutNumerators, False, reputationToken.balanceOf(tester.a0))
         universe = fixture.applySignature('Universe', universe.createChildUniverse(yesPayoutNumerators, False))
 
-    yesNoMarket = fixture.createReasonableYesNoMarket(universe, cash)
+    yesNoMarket = fixture.createReasonableYesNoMarket(universe)
     startingGas = fixture.chain.head_state.gas_used
-    categoricalMarket = fixture.createReasonableCategoricalMarket(universe, 3, cash)
+    categoricalMarket = fixture.createReasonableCategoricalMarket(universe, 3)
     print 'Gas Used: %s' % (fixture.chain.head_state.gas_used - startingGas)
-    scalarMarket = fixture.createReasonableScalarMarket(universe, 30, -10, 400000, cash)
+    scalarMarket = fixture.createReasonableScalarMarket(universe, 30, -10, 400000)
     fixture.uploadAndAddToController("solidity_test_helpers/Constants.sol")
     snapshot = fixture.createSnapshot()
     snapshot['universe'] = universe

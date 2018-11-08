@@ -37,18 +37,17 @@ def test_disputeWindowCreation(localFixture, universe, cash):
     with PrintGasUsed(localFixture, "REPORTING_WINDOW_CREATE", REPORTING_WINDOW_CREATE):
         universe.getOrCreateDisputeWindowByTimestamp(endTime)
 
-def test_marketCreation(localFixture, universe, cash):
+def test_marketCreation(localFixture, universe):
     marketCreationFee = universe.getOrCacheMarketCreationCost()
 
     endTime = long(localFixture.chain.head_state.timestamp + timedelta(days=1).total_seconds())
     feePerEthInWei = 10**16
-    denominationToken = cash
     designatedReporterAddress = tester.a0
     numTicks = 10 ** 18
     numOutcomes = 2
 
     with PrintGasUsed(localFixture, "DisputeWindow:createMarket", MARKET_CREATION):
-        marketAddress = universe.createYesNoMarket(endTime, feePerEthInWei, denominationToken.address, designatedReporterAddress, "", "description", "", value = marketCreationFee)
+        marketAddress = universe.createYesNoMarket(endTime, feePerEthInWei, designatedReporterAddress, "", "description", "", value = marketCreationFee)
 
 def test_marketFinalization(localFixture, universe, market):
     proceedToNextRound(localFixture, market)
