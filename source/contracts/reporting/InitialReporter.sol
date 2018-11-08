@@ -34,7 +34,7 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         return true;
     }
 
-    function report(address _reporter, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid, uint256 _initialReportStake) public returns (bool) {
+    function report(address _reporter, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, uint256 _initialReportStake) public returns (bool) {
         require(IMarket(msg.sender) == market);
         require(reportTimestamp == 0);
         uint256 _timestamp = controller.getTimestamp();
@@ -45,7 +45,6 @@ contract InitialReporter is DelegationTarget, Ownable, BaseReportingParticipant,
         owner = _reporter;
         payoutDistributionHash = _payoutDistributionHash;
         reportTimestamp = _timestamp;
-        invalid = _invalid;
         payoutNumerators = _payoutNumerators;
         size = _initialReportStake;
         return true;

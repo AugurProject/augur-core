@@ -33,7 +33,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     uint256 private constant MAX_FEE_PER_ETH_IN_ATTOETH = 15 * 10**16; // 15%
     uint256 private constant APPROVAL_AMOUNT = 2 ** 256 - 1;
     address private constant NULL_ADDRESS = address(0);
-    uint256 private constant MIN_OUTCOMES = 2;
+    uint256 private constant MIN_OUTCOMES = 3; // Includes INVALID
     uint256 private constant MAX_OUTCOMES = 8;
 
     // Contract Refs
@@ -61,6 +61,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function initialize(IUniverse _universe, uint256 _endTime, uint256 _feePerEthInAttoEth, ICash _cash, address _designatedReporterAddress, address _creator, uint256 _numOutcomes, uint256 _numTicks) public payable beforeInitialized returns (bool _success) {
         endInitialization();
+        _numOutcomes += 1; // The INVALID outcome is always first
         require(MIN_OUTCOMES <= _numOutcomes && _numOutcomes <= MAX_OUTCOMES);
         require(_designatedReporterAddress != NULL_ADDRESS);
         require((_numTicks >= _numOutcomes));
@@ -114,21 +115,22 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function doInitialReport(uint256[] _payoutNumerators, bool _invalid, string _description) public returns (bool) {
-        doInitialReportInternal(msg.sender, _payoutNumerators, _invalid, _description);
+    function doInitialReport(uint256[] _payoutNumerators, string _description) public returns (bool) {
+        doInitialReportInternal(msg.sender, _payoutNumerators, _description);
         return true;
     }
 
-    function doInitialReportInternal(address _reporter, uint256[] _payoutNumerators, bool _invalid, string _description) private returns (bool) {
+    function doInitialReportInternal(address _reporter, uint256[] _payoutNumerators, string _description) private returns (bool) {
         require(!universe.isForking());
         IInitialReporter _initialReporter = getInitialReporter();
         uint256 _timestamp = controller.getTimestamp();
         require(_timestamp > endTime);
         uint256 _initialReportStake = distributeInitialReportingRep(_reporter, _initialReporter);
-        bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
+        // The derive call will validate that an Invalid report is entirely paid out on the Invalid outcome
+        bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators);
         disputeWindow = universe.getOrCreateNextDisputeWindow();
-        _initialReporter.report(_reporter, _payoutDistributionHash, _payoutNumerators, _invalid, _initialReportStake);
-        controller.getAugur().logInitialReportSubmitted(universe, _reporter, this, _initialReportStake, _initialReporter.designatedReporterShowed(), _payoutNumerators, _invalid, _description);
+        _initialReporter.report(_reporter, _payoutDistributionHash, _payoutNumerators, _initialReportStake);
+        controller.getAugur().logInitialReportSubmitted(universe, _reporter, this, _initialReportStake, _initialReporter.designatedReporterShowed(), _payoutNumerators, _description);
         return true;
     }
 
@@ -147,7 +149,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return _initialReportStake;
     }
 
-    function contribute(uint256[] _payoutNumerators, bool _invalid, uint256 _amount, string _description) public returns (bool) {
+    function contribute(uint256[] _payoutNumerators, uint256 _amount, string _description) public returns (bool) {
         require(getInitialReporter().getReportTimestamp() != 0);
         if (disputePacingOn) {
             require(disputeWindow.isActive());
@@ -155,9 +157,10 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
             require(!disputeWindow.isOver());
         }
         require(!universe.isForking());
-        bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators, _invalid);
+        // The derive call will validate that an Invalid report is entirely paid out on the Invalid outcome
+        bytes32 _payoutDistributionHash = derivePayoutDistributionHash(_payoutNumerators);
         require(_payoutDistributionHash != getWinningReportingParticipant().getPayoutDistributionHash());
-        IDisputeCrowdsourcer _crowdsourcer = getOrCreateDisputeCrowdsourcer(_payoutDistributionHash, _payoutNumerators, _invalid);
+        IDisputeCrowdsourcer _crowdsourcer = getOrCreateDisputeCrowdsourcer(_payoutDistributionHash, _payoutNumerators);
         uint256 _actualAmount = _crowdsourcer.contribute(msg.sender, _amount);
         controller.getAugur().logDisputeCrowdsourcerContribution(universe, msg.sender, this, _crowdsourcer, _actualAmount, _description);
         if (_crowdsourcer.totalSupply() == _crowdsourcer.getSize()) {
@@ -261,19 +264,19 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return true;
     }
 
-    function getOrCreateDisputeCrowdsourcer(bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) private returns (IDisputeCrowdsourcer) {
+    function getOrCreateDisputeCrowdsourcer(bytes32 _payoutDistributionHash, uint256[] _payoutNumerators) private returns (IDisputeCrowdsourcer) {
         IDisputeCrowdsourcer _crowdsourcer = IDisputeCrowdsourcer(crowdsourcers.getAsAddressOrZero(_payoutDistributionHash));
         if (_crowdsourcer == IDisputeCrowdsourcer(0)) {
             uint256 _size = getParticipantStake().mul(2).sub(getStakeInOutcome(_payoutDistributionHash).mul(3));
             DisputeCrowdsourcerFactory _disputeCrowdsourcerFactory = DisputeCrowdsourcerFactory(controller.lookup("DisputeCrowdsourcerFactory"));
-            _crowdsourcer = _disputeCrowdsourcerFactory.createDisputeCrowdsourcer(controller, this, _size, _payoutDistributionHash, _payoutNumerators, _invalid);
+            _crowdsourcer = _disputeCrowdsourcerFactory.createDisputeCrowdsourcer(controller, this, _size, _payoutDistributionHash, _payoutNumerators);
             crowdsourcers.add(_payoutDistributionHash, address(_crowdsourcer));
-            controller.getAugur().disputeCrowdsourcerCreated(universe, this, _crowdsourcer, _payoutNumerators, _size, _invalid);
+            controller.getAugur().disputeCrowdsourcerCreated(universe, this, _crowdsourcer, _payoutNumerators, _size);
         }
         return _crowdsourcer;
     }
 
-    function migrateThroughOneFork(uint256[] _payoutNumerators, bool _invalid, string _description) public returns (bool) {
+    function migrateThroughOneFork(uint256[] _payoutNumerators, string _description) public returns (bool) {
         // only proceed if the forking market is finalized
         IMarket _forkingMarket = universe.getForkingMarket();
         require(_forkingMarket.isFinalized());
@@ -311,7 +314,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         // If the market is past expiration use the reporting data to make an initial report
         uint256 _timestamp = controller.getTimestamp();
         if (_timestamp > endTime) {
-            doInitialReportInternal(msg.sender, _payoutNumerators, _invalid, _description);
+            doInitialReportInternal(msg.sender, _payoutNumerators, _description);
         }
 
         return true;
@@ -401,7 +404,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
 
     function isInvalid() public view returns (bool) {
         require(isFinalized());
-        return getWinningReportingParticipant().isInvalid();
+        return getWinningReportingParticipant().getPayoutNumerator(0) > 0;
     }
 
     function getInitialReporter() public view returns (IInitialReporter) {
@@ -477,22 +480,18 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         return disputePacingOn;
     }
 
-    function derivePayoutDistributionHash(uint256[] _payoutNumerators, bool _invalid) public view returns (bytes32) {
+    function derivePayoutDistributionHash(uint256[] _payoutNumerators) public view returns (bytes32) {
         uint256 _sum = 0;
         uint256 _previousValue = _payoutNumerators[0];
+        require(_payoutNumerators[0] == 0 || _payoutNumerators[0] == numTicks);
         require(_payoutNumerators.length == numOutcomes);
         for (uint256 i = 0; i < _payoutNumerators.length; i++) {
             uint256 _value = _payoutNumerators[i];
             _sum = _sum.add(_value);
-            require(!_invalid || _value == _previousValue);
             _previousValue = _value;
         }
-        if (_invalid) {
-            require(_previousValue == numTicks / numOutcomes);
-        } else {
-            require(_sum == numTicks);
-        }
-        return keccak256(abi.encodePacked(_payoutNumerators, _invalid));
+        require(_sum == numTicks);
+        return keccak256(abi.encodePacked(_payoutNumerators));
     }
 
     function isContainerForShareToken(IShareToken _shadyShareToken) public view returns (bool) {

@@ -215,6 +215,7 @@ def test_malicious_order_creator(contractsFixture, cash, market, universe):
     completeSets = contractsFixture.contracts['CompleteSets']
     firstShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(0))
     secondShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(1))
+    thirdShareToken = contractsFixture.applySignature('ShareToken', market.getShareToken(2))
 
     maliciousTrader = contractsFixture.upload('solidity_test_helpers/MaliciousTrader.sol', 'maliciousTrader')
     maliciousTrader.approveAugur(cash.address, augur.address)
@@ -225,6 +226,7 @@ def test_malicious_order_creator(contractsFixture, cash, market, universe):
     assert completeSets.publicBuyCompleteSets(market.address, fix(1), value=fix('1', numTicks))
     assert firstShareToken.transfer(maliciousTrader.address, fix(1))
     assert secondShareToken.transfer(maliciousTrader.address, fix(1))
+    assert thirdShareToken.transfer(maliciousTrader.address, fix(1))
     orderID = maliciousTrader.makeOrder(createOrder.address, BID, fix(1), price, market.address, 0, longTo32Bytes(0), longTo32Bytes(0), "42", value=fix(1, price), sender=tester.k1)
     assert orderID
 

@@ -77,17 +77,22 @@ def test_fill_order_with_shares(localFixture, zeroX, market, cash, controller):
 
     yesShareAddress = market.getShareToken(YES)
     noShareAddress = market.getShareToken(NO)
+    invalidShareAddress = market.getShareToken(0)
     yesShareToken = localFixture.applySignature('ShareToken', yesShareAddress)
     noShareToken = localFixture.applySignature('ShareToken', noShareAddress)
+    invalidShareToken = localFixture.applySignature('ShareToken', invalidShareAddress)
     completeSets = localFixture.contracts['CompleteSets']
     assert completeSets.publicBuyCompleteSets(market.address, fix(20), value=fix('20', market.getNumTicks()))
     assert noShareToken.transfer(tester.a1, 10)
+    assert invalidShareToken.transfer(tester.a1, 10)
 
     assert yesShareToken.approve(zeroX.address, 10)
     assert zeroX.deposit(yesShareAddress, 10)
 
     assert noShareToken.approve(zeroX.address, 10, sender=tester.k1)
     assert zeroX.deposit(noShareAddress, 10, sender=tester.k1)
+    assert invalidShareToken.approve(zeroX.address, 10, sender=tester.k1)
+    assert zeroX.deposit(invalidShareAddress, 10, sender=tester.k1)
 
     with PrintGasUsed(localFixture, "FILL_0X"):
         assert zeroX.fillOrder(

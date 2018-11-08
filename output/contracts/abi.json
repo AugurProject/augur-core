@@ -301,6 +301,41 @@
 					"type": "address"
 				},
 				{
+					"name": "_market",
+					"type": "address"
+				},
+				{
+					"name": "_disputeCrowdsourcer",
+					"type": "address"
+				},
+				{
+					"name": "_payoutNumerators",
+					"type": "uint256[]"
+				},
+				{
+					"name": "_size",
+					"type": "uint256"
+				}
+			],
+			"name": "disputeCrowdsourcerCreated",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_universe",
+					"type": "address"
+				},
+				{
 					"name": "_target",
 					"type": "address"
 				},
@@ -355,6 +390,29 @@
 				{
 					"name": "",
 					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_parentPayoutDistributionHash",
+					"type": "bytes32"
+				},
+				{
+					"name": "_parentPayoutNumerators",
+					"type": "uint256[]"
+				}
+			],
+			"name": "createChildUniverse",
+			"outputs": [
+				{
+					"name": "",
+					"type": "address"
 				}
 			],
 			"payable": false,
@@ -552,45 +610,6 @@
 					"type": "address"
 				},
 				{
-					"name": "_market",
-					"type": "address"
-				},
-				{
-					"name": "_disputeCrowdsourcer",
-					"type": "address"
-				},
-				{
-					"name": "_payoutNumerators",
-					"type": "uint256[]"
-				},
-				{
-					"name": "_size",
-					"type": "uint256"
-				},
-				{
-					"name": "_invalid",
-					"type": "bool"
-				}
-			],
-			"name": "disputeCrowdsourcerCreated",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_universe",
-					"type": "address"
-				},
-				{
 					"name": "_reporter",
 					"type": "address"
 				},
@@ -736,33 +755,6 @@
 			"type": "function"
 		},
 		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_parentPayoutDistributionHash",
-					"type": "bytes32"
-				},
-				{
-					"name": "_parentPayoutNumerators",
-					"type": "uint256[]"
-				},
-				{
-					"name": "_parentInvalid",
-					"type": "bool"
-				}
-			],
-			"name": "createChildUniverse",
-			"outputs": [
-				{
-					"name": "",
-					"type": "address"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
 			"constant": true,
 			"inputs": [
 				{
@@ -785,29 +777,6 @@
 			"constant": false,
 			"inputs": [
 				{
-					"name": "_feeWindow",
-					"type": "address"
-				},
-				{
-					"name": "_id",
-					"type": "uint256"
-				}
-			],
-			"name": "logFeeWindowCreated",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
 					"name": "_controller",
 					"type": "address"
 				}
@@ -817,20 +786,6 @@
 				{
 					"name": "",
 					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [],
-			"name": "createGenesisUniverse",
-			"outputs": [
-				{
-					"name": "",
-					"type": "address"
 				}
 			],
 			"payable": false,
@@ -865,10 +820,6 @@
 					"type": "uint256[]"
 				},
 				{
-					"name": "_invalid",
-					"type": "bool"
-				},
-				{
 					"name": "_description",
 					"type": "string"
 				}
@@ -878,6 +829,20 @@
 				{
 					"name": "",
 					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [],
+			"name": "createGenesisUniverse",
+			"outputs": [
+				{
+					"name": "",
+					"type": "address"
 				}
 			],
 			"payable": false,
@@ -905,6 +870,29 @@
 				}
 			],
 			"name": "logAuctionTokensTransferred",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_disputeWindow",
+					"type": "address"
+				},
+				{
+					"name": "_id",
+					"type": "uint256"
+				}
+			],
+			"name": "logDisputeWindowCreated",
 			"outputs": [
 				{
 					"name": "",
@@ -1468,11 +1456,6 @@
 				},
 				{
 					"indexed": false,
-					"name": "invalid",
-					"type": "bool"
-				},
-				{
-					"indexed": false,
 					"name": "description",
 					"type": "string"
 				}
@@ -1507,11 +1490,6 @@
 					"indexed": false,
 					"name": "size",
 					"type": "uint256"
-				},
-				{
-					"indexed": false,
-					"name": "invalid",
-					"type": "bool"
 				}
 			],
 			"name": "DisputeCrowdsourcerCreated",
@@ -1762,11 +1740,6 @@
 					"indexed": false,
 					"name": "payoutNumerators",
 					"type": "uint256[]"
-				},
-				{
-					"indexed": false,
-					"name": "invalid",
-					"type": "bool"
 				}
 			],
 			"name": "UniverseCreated",
@@ -2160,7 +2133,7 @@
 				},
 				{
 					"indexed": false,
-					"name": "feeWindow",
+					"name": "disputeWindow",
 					"type": "address"
 				},
 				{
@@ -2179,7 +2152,7 @@
 					"type": "uint256"
 				}
 			],
-			"name": "FeeWindowCreated",
+			"name": "DisputeWindowCreated",
 			"type": "event"
 		},
 		{
@@ -2730,19 +2703,11 @@
 			"constant": false,
 			"inputs": [
 				{
-					"name": "_payoutNumerators",
-					"type": "uint256[]"
-				},
-				{
-					"name": "_invalid",
-					"type": "bool"
-				},
-				{
-					"name": "_attotokens",
+					"name": "_amount",
 					"type": "uint256"
 				}
 			],
-			"name": "migrateOutByPayout",
+			"name": "faucet",
 			"outputs": [
 				{
 					"name": "",
@@ -2757,11 +2722,15 @@
 			"constant": false,
 			"inputs": [
 				{
-					"name": "_amount",
+					"name": "_payoutNumerators",
+					"type": "uint256[]"
+				},
+				{
+					"name": "_attotokens",
 					"type": "uint256"
 				}
 			],
-			"name": "faucet",
+			"name": "migrateOutByPayout",
 			"outputs": [
 				{
 					"name": "",
@@ -2852,6 +2821,33 @@
 			"type": "function"
 		},
 		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_source",
+					"type": "address"
+				},
+				{
+					"name": "_destination",
+					"type": "address"
+				},
+				{
+					"name": "_attotokens",
+					"type": "uint256"
+				}
+			],
+			"name": "trustedDisputeWindowTransfer",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
 			"constant": true,
 			"inputs": [],
 			"name": "getLegacyRepToken",
@@ -2910,33 +2906,6 @@
 			],
 			"payable": false,
 			"stateMutability": "view",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_source",
-					"type": "address"
-				},
-				{
-					"name": "_destination",
-					"type": "address"
-				},
-				{
-					"name": "_attotokens",
-					"type": "uint256"
-				}
-			],
-			"name": "trustedFeeWindowTransfer",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
 			"type": "function"
 		},
 		{
@@ -3546,19 +3515,11 @@
 			"constant": false,
 			"inputs": [
 				{
-					"name": "_payoutNumerators",
-					"type": "uint256[]"
-				},
-				{
-					"name": "_invalid",
-					"type": "bool"
-				},
-				{
-					"name": "_attotokens",
+					"name": "_amount",
 					"type": "uint256"
 				}
 			],
-			"name": "migrateOutByPayout",
+			"name": "faucet",
 			"outputs": [
 				{
 					"name": "",
@@ -3573,11 +3534,15 @@
 			"constant": false,
 			"inputs": [
 				{
-					"name": "_amount",
+					"name": "_payoutNumerators",
+					"type": "uint256[]"
+				},
+				{
+					"name": "_attotokens",
 					"type": "uint256"
 				}
 			],
-			"name": "faucet",
+			"name": "migrateOutByPayout",
 			"outputs": [
 				{
 					"name": "",
@@ -3688,6 +3653,33 @@
 		},
 		{
 			"constant": false,
+			"inputs": [
+				{
+					"name": "_source",
+					"type": "address"
+				},
+				{
+					"name": "_destination",
+					"type": "address"
+				},
+				{
+					"name": "_attotokens",
+					"type": "uint256"
+				}
+			],
+			"name": "trustedDisputeWindowTransfer",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"constant": false,
 			"inputs": [],
 			"name": "migrateFromLegacyReputationToken",
 			"outputs": [
@@ -3726,33 +3718,6 @@
 			],
 			"payable": false,
 			"stateMutability": "view",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_source",
-					"type": "address"
-				},
-				{
-					"name": "_destination",
-					"type": "address"
-				},
-				{
-					"name": "_attotokens",
-					"type": "uint256"
-				}
-			],
-			"name": "trustedFeeWindowTransfer",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
 			"type": "function"
 		},
 		{
@@ -4484,10 +4449,6 @@
 				{
 					"name": "_payoutNumerators",
 					"type": "uint256[]"
-				},
-				{
-					"name": "_invalid",
-					"type": "bool"
 				}
 			],
 			"name": "createDisputeCrowdsourcer",
@@ -4502,7 +4463,7 @@
 			"type": "function"
 		}
 	],
-	"FeeWindowFactory": [
+	"DisputeWindowFactory": [
 		{
 			"constant": false,
 			"inputs": [
@@ -4515,11 +4476,11 @@
 					"type": "address"
 				},
 				{
-					"name": "_feeWindowId",
+					"name": "_disputeWindowId",
 					"type": "uint256"
 				}
 			],
-			"name": "createFeeWindow",
+			"name": "createDisputeWindow",
 			"outputs": [
 				{
 					"name": "",
@@ -6288,20 +6249,6 @@
 	],
 	"DisputeCrowdsourcer": [
 		{
-			"constant": true,
-			"inputs": [],
-			"name": "isInvalid",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "view",
-			"type": "function"
-		},
-		{
 			"constant": false,
 			"inputs": [
 				{
@@ -6408,6 +6355,37 @@
 			"type": "function"
 		},
 		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_market",
+					"type": "address"
+				},
+				{
+					"name": "_size",
+					"type": "uint256"
+				},
+				{
+					"name": "_payoutDistributionHash",
+					"type": "bytes32"
+				},
+				{
+					"name": "_payoutNumerators",
+					"type": "uint256[]"
+				}
+			],
+			"name": "initialize",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
 			"constant": true,
 			"inputs": [],
 			"name": "ETERNAL_APPROVAL_VALUE",
@@ -6494,41 +6472,6 @@
 				{
 					"name": "",
 					"type": "uint256"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_market",
-					"type": "address"
-				},
-				{
-					"name": "_size",
-					"type": "uint256"
-				},
-				{
-					"name": "_payoutDistributionHash",
-					"type": "bytes32"
-				},
-				{
-					"name": "_payoutNumerators",
-					"type": "uint256[]"
-				},
-				{
-					"name": "_invalid",
-					"type": "bool"
-				}
-			],
-			"name": "initialize",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
 				}
 			],
 			"payable": false,
@@ -6838,7 +6781,7 @@
 			"type": "event"
 		}
 	],
-	"FeeWindow": [
+	"DisputeWindow": [
 		{
 			"constant": true,
 			"inputs": [],
@@ -7020,7 +6963,7 @@
 					"type": "address"
 				},
 				{
-					"name": "_feeWindowId",
+					"name": "_disputeWindowId",
 					"type": "uint256"
 				}
 			],
@@ -7093,20 +7036,6 @@
 		}
 	],
 	"InitialReporter": [
-		{
-			"constant": true,
-			"inputs": [],
-			"name": "isInvalid",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "view",
-			"type": "function"
-		},
 		{
 			"constant": false,
 			"inputs": [],
@@ -7337,41 +7266,6 @@
 			"type": "function"
 		},
 		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_reporter",
-					"type": "address"
-				},
-				{
-					"name": "_payoutDistributionHash",
-					"type": "bytes32"
-				},
-				{
-					"name": "_payoutNumerators",
-					"type": "uint256[]"
-				},
-				{
-					"name": "_invalid",
-					"type": "bool"
-				},
-				{
-					"name": "_initialReportStake",
-					"type": "uint256"
-				}
-			],
-			"name": "report",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
 			"constant": true,
 			"inputs": [
 				{
@@ -7416,6 +7310,37 @@
 			],
 			"payable": false,
 			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_reporter",
+					"type": "address"
+				},
+				{
+					"name": "_payoutDistributionHash",
+					"type": "bytes32"
+				},
+				{
+					"name": "_payoutNumerators",
+					"type": "uint256[]"
+				},
+				{
+					"name": "_initialReportStake",
+					"type": "uint256"
+				}
+			],
+			"name": "report",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
 			"type": "function"
 		},
 		{
@@ -7682,6 +7607,25 @@
 		},
 		{
 			"constant": true,
+			"inputs": [
+				{
+					"name": "_payoutNumerators",
+					"type": "uint256[]"
+				}
+			],
+			"name": "derivePayoutDistributionHash",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bytes32"
+				}
+			],
+			"payable": false,
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"constant": true,
 			"inputs": [],
 			"name": "getInitialReporter",
 			"outputs": [
@@ -7702,6 +7646,20 @@
 				{
 					"name": "",
 					"type": "uint256"
+				}
+			],
+			"payable": false,
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"constant": true,
+			"inputs": [],
+			"name": "getDisputeWindow",
+			"outputs": [
+				{
+					"name": "",
+					"type": "address"
 				}
 			],
 			"payable": false,
@@ -7753,60 +7711,6 @@
 			],
 			"payable": true,
 			"stateMutability": "payable",
-			"type": "function"
-		},
-		{
-			"constant": true,
-			"inputs": [
-				{
-					"name": "_payoutNumerators",
-					"type": "uint256[]"
-				},
-				{
-					"name": "_invalid",
-					"type": "bool"
-				}
-			],
-			"name": "derivePayoutDistributionHash",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bytes32"
-				}
-			],
-			"payable": false,
-			"stateMutability": "view",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_payoutNumerators",
-					"type": "uint256[]"
-				},
-				{
-					"name": "_invalid",
-					"type": "bool"
-				},
-				{
-					"name": "_amount",
-					"type": "uint256"
-				},
-				{
-					"name": "_description",
-					"type": "string"
-				}
-			],
-			"name": "contribute",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
 			"type": "function"
 		},
 		{
@@ -7882,33 +7786,6 @@
 			],
 			"payable": false,
 			"stateMutability": "view",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_payoutNumerators",
-					"type": "uint256[]"
-				},
-				{
-					"name": "_invalid",
-					"type": "bool"
-				},
-				{
-					"name": "_description",
-					"type": "string"
-				}
-			],
-			"name": "migrateThroughOneFork",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
 			"type": "function"
 		},
 		{
@@ -8367,33 +8244,6 @@
 			"type": "function"
 		},
 		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_payoutNumerators",
-					"type": "uint256[]"
-				},
-				{
-					"name": "_invalid",
-					"type": "bool"
-				},
-				{
-					"name": "_description",
-					"type": "string"
-				}
-			],
-			"name": "doInitialReport",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
 			"constant": true,
 			"inputs": [],
 			"name": "getTypeName",
@@ -8419,6 +8269,29 @@
 			],
 			"payable": false,
 			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_payoutNumerators",
+					"type": "uint256[]"
+				},
+				{
+					"name": "_description",
+					"type": "string"
+				}
+			],
+			"name": "migrateThroughOneFork",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
 			"type": "function"
 		},
 		{
@@ -8488,17 +8361,30 @@
 			"type": "function"
 		},
 		{
-			"constant": true,
-			"inputs": [],
-			"name": "getFeeWindow",
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_payoutNumerators",
+					"type": "uint256[]"
+				},
+				{
+					"name": "_amount",
+					"type": "uint256"
+				},
+				{
+					"name": "_description",
+					"type": "string"
+				}
+			],
+			"name": "contribute",
 			"outputs": [
 				{
 					"name": "",
-					"type": "address"
+					"type": "bool"
 				}
 			],
 			"payable": false,
-			"stateMutability": "view",
+			"stateMutability": "nonpayable",
 			"type": "function"
 		},
 		{
@@ -8532,6 +8418,29 @@
 			],
 			"payable": false,
 			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_payoutNumerators",
+					"type": "uint256[]"
+				},
+				{
+					"name": "_description",
+					"type": "string"
+				}
+			],
+			"name": "doInitialReport",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
 			"type": "function"
 		}
 	],
@@ -8665,10 +8574,6 @@
 					"type": "uint256[]"
 				},
 				{
-					"name": "_invalid",
-					"type": "bool"
-				},
-				{
 					"name": "_attotokens",
 					"type": "uint256"
 				}
@@ -8784,6 +8689,33 @@
 		},
 		{
 			"constant": false,
+			"inputs": [
+				{
+					"name": "_source",
+					"type": "address"
+				},
+				{
+					"name": "_destination",
+					"type": "address"
+				},
+				{
+					"name": "_attotokens",
+					"type": "uint256"
+				}
+			],
+			"name": "trustedDisputeWindowTransfer",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"constant": false,
 			"inputs": [],
 			"name": "migrateFromLegacyReputationToken",
 			"outputs": [
@@ -8822,33 +8754,6 @@
 			],
 			"payable": false,
 			"stateMutability": "view",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_source",
-					"type": "address"
-				},
-				{
-					"name": "_destination",
-					"type": "address"
-				},
-				{
-					"name": "_attotokens",
-					"type": "uint256"
-				}
-			],
-			"name": "trustedFeeWindowTransfer",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
 			"type": "function"
 		},
 		{
@@ -9293,6 +9198,39 @@
 	"Universe": [
 		{
 			"constant": true,
+			"inputs": [
+				{
+					"name": "_shadyDisputeWindow",
+					"type": "address"
+				}
+			],
+			"name": "isContainerForDisputeWindow",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [],
+			"name": "getOrCreateNextDisputeWindow",
+			"outputs": [
+				{
+					"name": "",
+					"type": "address"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"constant": true,
 			"inputs": [],
 			"name": "getDisputeThresholdForDisputePacing",
 			"outputs": [
@@ -9326,20 +9264,6 @@
 		},
 		{
 			"constant": false,
-			"inputs": [],
-			"name": "getOrCreateNextFeeWindow",
-			"outputs": [
-				{
-					"name": "",
-					"type": "address"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
-			"constant": false,
 			"inputs": [
 				{
 					"name": "_amount",
@@ -9351,6 +9275,25 @@
 				{
 					"name": "",
 					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_timestamp",
+					"type": "uint256"
+				}
+			],
+			"name": "getOrCreateDisputeWindowByTimestamp",
+			"outputs": [
+				{
+					"name": "",
+					"type": "address"
 				}
 			],
 			"payable": false,
@@ -9374,7 +9317,7 @@
 		{
 			"constant": false,
 			"inputs": [],
-			"name": "getOrCreatePreviousFeeWindow",
+			"name": "getOrCreatePreviousPreviousDisputeWindow",
 			"outputs": [
 				{
 					"name": "",
@@ -9402,6 +9345,20 @@
 		{
 			"constant": true,
 			"inputs": [],
+			"name": "getNextDisputeWindow",
+			"outputs": [
+				{
+					"name": "",
+					"type": "address"
+				}
+			],
+			"payable": false,
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"constant": true,
+			"inputs": [],
 			"name": "getDisputeRoundDurationInSeconds",
 			"outputs": [
 				{
@@ -9414,14 +9371,14 @@
 			"type": "function"
 		},
 		{
-			"constant": true,
+			"constant": false,
 			"inputs": [
 				{
-					"name": "_feeWindowId",
-					"type": "uint256"
+					"name": "_parentPayoutNumerators",
+					"type": "uint256[]"
 				}
 			],
-			"name": "getFeeWindow",
+			"name": "createChildUniverse",
 			"outputs": [
 				{
 					"name": "",
@@ -9429,7 +9386,7 @@
 				}
 			],
 			"payable": false,
-			"stateMutability": "view",
+			"stateMutability": "nonpayable",
 			"type": "function"
 		},
 		{
@@ -9449,7 +9406,7 @@
 		{
 			"constant": false,
 			"inputs": [],
-			"name": "getOrCreatePreviousPreviousFeeWindow",
+			"name": "getOrCreatePreviousDisputeWindow",
 			"outputs": [
 				{
 					"name": "",
@@ -9473,6 +9430,20 @@
 				{
 					"name": "",
 					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"constant": true,
+			"inputs": [],
+			"name": "getPreviousDisputeWindow",
+			"outputs": [
+				{
+					"name": "",
+					"type": "address"
 				}
 			],
 			"payable": false,
@@ -9533,20 +9504,6 @@
 			"type": "function"
 		},
 		{
-			"constant": false,
-			"inputs": [],
-			"name": "getOrCreateCurrentFeeWindow",
-			"outputs": [
-				{
-					"name": "",
-					"type": "address"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
 			"constant": true,
 			"inputs": [],
 			"name": "getOpenInterestInAttoEth",
@@ -9562,12 +9519,17 @@
 		},
 		{
 			"constant": true,
-			"inputs": [],
-			"name": "getRepMarketCapInAttoEth",
+			"inputs": [
+				{
+					"name": "_disputeWindowId",
+					"type": "uint256"
+				}
+			],
+			"name": "getDisputeWindow",
 			"outputs": [
 				{
 					"name": "",
-					"type": "uint256"
+					"type": "address"
 				}
 			],
 			"payable": false,
@@ -9577,11 +9539,11 @@
 		{
 			"constant": true,
 			"inputs": [],
-			"name": "getPreviousFeeWindow",
+			"name": "getRepMarketCapInAttoEth",
 			"outputs": [
 				{
 					"name": "",
-					"type": "address"
+					"type": "uint256"
 				}
 			],
 			"payable": false,
@@ -9702,11 +9664,11 @@
 		{
 			"constant": true,
 			"inputs": [],
-			"name": "getCurrentFeeWindow",
+			"name": "getForkReputationGoal",
 			"outputs": [
 				{
 					"name": "",
-					"type": "address"
+					"type": "uint256"
 				}
 			],
 			"payable": false,
@@ -9715,8 +9677,13 @@
 		},
 		{
 			"constant": true,
-			"inputs": [],
-			"name": "getForkReputationGoal",
+			"inputs": [
+				{
+					"name": "_timestamp",
+					"type": "uint256"
+				}
+			],
+			"name": "getDisputeWindowId",
 			"outputs": [
 				{
 					"name": "",
@@ -9827,6 +9794,20 @@
 			"type": "function"
 		},
 		{
+			"constant": false,
+			"inputs": [],
+			"name": "getOrCreateCurrentDisputeWindow",
+			"outputs": [
+				{
+					"name": "",
+					"type": "address"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
 			"constant": true,
 			"inputs": [
 				{
@@ -9834,7 +9815,7 @@
 					"type": "uint256"
 				}
 			],
-			"name": "getFeeWindowByTimestamp",
+			"name": "getDisputeWindowByTimestamp",
 			"outputs": [
 				{
 					"name": "",
@@ -9877,15 +9858,15 @@
 			"constant": false,
 			"inputs": [
 				{
-					"name": "_amount",
-					"type": "uint256"
+					"name": "_disputeWindow",
+					"type": "address"
 				}
 			],
-			"name": "decrementOpenInterest",
+			"name": "getOrCreateDisputeWindowBefore",
 			"outputs": [
 				{
 					"name": "",
-					"type": "bool"
+					"type": "address"
 				}
 			],
 			"payable": false,
@@ -9896,15 +9877,15 @@
 			"constant": false,
 			"inputs": [
 				{
-					"name": "_timestamp",
+					"name": "_amount",
 					"type": "uint256"
 				}
 			],
-			"name": "getOrCreateFeeWindowByTimestamp",
+			"name": "decrementOpenInterest",
 			"outputs": [
 				{
 					"name": "",
-					"type": "address"
+					"type": "bool"
 				}
 			],
 			"payable": false,
@@ -9984,25 +9965,6 @@
 				{
 					"name": "",
 					"type": "bytes32"
-				}
-			],
-			"payable": false,
-			"stateMutability": "view",
-			"type": "function"
-		},
-		{
-			"constant": true,
-			"inputs": [
-				{
-					"name": "_shadyFeeWindow",
-					"type": "address"
-				}
-			],
-			"name": "isContainerForFeeWindow",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
 				}
 			],
 			"payable": false,
@@ -10134,25 +10096,6 @@
 		},
 		{
 			"constant": true,
-			"inputs": [
-				{
-					"name": "_timestamp",
-					"type": "uint256"
-				}
-			],
-			"name": "getFeeWindowId",
-			"outputs": [
-				{
-					"name": "",
-					"type": "uint256"
-				}
-			],
-			"payable": false,
-			"stateMutability": "view",
-			"type": "function"
-		},
-		{
-			"constant": true,
 			"inputs": [],
 			"name": "getTypeName",
 			"outputs": [
@@ -10178,48 +10121,6 @@
 				{
 					"name": "",
 					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_parentPayoutNumerators",
-					"type": "uint256[]"
-				},
-				{
-					"name": "_parentInvalid",
-					"type": "bool"
-				}
-			],
-			"name": "createChildUniverse",
-			"outputs": [
-				{
-					"name": "",
-					"type": "address"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_feeWindow",
-					"type": "address"
-				}
-			],
-			"name": "getOrCreateFeeWindowBefore",
-			"outputs": [
-				{
-					"name": "",
-					"type": "address"
 				}
 			],
 			"payable": false,
@@ -10276,11 +10177,11 @@
 		{
 			"constant": true,
 			"inputs": [],
-			"name": "getNextFeeWindow",
+			"name": "getInitialized",
 			"outputs": [
 				{
 					"name": "",
-					"type": "address"
+					"type": "bool"
 				}
 			],
 			"payable": false,
@@ -10290,11 +10191,11 @@
 		{
 			"constant": true,
 			"inputs": [],
-			"name": "getInitialized",
+			"name": "getCurrentDisputeWindow",
 			"outputs": [
 				{
 					"name": "",
-					"type": "bool"
+					"type": "address"
 				}
 			],
 			"payable": false,

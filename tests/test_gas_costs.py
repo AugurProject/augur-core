@@ -100,7 +100,7 @@ def test_winningShareRedmption(localFixture, cash, market):
     claimTradingProceeds = localFixture.contracts['ClaimTradingProceeds']
 
     acquireLongShares(localFixture, cash, market, YES, 1, claimTradingProceeds.address, sender = tester.k1)
-    finalizeMarket(localFixture, market, [0,market.getNumTicks()])
+    finalizeMarket(localFixture, market, [0, 0, market.getNumTicks()])
 
     with PrintGasUsed(localFixture, "ClaimTradingProceeds:claimTradingProceeds", CLAIM_PROCEEDS):
         claimTradingProceeds.claimTradingProceeds(market.address, tester.a1)
@@ -109,16 +109,16 @@ def test_initial_report(localFixture, universe, cash, market):
     proceedToDesignatedReporting(localFixture, market)
 
     with PrintGasUsed(localFixture, "Market:doInitialReport", INITIAL_REPORT):
-        market.doInitialReport([0, market.getNumTicks()], False, "")
+        market.doInitialReport([0, 0, market.getNumTicks()], "")
 
 def test_contribute(localFixture, universe, cash, market):
     proceedToNextRound(localFixture, market)
 
     with PrintGasUsed(localFixture, "Market.contribute", FIRST_CONTRIBUTE):
-        market.contribute([0, market.getNumTicks()], False, 1, "")
+        market.contribute([0, 0, market.getNumTicks()], 1, "")
 
     with PrintGasUsed(localFixture, "Market.contribute", FIRST_COMPLETED_CONTRIBUTE):
-        market.contribute([0, market.getNumTicks()], False, market.getParticipantStake(), "")
+        market.contribute([0, 0, market.getNumTicks()], market.getParticipantStake(), "")
 
     for i in range(9):
         proceedToNextRound(localFixture, market, randomPayoutNumerators = True)
@@ -127,7 +127,7 @@ def test_contribute(localFixture, universe, cash, market):
         proceedToNextRound(localFixture, market, randomPayoutNumerators = True)
 
     with PrintGasUsed(localFixture, "Market.contribute", FORKING_CONTRIBUTE):
-        market.contribute([market.getNumTicks() / 2, market.getNumTicks() / 2], False, market.getParticipantStake(), "")
+        market.contribute([0, market.getNumTicks() / 2, market.getNumTicks() / 2], market.getParticipantStake(), "")
 
 def test_redeem(localFixture, universe, cash, market):
     # Initial report

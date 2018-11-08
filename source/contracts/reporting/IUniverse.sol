@@ -15,7 +15,7 @@ contract IUniverse is ITyped {
     function initialize(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) external returns (bool);
     function fork() public returns (bool);
     function getParentUniverse() public view returns (IUniverse);
-    function createChildUniverse(uint256[] _parentPayoutNumerators, bool _invalid) public returns (IUniverse);
+    function createChildUniverse(uint256[] _parentPayoutNumerators) public returns (IUniverse);
     function getChildUniverse(bytes32 _parentPayoutDistributionHash) public view returns (IUniverse);
     function getReputationToken() public view returns (IReputationToken);
     function getAuction() public view returns (IAuction);

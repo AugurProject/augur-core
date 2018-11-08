@@ -241,7 +241,7 @@ contract MockMarket is IMarket {
         return true;
     }
 
-    function derivePayoutDistributionHash(uint256[] _payoutNumerators, bool _invalid) public view returns (bytes32) {
+    function derivePayoutDistributionHash(uint256[] _payoutNumerators) public view returns (bytes32) {
         return derivePayoutDistributionHashValue;
     }
 
