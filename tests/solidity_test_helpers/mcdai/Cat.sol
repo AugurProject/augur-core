@@ -106,16 +106,14 @@ contract Cat is DSNote {
     }
 
     // --- Administration ---
-    function file(bytes32 what, address data) public note auth {
-        if (what == "pit") pit = PitLike(data);
-        if (what == "vow") vow = VowLike(data);
-    }
-    function file(bytes32 ilk, bytes32 what, uint data) public note auth {
+    function fileData(bytes32 ilk, bytes32 what, uint data) public note auth {
         if (what == "chop") ilks[ilk].chop = data;
         if (what == "lump") ilks[ilk].lump = data;
     }
-    function file(bytes32 ilk, bytes32 what, address flip) public note auth {
-        if (what == "flip") ilks[ilk].flip = flip;
+    function file(bytes32 ilk, bytes32 what, address data) public note auth {
+        if (what == "flip") ilks[ilk].flip = data;
+        if (what == "pit") pit = PitLike(data);
+        if (what == "vow") vow = VowLike(data);
     }
 
     // --- CDP Liquidation ---

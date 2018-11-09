@@ -76,7 +76,7 @@ contract Vow is DSNote {
     }
 
     // --- Administration ---
-    function file(bytes32 what, uint data) public note auth {
+    function fileUint(bytes32 what, uint data) public note auth {
         if (what == "wait") wait = data;
         if (what == "bump") bump = data;
         if (what == "sump") sump = data;

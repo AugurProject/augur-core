@@ -71,21 +71,18 @@ contract Pit is DSNote {
     }
 
     // --- Administration ---
-    function file(bytes32 what, uint data) public note auth {
-        if (what == "Line") Line = data;
-    }
     function file(bytes32 ilk, bytes32 what, uint data) public note auth {
         if (what == "spot") ilks[ilk].spot = data;
         if (what == "line") ilks[ilk].line = data;
+        if (what == "Line") Line = data;
     }
 
     // --- CDP Owner Interface ---
     function frob(bytes32 ilk, int dink, int dart) public {
-        VatLike(vat).tune(ilk, bytes32(msg.sender), bytes32(msg.sender),
-                          bytes32(msg.sender), dink, dart);
+        VatLike(vat).tune(ilk, bytes32(msg.sender), bytes32(msg.sender), bytes32(msg.sender), dink, dart);
 
         (uint take, uint rate, uint Ink, uint Art) = vat.ilks(ilk); take; Ink;
-        (uint ink,  uint art) = vat.urns(ilk, bytes32(msg.sender));
+        (uint ink,  uint art) = vat.urns(ilk, bytes32(msg.sender)); // ink is balance of tokens deposited, art is dai for that token
         bool calm = mul(Art, rate) <= mul(ilks[ilk].line, ONE)
                     &&  vat.debt() <= mul(Line, ONE);
         bool safe = mul(ink, ilks[ilk].spot) >= mul(art, rate);

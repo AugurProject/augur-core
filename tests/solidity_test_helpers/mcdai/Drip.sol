@@ -84,7 +84,7 @@ contract Drip is DSNote {
     function file(bytes32 what, uint data) public note auth {
         if (what == "repo") repo = data;
     }
-    function file(bytes32 what, bytes32 data) public note auth {
+    function fileContract(bytes32 what, bytes32 data) public note auth {
         if (what == "vow") vow = data;
     }
 

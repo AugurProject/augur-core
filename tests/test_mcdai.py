@@ -1,22 +1,25 @@
 from ethereum.tools import tester
 from ethereum.tools.tester import ABIContract, TransactionFailed
 from pytest import fixture, raises
-from utils import longTo32Bytes, PrintGasUsed, fix
+from utils import longTo32Bytes, PrintGasUsed, fix, stringToBytes, bytesToHexString
 from constants import BID, ASK, YES, NO
 from datetime import timedelta
 from ethereum.utils import ecsign, sha3, normalize_key, int_to_32bytearray, bytearray_to_bytestr, zpad
 
 gemIlk = longTo32Bytes(42)
 ethIlk = longTo32Bytes(43)
+ONE = 10**27
 
-def test_fill_order_with_tokens(localFixture, dai, token, vat, pit, drip, cat, vow, flipper, flopper, flapper, gemJoin, daiJoin, ethJoin):
+def test_mdai(localFixture, dai, token, vat, pit, drip, cat, vow, flipper, flopper, flapper, gemJoin, daiJoin, ethJoin, daiMove):
     # get some tokens and "dai"
     assert token.faucet(10000)
     assert dai.faucet(10000)
 
     # Put some of our tokens into the system
     token.approve(gemJoin.address, 1000)
-    gemJoin.join(tester.a0, 1000)
+    bytesUserAddress = vat.getBytesAddress(tester.a0)
+    gemJoin.join(bytesUserAddress, 1000)
+    assert vat.getGemBalance(gemIlk, bytesUserAddress) == 1000 * ONE
 
     # also add some eth
     ethJoin.join(tester.a0, value=10000)
@@ -25,36 +28,48 @@ def test_fill_order_with_tokens(localFixture, dai, token, vat, pit, drip, cat, v
 
     # Before we actually get the dai lets configure the Pit for our token and initialize the Vat for it
     vat.init(gemIlk)
-    # Adjust rates so that we pay and recieve exactly what is passed for simplicity
-    vat.fold(gemIlk, tester.a0, -10**27 + 1)
-    vat.toll(gemIlk, tester.a0, -10**27 + 1)
 
     #spot: the maximum amount of Dai drawn per unit collateral
-    pit.file("spot", 100)
+    pit.file(gemIlk, "spot", 10 * ONE)
     # line: the maximum total Dai drawn
-    pit.file("line", 10000000)
+    pit.file(gemIlk, "line", 10000000 * ONE)
     # Line: the maximum total Dai drawn across all ilks
-    pit.file("Line", 1000000000)
+    pit.file(gemIlk, "Line", 1000000000 * ONE)
 
     # Now we can actually get the dai
-    tokensTaken = 100
-    daiReceivedInRay = 100
-    pit.frob(gemIlk, tokensTaken, daiReceivedInRay)
+    tokensProvided = 10
+    daiReceived = 100
+    pit.frob(gemIlk, tokensProvided, daiReceived)
+    assert vat.getDaiBalance(bytesUserAddress) == 100 * ONE
 
-    # drip.drip
-    #   vat.fold
+    # If we adjust the spot rate such that it will trigger liquidation we can call the cat.bite method to initiate that
+    pit.file(gemIlk, "spot", 9 * ONE)
+    cat.bite(gemIlk, bytesUserAddress)
 
-    # cat.flip
-    #   flip.kick
-    #   vow.fess
-    #   vat.grab
+    # We can see some tokens were removed from the user balance in accordance with the new spot rate
+    assert vat.getGemBalance(gemIlk, bytesUserAddress) == 990 * ONE
+    catBytesAddress = vat.getBytesAddress(cat.address)
+    assert vat.getGemBalance(gemIlk, catBytesAddress) == 10 * ONE
 
-    # cat.bite
-    #   flip.kick
-    #   vow.fess
-    #   vat.grab
+    # Lets configure some of the liquidation params
+    cat.fileData(gemIlk, "chop", ONE)
 
-    pass
+    # Maximum auction
+    cat.fileData(gemIlk, "lump", 10)
+
+    # We can kick off an auction now for some seized funds
+    cat.flip(0, 10)
+
+    # Now lets bid on the gems that have been put up for auction
+    daiMove.hope(flipper.address)
+    flipper.tend(1, 1, 1)
+
+    assert vat.getDaiBalance(bytesUserAddress) == 99 * ONE
+
+    # Move time to the end of the auction and get our tokens
+    localFixture.chain.head_state.timestamp += flipper.tau() + 1
+    flipper.deal(1)
+    assert vat.getGemBalance(gemIlk, bytesUserAddress) == 991 * ONE
 
 
 @fixture(scope="session")
@@ -68,14 +83,14 @@ def localSnapshot(fixture, kitchenSinkSnapshot):
     drip = kitchenSinkSnapshot['drip'] = fixture.upload('solidity_test_helpers/mcdai/Drip.sol', "drip", constructorArgs=[vat.address])
     cat = kitchenSinkSnapshot['cat'] = fixture.upload('solidity_test_helpers/mcdai/Cat.sol', "cat", constructorArgs=[vat.address])
     vow = kitchenSinkSnapshot['vow'] = fixture.upload('solidity_test_helpers/mcdai/Vow.sol', "vow")
-    flipper = kitchenSinkSnapshot['flipper'] = fixture.upload('solidity_test_helpers/mcdai/Flipper.sol', "flipper", constructorArgs=[dai.address, token.address])
-    flopper = kitchenSinkSnapshot['flopper'] = fixture.upload('solidity_test_helpers/mcdai/Flopper.sol', "flopper", constructorArgs=[dai.address, token.address])
-    flapper = kitchenSinkSnapshot['flapper'] = fixture.upload('solidity_test_helpers/mcdai/Flapper.sol', "flapper", constructorArgs=[dai.address, token.address])
     gemJoin = kitchenSinkSnapshot['gemJoin'] = fixture.upload('solidity_test_helpers/mcdai/GemJoin.sol', "gemJoin", constructorArgs=[vat.address, gemIlk, token.address])
     daiJoin = kitchenSinkSnapshot['daiJoin'] = fixture.upload('solidity_test_helpers/mcdai/DaiJoin.sol', "daiJoin", constructorArgs=[vat.address, dai.address])
     ethJoin = kitchenSinkSnapshot['ethJoin'] = fixture.upload('solidity_test_helpers/mcdai/ETHJoin.sol', "ethJoin", constructorArgs=[vat.address, ethIlk])
     daiMove = kitchenSinkSnapshot['daiMove'] = fixture.upload('solidity_test_helpers/mcdai/DaiMove.sol', "daiMove", constructorArgs=[vat.address])
     gemMove = kitchenSinkSnapshot['gemMove'] = fixture.upload('solidity_test_helpers/mcdai/GemMove.sol', "gemMove", constructorArgs=[vat.address, gemIlk])
+    flipper = kitchenSinkSnapshot['flipper'] = fixture.upload('solidity_test_helpers/mcdai/Flipper.sol', "flipper", constructorArgs=[daiMove.address, gemMove.address])
+    flopper = kitchenSinkSnapshot['flopper'] = fixture.upload('solidity_test_helpers/mcdai/Flopper.sol', "flopper", constructorArgs=[daiMove.address, gemMove.address])
+    flapper = kitchenSinkSnapshot['flapper'] = fixture.upload('solidity_test_helpers/mcdai/Flapper.sol', "flapper", constructorArgs=[daiMove.address, gemMove.address])
 
     vat.rely(gemJoin.address)
     vat.rely(daiJoin.address)
@@ -84,6 +99,19 @@ def localSnapshot(fixture, kitchenSinkSnapshot):
     vat.rely(pit.address)
     vat.rely(cat.address)
     vat.rely(vow.address)
+    vat.rely(gemMove.address)
+    vat.rely(daiMove.address)
+
+    vow.file("flap", flapper.address)
+    vow.file("flop", flopper.address)
+    vow.file("vat", vat.address)
+    vow.rely(cat.address)
+
+    cat.file(gemIlk, "flip", flipper.address)
+    cat.file(gemIlk, "pit", pit.address)
+    cat.file(gemIlk, "vow", vow.address)
+
+    drip.fileContract("vow", vat.getBytesAddress(vow.address))
 
     return fixture.createSnapshot()
 

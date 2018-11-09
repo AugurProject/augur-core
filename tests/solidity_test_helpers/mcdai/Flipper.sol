@@ -153,4 +153,10 @@ contract Flipper is DSNote {
         gem.push(bytes32(bids[id].guy), bids[id].lot);
         delete bids[id];
     }
+
+    // TESTING
+
+    function getLot(uint id) public view returns (uint256) {
+        return bids[id].lot;
+    }
 }

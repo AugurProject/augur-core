@@ -161,4 +161,18 @@ contract Vat {
         ilk.take  = add(ilk.take, take);
         gem[i][u] = sub(gem[i][u], mul(ilk.Ink, take));
     }
+
+    // TESTING
+
+    function getBytesAddress(address addr) public view returns (bytes32) {
+        return bytes32(addr);
+    }
+
+    function getGemBalance(bytes32 i, bytes32 u) public view returns (uint256) {
+        return gem[i][u];
+    }
+
+    function getDaiBalance(bytes32 u) public view returns (uint256) {
+        return dai[u];
+    }
 }
