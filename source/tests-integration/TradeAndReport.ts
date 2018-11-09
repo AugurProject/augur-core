@@ -20,7 +20,7 @@ describe("TradeAndReport", () => {
         console.log("Starting ETH balance", ethBalance.toString(10));
 
         // Create a market
-        const market = await fixture.createReasonableMarket(fixture.universe, fixture.cash.address, [stringTo32ByteHex(" "), stringTo32ByteHex(" ")]);
+        const market = await fixture.createReasonableMarket(fixture.universe, [stringTo32ByteHex(" "), stringTo32ByteHex(" ")]);
         const actualTypeName = await market.getTypeName_();
         const expectedTypeName = stringTo32ByteHex("Market");
         expect(actualTypeName).to.equal(expectedTypeName);

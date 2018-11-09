@@ -22,7 +22,7 @@ def test_universe_creation(localFixture, mockReputationToken, mockReputationToke
     assert universe.getForkEndTime() == 0
     assert universe.getChildUniverse("5") == longToHexString(0)
 
-def test_universe_fork_market(localFixture, populatedUniverse, mockUniverse, mockCash, mockDisputeWindow, mockUniverseFactory, mockDisputeWindowFactory, mockMarket, chain, mockMarketFactory, mockAugur):
+def test_universe_fork_market(localFixture, populatedUniverse, mockUniverse, mockDisputeWindow, mockUniverseFactory, mockDisputeWindowFactory, mockMarket, chain, mockMarketFactory, mockAugur):
     with raises(TransactionFailed, message="must be called from market"):
         populatedUniverse.fork()
 
@@ -35,7 +35,7 @@ def test_universe_fork_market(localFixture, populatedUniverse, mockUniverse, moc
     with raises(TransactionFailed, message="forking market has to be in universe"):
         mockMarket.callForkOnUniverse(populatedUniverse.address)
 
-    assert populatedUniverse.createYesNoMarket(endTime, 1000, mockCash.address, tester.a0, "topic", "description", "info")
+    assert populatedUniverse.createYesNoMarket(endTime, 1000, tester.a0, "topic", "description", "info")
     assert mockMarketFactory.getCreateMarketUniverseValue() == populatedUniverse.address
 
     assert populatedUniverse.isContainerForMarket(mockMarket.address)
@@ -71,7 +71,7 @@ def test_get_reporting_window(localFixture, populatedUniverse, chain):
     assert populatedUniverse.getOrCreateCurrentDisputeWindow() == populatedUniverse.getOrCreateDisputeWindowByTimestamp(chain.head_state.timestamp)
     assert populatedUniverse.getOrCreateNextDisputeWindow() == populatedUniverse.getOrCreateDisputeWindowByTimestamp(chain.head_state.timestamp + duration)
 
-def test_universe_contains(localFixture, populatedUniverse, mockMarket, chain, mockCash, mockMarketFactory, mockDisputeWindow, mockShareToken, mockDisputeWindowFactory):
+def test_universe_contains(localFixture, populatedUniverse, mockMarket, chain, mockMarketFactory, mockDisputeWindow, mockShareToken, mockDisputeWindowFactory):
     mockDisputeWindow.setStartTime(0)
     assert populatedUniverse.isContainerForDisputeWindow(mockDisputeWindow.address) == False
     assert populatedUniverse.isContainerForMarket(mockMarket.address) == False
@@ -94,7 +94,7 @@ def test_universe_contains(localFixture, populatedUniverse, mockMarket, chain, m
     mockMarketFactory.setMarket(mockMarket.address)
     endTime = localFixture.contracts["Time"].getTimestamp() + 30 * 24 * 60 * 60 # 30 days
 
-    assert populatedUniverse.createYesNoMarket(endTime, 1000, mockCash.address, tester.a0, "topic", "description", "info")
+    assert populatedUniverse.createYesNoMarket(endTime, 1000, tester.a0, "topic", "description", "info")
     assert mockMarketFactory.getCreateMarketUniverseValue() == populatedUniverse.address
 
     assert populatedUniverse.isContainerForDisputeWindow(mockDisputeWindow.address) == True
@@ -176,7 +176,7 @@ def test_universe_calculate_floating_value_defaults(populatedUniverse):
     totalMarkets = 0
     assert populatedUniverse.calculateFloatingValue(11, totalMarkets, 4, 22, defaultValue, 6) == defaultValue
 
-def test_universe_create_market(localFixture, chain, populatedUniverse, mockMarket, mockMarketFactory, mockCash, mockReputationToken, mockAugur, mockDisputeWindowFactory, mockDisputeWindow):
+def test_universe_create_market(localFixture, chain, populatedUniverse, mockMarket, mockMarketFactory, mockReputationToken, mockAugur, mockDisputeWindowFactory, mockDisputeWindow):
     timestamp = localFixture.contracts["Time"].getTimestamp()
     endTimeValue = timestamp + 10
     feePerEthInWeiValue = 10 ** 18
@@ -194,7 +194,7 @@ def test_universe_create_market(localFixture, chain, populatedUniverse, mockMark
     assert mockAugur.logMarketCreatedCalled() == False
     mockMarketFactory.setMarket(mockMarket.address)
 
-    newMarket = populatedUniverse.createYesNoMarket(endTimeValue, feePerEthInWeiValue, mockCash.address, designatedReporterAddressValue, "topic", "description", "info")
+    newMarket = populatedUniverse.createYesNoMarket(endTimeValue, feePerEthInWeiValue, designatedReporterAddressValue, "topic", "description", "info")
 
     assert mockMarketFactory.getCreateMarketUniverseValue() == populatedUniverse.address
     assert populatedUniverse.isContainerForMarket(mockMarket.address)
@@ -273,10 +273,6 @@ def mockAugur(localFixture):
 @fixture
 def mockShareToken(localFixture):
     return localFixture.contracts['MockShareToken']
-
-@fixture
-def mockCash(localFixture):
-    return localFixture.contracts['MockCash']
 
 @fixture
 def populatedUniverse(localFixture, mockReputationTokenFactory, mockReputationToken, mockUniverse):

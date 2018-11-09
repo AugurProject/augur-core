@@ -12,45 +12,41 @@ def test_market_creation(localFixture, mockUniverse, mockDisputeWindow, mockCash
     market.setController(localFixture.contracts["Controller"].address)
 
     with raises(TransactionFailed, message="outcomes has to be greater than 1"):
-        market.initialize(mockUniverse.address, endTime, fee, mockCash.address, tester.a1, tester.a1, 1, numTicks)
+        market.initialize(mockUniverse.address, endTime, fee, tester.a1, tester.a1, 1, numTicks)
 
     with raises(TransactionFailed, message="outcomes has to be less than 9"):
-        market.initialize(mockUniverse.address, endTime, fee, mockCash.address, tester.a1, tester.a1, 9, numTicks)
+        market.initialize(mockUniverse.address, endTime, fee, tester.a1, tester.a1, 9, numTicks)
 
     with raises(TransactionFailed, message="numTicks needs to be divisable by outcomes"):
-        market.initialize(mockUniverse.address, endTime, fee, mockCash.address, tester.a1, tester.a1, 7, numTicks)
+        market.initialize(mockUniverse.address, endTime, fee, tester.a1, tester.a1, 7, numTicks)
 
     with raises(TransactionFailed, message="fee per eth can not be greater than max fee per eth in attoEth"):
-        market.initialize(mockUniverse.address, endTime, oneEther / 2 + 1, mockCash.address, tester.a1, tester.a1, 5, numTicks)
+        market.initialize(mockUniverse.address, endTime, oneEther / 2 + 1, tester.a1, tester.a1, 5, numTicks)
 
     with raises(TransactionFailed, message="creator address can not be 0"):
-        market.initialize(mockUniverse.address, endTime, fee, mockCash.address, longToHexString(0), tester.a1, 5, numTicks)
+        market.initialize(mockUniverse.address, endTime, fee, longToHexString(0), tester.a1, 5, numTicks)
 
     with raises(TransactionFailed, message="designated reporter address can not be 0"):
-        market.initialize(mockUniverse.address, endTime, fee, mockCash.address, tester.a1, longToHexString(0), 5, numTicks)
+        market.initialize(mockUniverse.address, endTime, fee, tester.a1, longToHexString(0), 5, numTicks)
 
     mockUniverse.setForkingMarket(mockMarket.address)
     with raises(TransactionFailed, message="forking market address has to be 0"):
-        market.initialize(mockUniverse.address, endTime, fee, mockCash.address, tester.a1, tester.a1, 5, numTicks)
+        market.initialize(mockUniverse.address, endTime, fee, tester.a1, tester.a1, 5, numTicks)
 
     mockUniverse.setForkingMarket(longToHexString(0))
     mockReputationToken.setBalanceOf(0)
     mockUniverse.setOrCacheDesignatedReportNoShowBond(100)
     with raises(TransactionFailed, message="reporting window reputation token does not have enough balance"):
-        market.initialize(mockUniverse.address, endTime, fee, mockCash.address, tester.a1, tester.a1, 5, numTicks)
-
-    badCash = localFixture.upload('../source/contracts/trading/Cash.sol', 'uncontrolledCash')
-    with raises(TransactionFailed, message="the denomination token must be a valid cash implementation"):
-        market.initialize(mockUniverse.address, endTime, fee, badCash.address, tester.a1, tester.a1, 5, numTicks, value=100)
+        market.initialize(mockUniverse.address, endTime, fee, tester.a1, tester.a1, 5, numTicks)
 
     mockReputationToken.setBalanceOf(100)
     mockUniverse.setOrCacheTargetReporterGasCosts(15)
     mockUniverse.setOrCacheValidityBond(12)
     with raises(TransactionFailed, message="refund is not over 0"):
-        market.initialize(mockUniverse.address, endTime, fee, mockCash.address, tester.a1, tester.a1, 5, numTicks, value=0)
+        market.initialize(mockUniverse.address, endTime, fee, tester.a1, tester.a1, 5, numTicks, value=0)
 
     mockShareTokenFactory.resetCreateShareToken()
-    assert market.initialize(mockUniverse.address, endTime, fee, mockCash.address, tester.a1, tester.a1, 5, numTicks, value=100)
+    assert market.initialize(mockUniverse.address, endTime, fee, tester.a1, tester.a1, 5, numTicks, value=100)
     assert mockShareTokenFactory.getCreateShareTokenMarketValue() == market.address
     assert mockShareTokenFactory.getCreateShareTokenOutcomeValue() == 5
     assert market.getTypeName() == stringToBytes("Market")
@@ -249,7 +245,7 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
     mockUniverse.setNextDisputeWindow(mockNextDisputeWindow.address)
     mockDisputeWindow.setEndTime(fixture.contracts["Time"].getTimestamp() + constants.DESIGNATED_REPORTING_DURATION_SECONDS())
     mockNextDisputeWindow.setEndTime(mockDisputeWindow.getEndTime() + constants.DESIGNATED_REPORTING_DURATION_SECONDS())
-    assert market.initialize(mockUniverse.address, endTime, 16, mockCash.address, tester.a1, tester.a2, 5, numTicks, value=100)
+    assert market.initialize(mockUniverse.address, endTime, 16, tester.a1, tester.a2, 5, numTicks, value=100)
 
     return fixture.createSnapshot()
 

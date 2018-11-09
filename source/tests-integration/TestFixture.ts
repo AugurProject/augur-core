@@ -79,15 +79,15 @@ export class TestFixture {
         await cash.approve(authority.address, new BN(2).pow(new BN(256)).sub(new BN(1)));
     }
 
-    public async createMarket(universe: Universe, outcomes: string[], endTime: BN, feePerEthInWei: BN, denominationToken: string, designatedReporter: string): Promise<Market> {
+    public async createMarket(universe: Universe, outcomes: string[], endTime: BN, feePerEthInWei: BN, designatedReporter: string): Promise<Market> {
         const marketCreationFee = await universe.getOrCacheMarketCreationCost_();
 
         console.log("Creating Market");
-        const marketAddress = await universe.createCategoricalMarket_(endTime, feePerEthInWei, denominationToken, designatedReporter, outcomes, stringTo32ByteHex(" "), 'description', '', { attachedEth: marketCreationFee });
+        const marketAddress = await universe.createCategoricalMarket_(endTime, feePerEthInWei, designatedReporter, outcomes, stringTo32ByteHex(" "), 'description', '', { attachedEth: marketCreationFee });
         if (!marketAddress || marketAddress == "0x") {
             throw new Error("Unable to get address for new categorical market.");
         }
-        await universe.createCategoricalMarket(endTime, feePerEthInWei, denominationToken, designatedReporter, outcomes, stringTo32ByteHex(" "), 'description', '', { attachedEth: marketCreationFee });
+        await universe.createCategoricalMarket(endTime, feePerEthInWei, designatedReporter, outcomes, stringTo32ByteHex(" "), 'description', '', { attachedEth: marketCreationFee });
         const market = new Market(this.connector, this.accountManager, marketAddress, TestFixture.GAS_PRICE);
         if (await market.getTypeName_() !== stringTo32ByteHex("Market")) {
             throw new Error("Unable to create new categorical market");
@@ -96,10 +96,10 @@ export class TestFixture {
         return market;
     }
 
-    public async createReasonableMarket(universe: Universe, denominationToken: string, outcomes: string[]): Promise<Market> {
+    public async createReasonableMarket(universe: Universe, outcomes: string[]): Promise<Market> {
         const endTime = new BN(Math.round(new Date().getTime() / 1000) + 30 * 24 * 60 * 60);
         const fee = (new BN(10)).pow(new BN(16));
-        return await this.createMarket(universe, outcomes, endTime, fee, denominationToken, this.accountManager.defaultAddress);
+        return await this.createMarket(universe, outcomes, endTime, fee, this.accountManager.defaultAddress);
     }
 
     public async placeOrder(market: string, type: BN, numShares: BN, price: BN, outcome: BN, betterOrderID: string, worseOrderID: string, tradeGroupID: string): Promise<void> {

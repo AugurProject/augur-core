@@ -59,7 +59,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
     Map public crowdsourcers;
     IShareToken[] private shareTokens;
 
-    function initialize(IUniverse _universe, uint256 _endTime, uint256 _feePerEthInAttoEth, ICash _cash, address _designatedReporterAddress, address _creator, uint256 _numOutcomes, uint256 _numTicks) public payable beforeInitialized returns (bool _success) {
+    function initialize(IUniverse _universe, uint256 _endTime, uint256 _feePerEthInAttoEth, address _designatedReporterAddress, address _creator, uint256 _numOutcomes, uint256 _numTicks) public payable beforeInitialized returns (bool _success) {
         endInitialization();
         _numOutcomes += 1; // The INVALID outcome is always first
         require(MIN_OUTCOMES <= _numOutcomes && _numOutcomes <= MAX_OUTCOMES);
@@ -72,6 +72,7 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         require(_endTime < _timestamp + Reporting.getMaximumMarketDuration());
         universe = _universe;
         require(!universe.isForking());
+        cash = ICash(controller.lookup("Cash"));
         owner = _creator;
         noShowBondOwner = owner;
         assessFees();
@@ -79,7 +80,6 @@ contract Market is DelegationTarget, ITyped, Initializable, Ownable, IMarket {
         numOutcomes = _numOutcomes;
         numTicks = _numTicks;
         feeDivisor = _feePerEthInAttoEth == 0 ? 0 : 1 ether / _feePerEthInAttoEth;
-        cash = _cash;
         InitialReporterFactory _initialReporterFactory = InitialReporterFactory(controller.lookup("InitialReporterFactory"));
         participants.push(_initialReporterFactory.createInitialReporter(controller, this, _designatedReporterAddress));
         marketCreatorMailbox = MailboxFactory(controller.lookup("MailboxFactory")).createMailbox(controller, owner, this);

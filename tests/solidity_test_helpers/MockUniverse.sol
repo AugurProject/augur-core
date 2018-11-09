@@ -418,24 +418,24 @@ contract MockUniverse is Initializable, IUniverse {
         return setForkReputationGoalValue;
     }
 
-    function createYesNoMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
-        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, 10000);
+    function createYesNoMarket(uint256 _endTime, uint256 _feePerEthInWei, address _designatedReporterAddress, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
+        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _designatedReporterAddress, msg.sender, 2, 10000);
         return _newMarket;
     }
 
-    function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, bytes32[] _outcomes, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
-        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, uint256(_outcomes.length), 10000);
+    function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, address _designatedReporterAddress, bytes32[] _outcomes, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
+        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _designatedReporterAddress, msg.sender, uint256(_outcomes.length), 10000);
         return _newMarket;
     }
 
-    function createScalarMarket(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, int256 _minPrice, int256 _maxPrice, uint256 _numTicks, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
-        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, msg.sender, 2, _numTicks);
+    function createScalarMarket(uint256 _endTime, uint256 _feePerEthInWei, address _designatedReporterAddress, int256 _minPrice, int256 _maxPrice, uint256 _numTicks, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
+        _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _designatedReporterAddress, msg.sender, 2, _numTicks);
         return _newMarket;
     }
 
-    function createMarketInternal(uint256 _endTime, uint256 _feePerEthInWei, ICash _denominationToken, address _designatedReporterAddress, address _sender, uint256 _numOutcomes, uint256 _numTicks) private returns (IMarket _newMarket) {
+    function createMarketInternal(uint256 _endTime, uint256 _feePerEthInWei, address _designatedReporterAddress, address _sender, uint256 _numOutcomes, uint256 _numTicks) private returns (IMarket _newMarket) {
         getReputationToken().trustedUniverseTransfer(_sender, marketFactory, getOrCacheDesignatedReportNoShowBond());
-        _newMarket = marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _feePerEthInWei, _denominationToken, _designatedReporterAddress, _sender, _numOutcomes, _numTicks);
+        _newMarket = marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _feePerEthInWei, _designatedReporterAddress, _sender, _numOutcomes, _numTicks);
         return _newMarket;
     }
 

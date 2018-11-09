@@ -73,7 +73,7 @@ def test_initialReportHappyPath(reportByDesignatedReporter, localFixture, univer
     localFixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)
     assert market.finalize()
 
-def test_initialReport_methods(localFixture, universe, market, cash, constants):
+def test_initialReport_methods(localFixture, universe, market, constants):
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
 
     # proceed to the initial reporting period
@@ -179,7 +179,7 @@ def test_roundsOfReporting(rounds, localFixture, market, universe):
     #(True, False),
     (False, False),
 ])
-def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, cash, market, categoricalMarket, scalarMarket):
+def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, market, categoricalMarket, scalarMarket):
     # Let's go into the one dispute round for the categorical market
     proceedToNextRound(localFixture, categoricalMarket)
     proceedToNextRound(localFixture, categoricalMarket)
@@ -195,7 +195,7 @@ def test_forking(finalizeByMigration, manuallyDisavow, localFixture, universe, c
 
     with raises(TransactionFailed, message="We cannot create markets during a fork"):
         time = localFixture.contracts["Time"].getTimestamp()
-        localFixture.createYesNoMarket(universe, time + 1000, 1, cash, tester.a0)
+        localFixture.createYesNoMarket(universe, time + 1000, 1, tester.a0)
 
     # confirm that we can manually create a child universe from an outcome no one asserted was true during dispute
     numTicks = market.getNumTicks()
@@ -333,14 +333,14 @@ def test_finalized_fork_migration(localFixture, universe, market, categoricalMar
     with raises(TransactionFailed):
         market.disavowCrowdsourcers()
 
-def test_fork_migration_no_report(localFixture, universe, market, cash):
+def test_fork_migration_no_report(localFixture, universe, market):
     # Proceed to Forking for the yesNo market but don't go all the way so that we can create the new market still
     for i in range(10):
         proceedToNextRound(localFixture, market)
 
     # Create a market before the fork occurs which has an end date past the forking window
     endTime = long(localFixture.contracts["Time"].getTimestamp() + timedelta(days=90).total_seconds())
-    longMarket = localFixture.createYesNoMarket(universe, endTime, 1, cash, tester.a0)
+    longMarket = localFixture.createYesNoMarket(universe, endTime, 1, tester.a0)
 
     # Go to the forking period
     proceedToFork(localFixture, market, universe)
@@ -357,7 +357,7 @@ def test_fork_migration_no_report(localFixture, universe, market, cash):
         with TokenDelta(newReputationToken, oldBalance, longMarket.address, "Migrating didn't place new no show bond"):
             assert longMarket.migrateThroughOneFork([], "")
 
-def test_forking_values(localFixture, universe, market, cash):
+def test_forking_values(localFixture, universe, market):
     reputationToken = localFixture.applySignature("ReputationToken", universe.getReputationToken())
 
     # Give some REP to another account
@@ -410,7 +410,7 @@ def test_forking_values(localFixture, universe, market, cash):
     assert childUniverse.getInitialReportMinValue() == long(childUniverse.getDisputeThresholdForFork() / 3L / 2**18 + 1)
 
     # Now we'll fork again and confirm it still takes only 20 dispute rounds in the worst case
-    newMarket = localFixture.createReasonableYesNoMarket(childUniverse, cash)
+    newMarket = localFixture.createReasonableYesNoMarket(childUniverse)
     proceedToFork(localFixture, newMarket, childUniverse)
     assert newMarket.getNumParticipants() == 21
 
@@ -431,7 +431,7 @@ def test_forking_values(localFixture, universe, market, cash):
     assert leafUniverseTheoreticalSupply < childUniverseReputationToken.getTotalTheoreticalSupply()
 
 
-def test_fee_window_record_keeping(localFixture, universe, cash, market, categoricalMarket, scalarMarket):
+def test_fee_window_record_keeping(localFixture, universe, market, categoricalMarket, scalarMarket):
     disputeWindow = localFixture.applySignature('DisputeWindow', universe.getOrCreateCurrentDisputeWindow())
 
     # First we'll confirm we get the expected default values for the window record keeping
