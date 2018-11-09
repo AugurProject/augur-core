@@ -415,7 +415,7 @@ class ContractsFixture:
 
     def getOrCreateChildUniverse(self, parentUniverse, market, payoutDistribution):
         assert payoutDistributionHash
-        childUniverseAddress = parentUniverse.getOrCreateChildUniverse(payoutDistribution, False)
+        childUniverseAddress = parentUniverse.getOrCreateChildUniverse(payoutDistribution)
         assert childUniverseAddress
         childUniverse = ABIContract(self.chain, ContractTranslator(ContractsFixture.signatures['Universe']), childUniverseAddress)
         return childUniverse
@@ -525,9 +525,9 @@ def kitchenSinkSnapshot(fixture, augurInitializedSnapshot):
         proceedToFork(fixture, forkingMarket, universe)
         fixture.contracts["Time"].setTimestamp(universe.getForkEndTime() + 1)
         reputationToken = fixture.applySignature('ReputationToken', universe.getReputationToken())
-        yesPayoutNumerators = [0, forkingMarket.getNumTicks()]
-        reputationToken.migrateOutByPayout(yesPayoutNumerators, False, reputationToken.balanceOf(tester.a0))
-        universe = fixture.applySignature('Universe', universe.createChildUniverse(yesPayoutNumerators, False))
+        yesPayoutNumerators = [0, 0, forkingMarket.getNumTicks()]
+        reputationToken.migrateOutByPayout(yesPayoutNumerators, reputationToken.balanceOf(tester.a0))
+        universe = fixture.applySignature('Universe', universe.createChildUniverse(yesPayoutNumerators))
 
     yesNoMarket = fixture.createReasonableYesNoMarket(universe)
     startingGas = fixture.chain.head_state.gas_used

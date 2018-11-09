@@ -30,11 +30,11 @@ export class ReportingUtils {
         const numberOfOutcomes = await market.getNumberOfOutcomes_();
         const numTicks = await market.getNumTicks_();
         let payoutNumerators = new Array(numberOfOutcomes.toNumber()).fill(new BN(0));
-        payoutNumerators[0] = numTicks;
+        payoutNumerators[1] = numTicks;
 
         let winningPayoutHash = "";
         if (disputeWindowAddress === ZERO_ADDRESS) {
-            await market.doInitialReport(payoutNumerators, false, "");
+            await market.doInitialReport(payoutNumerators, "");
             expect(await market.getDisputeWindow_() === ZERO_ADDRESS).to.be.false;
             console.log("Submitted initial report");
 
@@ -67,27 +67,27 @@ export class ReportingUtils {
             const winningReport = await fixture.getWinningReportingParticipant(market);
             winningPayoutHash = await winningReport.getPayoutDistributionHash_();
 
-            let chosenPayoutNumerators = [];
+            let chosenPayoutNumerators = new Array(numberOfOutcomes.toNumber()).fill(new BN(0));
+            chosenPayoutNumerators[1] = numTicks;
             if (randomPayoutNumerators) {
-                chosenPayoutNumerators = new Array(numberOfOutcomes).fill(new BN(0));
-                // Set chosenPayoutNumerators[0] to number >= 0 and <= numTicks
-                chosenPayoutNumerators[0] = new BN(Math.floor(Math.random() * Math.floor(numTicks.toNumber() + 1)));
-                chosenPayoutNumerators[1] = numTicks.sub(chosenPayoutNumerators[0]);
+                // Set chosenPayoutNumerators[1] to number >= 0 and <= numTicks
+                chosenPayoutNumerators[1] = new BN(Math.floor(Math.random() * Math.floor(numTicks.toNumber() + 1)));
+                chosenPayoutNumerators[2] = numTicks.sub(chosenPayoutNumerators[1]);
             } else {
-                const firstReportWinning = await market.derivePayoutDistributionHash_(payoutNumerators, false) === winningPayoutHash;
-                chosenPayoutNumerators = payoutNumerators;
+                const firstReportWinning = await market.derivePayoutDistributionHash_(payoutNumerators) === winningPayoutHash;
                 if (firstReportWinning) {
-                    payoutNumerators.reverse();
+                    chosenPayoutNumerators[1] = new BN(0);
+                    chosenPayoutNumerators[2] = numTicks;
                 }
             }
 
-            const chosenPayoutHash = await market.derivePayoutDistributionHash_(chosenPayoutNumerators, false);
+            console.log("Reporting with payout numerators: ", chosenPayoutNumerators);
+            const chosenPayoutHash = await market.derivePayoutDistributionHash_(chosenPayoutNumerators);
             const participantStake = await market.getParticipantStake_();
             const stakeInOutcome = await market.getStakeInOutcome_(chosenPayoutHash);
             const amount = participantStake.mul(new BN(2)).sub(stakeInOutcome.mul(new BN(3)));
-            await fixture.contribute(market, chosenPayoutNumerators, false, amount);
+            await fixture.contribute(market, chosenPayoutNumerators, amount);
             console.log("Staked", amount.toString(10));
-            console.log("Payout numerators", chosenPayoutNumerators);
             const forkingMarket = await market.getForkingMarket_();
             const marketDisputeWindow = await market.getDisputeWindow_();
             expect(forkingMarket !== ZERO_ADDRESS || marketDisputeWindow !== disputeWindowAddress).to.be.true;

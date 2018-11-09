@@ -29,7 +29,7 @@ contract MockInitialReporter is IInitialReporter {
 
     function reportWasCalled() public returns(bool) { return reportWasCalledValue; }
 
-    function report(address _reporter, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid, uint256 _initialReportStake) public returns (bool) {
+    function report(address _reporter, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, uint256 _initialReportStake) public returns (bool) {
         reportWasCalledValue = true;
         reportTimestamp = 1;
         return true;
@@ -72,10 +72,6 @@ contract MockInitialReporter is IInitialReporter {
     }
 
     function redeem(address _redeemer) public returns (bool) {
-        return true;
-    }
-
-    function isInvalid() public view returns (bool) {
         return true;
     }
 

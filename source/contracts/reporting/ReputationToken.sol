@@ -31,9 +31,9 @@ contract ReputationToken is DelegationTarget, ITyped, Initializable, VariableSup
         return true;
     }
 
-    function migrateOutByPayout(uint256[] _payoutNumerators, bool _invalid, uint256 _attotokens) public afterInitialized returns (bool) {
+    function migrateOutByPayout(uint256[] _payoutNumerators, uint256 _attotokens) public afterInitialized returns (bool) {
         require(_attotokens > 0);
-        IUniverse _destinationUniverse = universe.createChildUniverse(_payoutNumerators, _invalid);
+        IUniverse _destinationUniverse = universe.createChildUniverse(_payoutNumerators);
         IReputationToken _destination = _destinationUniverse.getReputationToken();
         burn(msg.sender, _attotokens);
         _destination.migrateIn(msg.sender, _attotokens);

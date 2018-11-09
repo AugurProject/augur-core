@@ -2,5 +2,5 @@ BID = 0
 ASK = 1
 LONG = 0
 SHORT = 1
-YES = 1
-NO = 0
+YES = 2
+NO = 1

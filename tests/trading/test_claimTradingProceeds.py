@@ -45,11 +45,11 @@ def acquireShortShareSet(kitchenSinkFixture, cash, market, outcome, amount, appr
         otherShareToken = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(otherOutcome))
         assert otherShareToken.approve(approvalAddress, amount, sender = sender)
 
-def finalizeMarket(fixture, market, payoutNumerators, invalid=False):
+def finalizeMarket(fixture, market, payoutNumerators):
     # set timestamp to after market end
     fixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
     # have tester.a0 submit designated report
-    market.doInitialReport(payoutNumerators, invalid, "")
+    market.doInitialReport(payoutNumerators, "")
     # set timestamp to after designated dispute end
     disputeWindow = fixture.applySignature('DisputeWindow', market.getDisputeWindow())
     fixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)
@@ -59,7 +59,7 @@ def finalizeMarket(fixture, market, payoutNumerators, invalid=False):
 def test_helpers(kitchenSinkFixture, scalarMarket):
     market = scalarMarket
     claimTradingProceeds = kitchenSinkFixture.contracts['ClaimTradingProceeds']
-    finalizeMarket(kitchenSinkFixture, market, [0,40*10**4])
+    finalizeMarket(kitchenSinkFixture, market, [0,0,40*10**4])
 
     assert claimTradingProceeds.calculateCreatorFee(market.address, fix('3')) == fix('0.03')
     assert claimTradingProceeds.calculateReportingFee(market.address, fix('5')) == fix('0.05')
@@ -89,7 +89,7 @@ def test_redeem_shares_in_yesNo_market(kitchenSinkFixture, universe, cash, marke
     # get NO shares with a2
     acquireShortShareSet(kitchenSinkFixture, cash, market, YES, 1, claimTradingProceeds.address, sender = tester.k2)
     assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
-    finalizeMarket(kitchenSinkFixture, market, [0,10**4])
+    finalizeMarket(kitchenSinkFixture, market, [0, 0, 10**4])
 
     initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
     initialShortHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a2)
@@ -119,37 +119,27 @@ def test_redeem_shares_in_yesNo_market(kitchenSinkFixture, universe, cash, marke
     assert noShareToken.balanceOf(tester.a1) == 0
     assert noShareToken.balanceOf(tester.a2) == 0
 
-@mark.parametrize('isInvalid', [
-    True,
-    False
-])
-def test_redeem_shares_in_categorical_market(isInvalid, kitchenSinkFixture, universe, cash, categoricalMarket):
+def test_redeem_shares_in_categorical_market(kitchenSinkFixture, universe, cash, categoricalMarket):
     market = categoricalMarket
     claimTradingProceeds = kitchenSinkFixture.contracts['ClaimTradingProceeds']
     shareToken2 = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(2))
     shareToken1 = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(1))
     shareToken0 = kitchenSinkFixture.applySignature('ShareToken', market.getShareToken(0))
     numTicks = market.getNumTicks()
-    expectedValue = numTicks if not isInvalid else numTicks / 3
+    expectedValue = numTicks
     expectedSettlementFees = expectedValue * 0.02
     expectedPayout = long(expectedValue - expectedSettlementFees)
-    if (isInvalid):
-        expectedPayout += 1 # rounding errors
 
     assert universe.getOpenInterestInAttoEth() == 0
 
     # get long shares with a1
-    acquireLongShares(kitchenSinkFixture, cash, market, 2, 1, claimTradingProceeds.address, sender = tester.k1)
+    acquireLongShares(kitchenSinkFixture, cash, market, 3, 1, claimTradingProceeds.address, sender = tester.k1)
     assert universe.getOpenInterestInAttoEth() == 1 * numTicks
     # get short shares with a2
-    acquireShortShareSet(kitchenSinkFixture, cash, market, 2, 1, claimTradingProceeds.address, sender = tester.k2)
+    acquireShortShareSet(kitchenSinkFixture, cash, market, 3, 1, claimTradingProceeds.address, sender = tester.k2)
     assert universe.getOpenInterestInAttoEth() == 2 * numTicks
 
-    if (isInvalid):
-        invalidPayout = numTicks / 3
-        finalizeMarket(kitchenSinkFixture, market, [invalidPayout, invalidPayout, invalidPayout], True)
-    else:
-        finalizeMarket(kitchenSinkFixture, market, [0, 0, numTicks])
+    finalizeMarket(kitchenSinkFixture, market, [0, 0, 0, numTicks])
 
     assert universe.getOpenInterestInAttoEth() == 0
 
@@ -162,7 +152,7 @@ def test_redeem_shares_in_categorical_market(isInvalid, kitchenSinkFixture, univ
 
     # assert both accounts are paid (or not paid) accordingly
     assert kitchenSinkFixture.chain.head_state.get_balance(tester.a1) == initialLongHolderETH + expectedPayout
-    shortHolderPayout = 2 * expectedPayout if isInvalid else 0
+    shortHolderPayout = 0
     assert kitchenSinkFixture.chain.head_state.get_balance(tester.a2) == initialShortHolderETH + shortHolderPayout
     assert shareToken2.balanceOf(tester.a1) == 0
     assert shareToken2.balanceOf(tester.a2) == 0
@@ -188,7 +178,7 @@ def test_redeem_shares_in_scalar_market(kitchenSinkFixture, universe, cash, scal
     # get NO shares with a2
     acquireShortShareSet(kitchenSinkFixture, cash, market, YES, 1, claimTradingProceeds.address, sender = tester.k2)
     assert universe.getOpenInterestInAttoEth() == 2 * market.getNumTicks()
-    finalizeMarket(kitchenSinkFixture, market, [10**5, 3*10**5])
+    finalizeMarket(kitchenSinkFixture, market, [0, 10**5, 3*10**5])
 
     # redeem shares with a1
     initialLongHolderETH = kitchenSinkFixture.chain.head_state.get_balance(tester.a1)
@@ -215,7 +205,7 @@ def test_reedem_failure(kitchenSinkFixture, cash, market):
     # set timestamp to after market end
     kitchenSinkFixture.contracts["Time"].setTimestamp(market.getEndTime() + 1)
     # have tester.a0 subimt designated report (75% high, 25% low, range -10*10^18 to 30*10^18)
-    market.doInitialReport([0, 10**4], False, "")
+    market.doInitialReport([0, 0, 10000], "")
     # set timestamp to after designated dispute end
     disputeWindow = kitchenSinkFixture.applySignature('DisputeWindow', market.getDisputeWindow())
     kitchenSinkFixture.contracts["Time"].setTimestamp(disputeWindow.getEndTime() + 1)

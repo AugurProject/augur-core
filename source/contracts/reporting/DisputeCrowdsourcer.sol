@@ -11,7 +11,7 @@ import 'reporting/IUniverse.sol';
 contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseReportingParticipant, IDisputeCrowdsourcer, Initializable {
     IUniverse internal universe;
 
-    function initialize(IMarket _market, uint256 _size, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators, bool _invalid) public beforeInitialized returns (bool) {
+    function initialize(IMarket _market, uint256 _size, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators) public beforeInitialized returns (bool) {
         endInitialization();
         market = _market;
         universe = market.getUniverse();
@@ -19,7 +19,6 @@ contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseRepor
         size = _size;
         payoutNumerators = _payoutNumerators;
         payoutDistributionHash = _payoutDistributionHash;
-        invalid = _invalid;
         return true;
     }
 

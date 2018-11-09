@@ -439,7 +439,7 @@ contract MockUniverse is Initializable, IUniverse {
         return _newMarket;
     }
 
-    function createChildUniverse(uint256[] _parentPayoutNumerators, bool _parentInvalid) public returns (IUniverse) {
+    function createChildUniverse(uint256[] _parentPayoutNumerators) public returns (IUniverse) {
         return IUniverse(0);
     }
 

@@ -11,7 +11,7 @@ def test_is_known_universe(augur, universe):
 
 def test_known_universe_child_creation_failure(augur):
     with raises(TransactionFailed):
-        augur.createChildUniverse("", [0, 10000], False)
+        augur.createChildUniverse("", [0, 0, 10000])
 
 def test_trusted_transfer_amount_failure(augur):
     with raises(TransactionFailed):
@@ -25,10 +25,10 @@ def test_log_requires(augur, universe):
         augur.logMarketCreated("", "", "", augur.address, augur.address, augur.address, 0, 100, 0)
 
     with raises(TransactionFailed):
-        augur.logInitialReportSubmitted(universe.address, universe.address, universe.address, 1, False, [0, 10000], False)
+        augur.logInitialReportSubmitted(universe.address, universe.address, universe.address, 1, False, [0, 0, 10000])
 
     with raises(TransactionFailed):
-        augur.logInitialReportSubmitted(augur.address, augur.address, augur.address, 1, False, [0, 10000], False)
+        augur.logInitialReportSubmitted(augur.address, augur.address, augur.address, 1, False, [0, 0, 10000])
 
 @pytest_fixture(scope="session")
 def localSnapshot(fixture, kitchenSinkSnapshot):
