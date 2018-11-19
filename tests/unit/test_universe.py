@@ -4,15 +4,10 @@ from utils import longToHexString, stringToBytes, twentyZeros, thirtyTwoZeros, b
 from pytest import fixture, raises
 
 def test_universe_creation(localFixture, mockReputationToken, mockReputationTokenFactory, mockUniverse, mockUniverseFactory, mockAugur):
-    universe = localFixture.upload('../source/contracts/reporting/Universe.sol', 'newUniverse')
-
-    with raises(TransactionFailed, message="reputation token can not be address 0"):
-        universe.initialize(mockUniverse.address, stringToBytes("5"))
-
     mockReputationTokenFactory.setCreateReputationTokenValue(mockReputationToken.address)
 
-    universe.setController(localFixture.contracts['Controller'].address)
-    assert universe.initialize(mockUniverse.address, stringToBytes("5"))
+    universe = localFixture.upload('../source/contracts/reporting/Universe.sol', 'newUniverse', constructorArgs=[localFixture.contracts['Controller'].address, mockUniverse.address, stringToBytes("5")])
+
     assert universe.getReputationToken() == mockReputationToken.address
     assert universe.getParentUniverse() == mockUniverse.address
     assert universe.getParentPayoutDistributionHash() == stringToBytes("5")
@@ -216,12 +211,10 @@ def localSnapshot(fixture, augurInitializedWithMocksSnapshot):
 
     mockReputationToken = fixture.contracts['MockReputationToken']
     mockUniverse = fixture.contracts['MockUniverse']
-
-    universe = fixture.upload('../source/contracts/reporting/Universe.sol', 'universe')
-    fixture.contracts['populatedUniverse'] = universe
     mockReputationTokenFactory.setCreateReputationTokenValue(mockReputationToken.address)
-    universe.setController(fixture.contracts['Controller'].address)
-    assert universe.initialize(mockUniverse.address, stringToBytes("5"))
+
+    universe = fixture.upload('../source/contracts/reporting/Universe.sol', 'universe', constructorArgs=[fixture.contracts['Controller'].address, mockUniverse.address, stringToBytes("5")])
+    fixture.contracts['populatedUniverse'] = universe
 
     return fixture.createSnapshot()
 
