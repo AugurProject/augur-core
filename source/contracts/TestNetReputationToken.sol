@@ -12,7 +12,7 @@ contract TestNetReputationToken is ReputationToken {
     uint256 private constant DEFAULT_FAUCET_AMOUNT = 47 ether;
     address private constant FOUNDATION_REP_ADDRESS = address(0x1985365e9f78359a9B6AD760e32412f4a445E862);
 
-    constructor(IController _controller, IUniverse _universe, IUniverse _parentUniverse) ReputationToken(_controller, _universe, _parentUniverse) {
+    constructor(IController _controller, IUniverse _universe, IUniverse _parentUniverse) ReputationToken(_controller, _universe, _parentUniverse) public {
         // This is to confirm we are not on foundation network
         require(!FOUNDATION_REP_ADDRESS.exists());
     }

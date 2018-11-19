@@ -23,7 +23,7 @@ contract ReputationToken is Controlled, ITyped, VariableSupplyToken, IV2Reputati
     uint256 internal totalMigrated;
     uint256 internal totalTheoreticalSupply;
 
-    constructor(IController _controller, IUniverse _universe, IUniverse _parentUniverse) {
+    constructor(IController _controller, IUniverse _universe, IUniverse _parentUniverse) public {
         require(_universe != address(0));
         controller = _controller;
         universe = _universe;

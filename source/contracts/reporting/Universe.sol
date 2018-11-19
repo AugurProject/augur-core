@@ -43,7 +43,7 @@ contract Universe is Controlled, ITyped, IUniverse {
     mapping (address => uint256) private designatedReportNoShowBondInAttoRep;
     mapping (address => uint256) private shareSettlementFeeDivisor;
 
-    constructor(IController _controller, IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) {
+    constructor(IController _controller, IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) public {
         controller = _controller;
         parentUniverse = _parentUniverse;
         parentPayoutDistributionHash = _parentPayoutDistributionHash;

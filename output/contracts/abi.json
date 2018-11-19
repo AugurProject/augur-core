@@ -3890,25 +3890,6 @@
 			"constant": false,
 			"inputs": [
 				{
-					"name": "_universe",
-					"type": "address"
-				}
-			],
-			"name": "initialize",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
 					"name": "_spender",
 					"type": "address"
 				},
@@ -3999,20 +3980,6 @@
 			"type": "function"
 		},
 		{
-			"constant": true,
-			"inputs": [],
-			"name": "getInitialized",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "view",
-			"type": "function"
-		},
-		{
 			"constant": false,
 			"inputs": [
 				{
@@ -4067,7 +4034,20 @@
 			"type": "function"
 		},
 		{
-			"inputs": [],
+			"inputs": [
+				{
+					"name": "_controller",
+					"type": "address"
+				},
+				{
+					"name": "_universe",
+					"type": "address"
+				},
+				{
+					"name": "_parentUniverse",
+					"type": "address"
+				}
+			],
 			"payable": false,
 			"stateMutability": "nonpayable",
 			"type": "constructor"
@@ -4365,6 +4345,10 @@
 				{
 					"name": "_universe",
 					"type": "address"
+				},
+				{
+					"name": "_reputationToken",
+					"type": "address"
 				}
 			],
 			"name": "createAuction",
@@ -4621,6 +4605,10 @@
 				{
 					"name": "_universe",
 					"type": "address"
+				},
+				{
+					"name": "_parentUniverse",
+					"type": "address"
 				}
 			],
 			"name": "createReputationToken",
@@ -4653,6 +4641,35 @@
 				}
 			],
 			"name": "createShareToken",
+			"outputs": [
+				{
+					"name": "",
+					"type": "address"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		}
+	],
+	"TestNetReputationTokenFactory": [
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_controller",
+					"type": "address"
+				},
+				{
+					"name": "_universe",
+					"type": "address"
+				},
+				{
+					"name": "_parentUniverse",
+					"type": "address"
+				}
+			],
+			"name": "createReputationToken",
 			"outputs": [
 				{
 					"name": "",
@@ -5551,25 +5568,6 @@
 			"constant": false,
 			"inputs": [
 				{
-					"name": "_universe",
-					"type": "address"
-				}
-			],
-			"name": "initialize",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
 					"name": "_feeAmount",
 					"type": "uint256"
 				}
@@ -5619,18 +5617,23 @@
 			"type": "function"
 		},
 		{
-			"constant": true,
-			"inputs": [],
-			"name": "getInitialized",
-			"outputs": [
+			"inputs": [
 				{
-					"name": "",
-					"type": "bool"
+					"name": "_controller",
+					"type": "address"
+				},
+				{
+					"name": "_universe",
+					"type": "address"
+				},
+				{
+					"name": "_reputationToken",
+					"type": "address"
 				}
 			],
 			"payable": false,
-			"stateMutability": "view",
-			"type": "function"
+			"stateMutability": "nonpayable",
+			"type": "constructor"
 		}
 	],
 	"AuctionToken": [
@@ -8772,25 +8775,6 @@
 			"constant": false,
 			"inputs": [
 				{
-					"name": "_universe",
-					"type": "address"
-				}
-			],
-			"name": "initialize",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
-			"constant": false,
-			"inputs": [
-				{
 					"name": "_spender",
 					"type": "address"
 				},
@@ -8881,20 +8865,6 @@
 			"type": "function"
 		},
 		{
-			"constant": true,
-			"inputs": [],
-			"name": "getInitialized",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "view",
-			"type": "function"
-		},
-		{
 			"constant": false,
 			"inputs": [
 				{
@@ -8947,6 +8917,25 @@
 			"payable": false,
 			"stateMutability": "nonpayable",
 			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"name": "_controller",
+					"type": "address"
+				},
+				{
+					"name": "_universe",
+					"type": "address"
+				},
+				{
+					"name": "_parentUniverse",
+					"type": "address"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "constructor"
 		},
 		{
 			"anonymous": false,
@@ -9766,29 +9755,6 @@
 			"type": "function"
 		},
 		{
-			"constant": false,
-			"inputs": [
-				{
-					"name": "_parentUniverse",
-					"type": "address"
-				},
-				{
-					"name": "_parentPayoutDistributionHash",
-					"type": "bytes32"
-				}
-			],
-			"name": "initialize",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "function"
-		},
-		{
 			"constant": true,
 			"inputs": [],
 			"name": "isForking",
@@ -9923,20 +9889,6 @@
 				{
 					"name": "",
 					"type": "address"
-				}
-			],
-			"payable": false,
-			"stateMutability": "view",
-			"type": "function"
-		},
-		{
-			"constant": true,
-			"inputs": [],
-			"name": "getInitialized",
-			"outputs": [
-				{
-					"name": "",
-					"type": "bool"
 				}
 			],
 			"payable": false,
@@ -10087,6 +10039,25 @@
 			"payable": false,
 			"stateMutability": "nonpayable",
 			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"name": "_controller",
+					"type": "address"
+				},
+				{
+					"name": "_parentUniverse",
+					"type": "address"
+				},
+				{
+					"name": "_parentPayoutDistributionHash",
+					"type": "bytes32"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "constructor"
 		}
 	],
 	"CancelOrder": [

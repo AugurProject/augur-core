@@ -176,10 +176,14 @@ Deploying to: ${networkConfiguration.networkName}
         if (contractName === 'Controller') return;
         if (contractName === 'Delegator') return;
         if (contractName === 'TimeControlled') return;
-        if (contractName === 'TestNetReputationToken') return;
+        if (contractName === 'TestNetReputationTokenFactory') return;
         if (contractName === 'Augur') return;
+        if (contractName === 'Universe') return;
+        if (contractName === 'Auction') return;
+        if (contractName === 'ReputationToken') return;
+        if (contractName === 'TestNetReputationToken') return;
         if (contractName === 'Time') contract = this.configuration.useNormalTime ? contract : this.contracts.get('TimeControlled');
-        if (contractName === 'ReputationToken') contract = this.configuration.isProduction ? contract : this.contracts.get('TestNetReputationToken');
+        if (contractName === 'ReputationTokenFactory') contract = this.configuration.isProduction ? contract : this.contracts.get('TestNetReputationTokenFactory');
         if (contract.relativeFilePath.startsWith('legacy_reputation/')) return;
         if (this.configuration.isProduction && contractName === 'LegacyReputationToken') return;
         if (contractName !== 'Map' && contract.relativeFilePath.startsWith('libraries/')) return;
