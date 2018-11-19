@@ -2,7 +2,6 @@ pragma solidity 0.4.24;
 
 import 'Controlled.sol';
 import 'reporting/IAuction.sol';
-import 'libraries/Initializable.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IV2ReputationToken.sol';
 import 'reporting/IReputationToken.sol';
@@ -13,7 +12,7 @@ import 'reporting/IAuctionToken.sol';
 import 'factories/AuctionTokenFactory.sol';
 
 
-contract Auction is Controlled, Initializable, IAuction {
+contract Auction is Controlled, IAuction {
     using SafeMathUint256 for uint256;
 
     enum RoundType {
@@ -52,11 +51,10 @@ contract Auction is Controlled, Initializable, IAuction {
         _;
     }
 
-    function initialize(IUniverse _universe) public beforeInitialized returns (bool) {
-        endInitialization();
-        require(_universe != address(0));
+    constructor(IController _controller, IUniverse _universe, IReputationToken _reputationToken) public {
+        controller = _controller;
         universe = _universe;
-        reputationToken = IV2ReputationToken(universe.getReputationToken());
+        reputationToken = IV2ReputationToken(_reputationToken);
         cash = ICash(controller.lookup("Cash"));
         auctionTokenFactory = AuctionTokenFactory(controller.lookup("AuctionTokenFactory"));
         initializationTime = controller.getTimestamp();
@@ -65,7 +63,6 @@ contract Auction is Controlled, Initializable, IAuction {
         lastRepPrice = manualRepPriceInAttoEth;
         repPrice = manualRepPriceInAttoEth;
         bootstrapMode = true;
-        return true;
     }
 
     function initializeNewAuction() public returns (bool) {
@@ -264,25 +261,25 @@ contract Auction is Controlled, Initializable, IAuction {
         return _weekStart.add(_addedTime.mul(Reporting.getAuctionDuration()));
     }
 
-    function getUniverse() public view afterInitialized returns (IUniverse) {
+    function getUniverse() public view returns (IUniverse) {
         return universe;
     }
 
-    function getReputationToken() public view afterInitialized returns (IReputationToken) {
+    function getReputationToken() public view returns (IReputationToken) {
         return IReputationToken(reputationToken);
     }
 
-    function setRepPriceInAttoEth(uint256 _repPriceInAttoEth) external afterInitialized onlyAuthorizedPriceFeeder returns (bool) {
+    function setRepPriceInAttoEth(uint256 _repPriceInAttoEth) external onlyAuthorizedPriceFeeder returns (bool) {
         manualRepPriceInAttoEth = _repPriceInAttoEth;
         return true;
     }
 
-    function addAuthorizedPriceFeeder(address _priceFeeder) public afterInitialized onlyKeyHolder returns (bool) {
+    function addAuthorizedPriceFeeder(address _priceFeeder) public onlyKeyHolder returns (bool) {
         authorizedPriceFeeders[_priceFeeder] = true;
         return true;
     }
 
-    function removeAuthorizedPriceFeeder(address _priceFeeder) public afterInitialized onlyKeyHolder returns (bool) {
+    function removeAuthorizedPriceFeeder(address _priceFeeder) public onlyKeyHolder returns (bool) {
         authorizedPriceFeeders[_priceFeeder] = false;
         return true;
     }

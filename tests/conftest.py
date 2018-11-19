@@ -249,6 +249,14 @@ class ContractsFixture:
         self.contracts['Controller'].registerContract(lookupKey.ljust(32, '\x00'), contract.address)
         return(contract)
 
+    def generateAndStoreSignature(self, relativePath):
+        key = path.splitext(path.basename(relativePath))[0]
+        resolvedPath = resolveRelativePath(relativePath)
+        if self.coverageMode:
+            resolvedPath = resolvedPath.replace("tests", "coverageEnv").replace("source/", "coverageEnv/")
+        if key not in ContractsFixture.signatures:
+            ContractsFixture.signatures[key] = self.generateSignature(resolvedPath)
+
     def upload(self, relativeFilePath, lookupKey = None, signatureKey = None, constructorArgs=[]):
         resolvedPath = resolveRelativePath(relativeFilePath)
         if self.coverageMode:
@@ -319,8 +327,14 @@ class ContractsFixture:
                 if name == 'controller': continue
                 if name == 'Augur': continue
                 if name == 'Time': continue # In testing and development we swap the Time library for a ControlledTime version which lets us manage block timestamp
+                if name == 'ReputationTokenFactory': continue # In testing adn development we use the TestNetReputationTokenFactory which lets us faucet
+                onlySignatures = ["Auction", "ReputationToken", "TestNetReputationToken", "Universe"]
+                if name in onlySignatures:
+                    self.generateAndStoreSignature(path.join(directory, filename))
                 elif name == "TimeControlled":
                     self.uploadAndAddToController(path.join(directory, filename), lookupKey = "Time", signatureKey = "TimeControlled")
+                elif name == "TestNetReputationTokenFactory":
+                    self.uploadAndAddToController(path.join(directory, filename), lookupKey = "ReputationTokenFactory", signatureKey = "TestNetReputationTokenFactory")
                 else:
                     self.uploadAndAddToController(path.join(directory, filename))
 

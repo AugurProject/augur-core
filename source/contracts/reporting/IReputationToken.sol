@@ -6,7 +6,6 @@ import 'reporting/IUniverse.sol';
 
 
 contract IReputationToken is ITyped, ERC20 {
-    function initialize(IUniverse _universe) public returns (bool);
     function migrateOut(IReputationToken _destination, uint256 _attotokens) public returns (bool);
     function migrateIn(address _reporter, uint256 _attotokens) public returns (bool);
     function trustedReportingParticipantTransfer(address _source, address _destination, uint256 _attotokens) public returns (bool);

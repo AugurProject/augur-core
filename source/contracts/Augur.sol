@@ -3,7 +3,7 @@ pragma solidity 0.4.24;
 import 'Controlled.sol';
 import 'IAugur.sol';
 import 'libraries/token/ERC20.sol';
-import 'factories/UniverseFactory.sol';
+import 'factories/IUniverseFactory.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IDisputeWindow.sol';
@@ -80,7 +80,7 @@ contract Augur is Controlled, IAugur {
     }
 
     function createUniverse(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash, uint256[] _parentPayoutNumerators) private returns (IUniverse) {
-        UniverseFactory _universeFactory = UniverseFactory(controller.lookup("UniverseFactory"));
+        IUniverseFactory _universeFactory = IUniverseFactory(controller.lookup("UniverseFactory"));
         IUniverse _newUniverse = _universeFactory.createUniverse(controller, _parentUniverse, _parentPayoutDistributionHash);
         universes[_newUniverse] = true;
         emit UniverseCreated(_parentUniverse, _newUniverse, _parentPayoutNumerators);

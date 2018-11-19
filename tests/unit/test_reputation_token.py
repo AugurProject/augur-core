@@ -5,12 +5,8 @@ from pytest import fixture, raises
 from ethereum.tools.tester import ABIContract, TransactionFailed
 
 def test_reputation_token_creation(localFixture, mockUniverse):
-    reputationToken = localFixture.upload('../source/contracts/reporting/ReputationToken.sol', 'reputationToken')
-    reputationToken.setController(localFixture.contracts['Controller'].address)
-    with raises(TransactionFailed, message="universe has to have address"):
-        reputationToken.initialize(longToHexString(0))
+    reputationToken = localFixture.upload('../source/contracts/reporting/ReputationToken.sol', 'reputationToken', constructorArgs=[localFixture.contracts['Controller'].address, mockUniverse.address, mockUniverse.address])
 
-    assert reputationToken.initialize(mockUniverse.address)
     assert reputationToken.getTypeName() == stringToBytes('ReputationToken')
     assert reputationToken.getUniverse() == mockUniverse.address
 
@@ -120,9 +116,7 @@ def mockAugur(localFixture):
 
 @fixture
 def initializedReputationToken(localFixture, mockUniverse, mockLegacyReputationToken):
-    reputationToken = localFixture.upload('../source/contracts/reporting/ReputationToken.sol', 'reputationToken')
-    reputationToken.setController(localFixture.contracts['Controller'].address)
-    assert reputationToken.initialize(mockUniverse.address)
+    reputationToken = localFixture.upload('../source/contracts/reporting/ReputationToken.sol', 'reputationToken', constructorArgs=[localFixture.contracts['Controller'].address, mockUniverse.address, mockUniverse.address])
     totalSupply = 11 * 10**6 * 10**18
     assert mockLegacyReputationToken.faucet(totalSupply)
     assert mockLegacyReputationToken.approve(reputationToken.address, totalSupply)

@@ -27,9 +27,16 @@ CREATE_ORDER =      589746
 FILL_ORDER =        704307
 CLAIM_PROCEEDS =    1090946
 
+# Other
+UNIVERSE_CREATE =   631183
+
 pytestmark = mark.skip(reason="Just for testing gas cost")
 
 tester.STARTGAS = long(6.7 * 10**6)
+
+def test_universe_creation(localFixture, augur):
+    with PrintGasUsed(localFixture, "UNIVERSE_CREATE", UNIVERSE_CREATE):
+        augur.createGenesisUniverse()
 
 def test_disputeWindowCreation(localFixture, universe, cash):
     endTime = long(localFixture.chain.head_state.timestamp + timedelta(days=365).total_seconds())

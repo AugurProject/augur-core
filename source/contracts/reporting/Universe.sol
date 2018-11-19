@@ -4,11 +4,10 @@ pragma solidity 0.4.24;
 import 'reporting/IUniverse.sol';
 import 'Controlled.sol';
 import 'libraries/ITyped.sol';
-import 'libraries/Initializable.sol';
-import 'factories/ReputationTokenFactory.sol';
+import 'factories/IReputationTokenFactory.sol';
 import 'factories/DisputeWindowFactory.sol';
 import 'factories/MarketFactory.sol';
-import 'factories/AuctionFactory.sol';
+import 'factories/IAuctionFactory.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IReputationToken.sol';
 import 'reporting/IAuction.sol';
@@ -19,7 +18,7 @@ import 'libraries/math/SafeMathUint256.sol';
 import 'IAugur.sol';
 
 
-contract Universe is Controlled, ITyped, Initializable, IUniverse {
+contract Universe is Controlled, ITyped, IUniverse {
     using SafeMathUint256 for uint256;
 
     IUniverse private parentUniverse;
@@ -44,18 +43,17 @@ contract Universe is Controlled, ITyped, Initializable, IUniverse {
     mapping (address => uint256) private designatedReportNoShowBondInAttoRep;
     mapping (address => uint256) private shareSettlementFeeDivisor;
 
-    function initialize(IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) external beforeInitialized returns (bool) {
-        endInitialization();
+    constructor(IController _controller, IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) {
+        controller = _controller;
         parentUniverse = _parentUniverse;
         parentPayoutDistributionHash = _parentPayoutDistributionHash;
-        reputationToken = ReputationTokenFactory(controller.lookup("ReputationTokenFactory")).createReputationToken(controller, this);
-        auction = AuctionFactory(controller.lookup("AuctionFactory")).createAuction(controller, this);
+        reputationToken = IReputationTokenFactory(controller.lookup("ReputationTokenFactory")).createReputationToken(controller, this, parentUniverse);
+        auction = IAuctionFactory(controller.lookup("AuctionFactory")).createAuction(controller, this, reputationToken);
         updateForkValues();
         require(reputationToken != address(0));
-        return true;
     }
 
-    function fork() public afterInitialized returns (bool) {
+    function fork() public returns (bool) {
         require(!isForking());
         require(isContainerForMarket(IMarket(msg.sender)));
         forkingMarket = IMarket(msg.sender);
@@ -427,21 +425,21 @@ contract Universe is Controlled, ITyped, Initializable, IUniverse {
         return getOrCacheDesignatedReportNoShowBond().max(getOrCacheDesignatedReportStake());
     }
 
-    function createYesNoMarket(uint256 _endTime, uint256 _feePerEthInWei, address _designatedReporterAddress, bytes32 _topic, string _description, string _extraInfo) public afterInitialized payable returns (IMarket _newMarket) {
+    function createYesNoMarket(uint256 _endTime, uint256 _feePerEthInWei, address _designatedReporterAddress, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
         require(bytes(_description).length > 0);
         _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _designatedReporterAddress, msg.sender, 2, 10000);
         controller.getAugur().logMarketCreated(_topic, _description, _extraInfo, this, _newMarket, msg.sender, 0, 1 ether, IMarket.MarketType.YES_NO);
         return _newMarket;
     }
 
-    function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, address _designatedReporterAddress, bytes32[] _outcomes, bytes32 _topic, string _description, string _extraInfo) public afterInitialized payable returns (IMarket _newMarket) {
+    function createCategoricalMarket(uint256 _endTime, uint256 _feePerEthInWei, address _designatedReporterAddress, bytes32[] _outcomes, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
         require(bytes(_description).length > 0);
         _newMarket = createMarketInternal(_endTime, _feePerEthInWei, _designatedReporterAddress, msg.sender, uint256(_outcomes.length), 10000);
         controller.getAugur().logMarketCreated(_topic, _description, _extraInfo, this, _newMarket, msg.sender, _outcomes, 0, 1 ether, IMarket.MarketType.CATEGORICAL);
         return _newMarket;
     }
 
-    function createScalarMarket(uint256 _endTime, uint256 _feePerEthInWei, address _designatedReporterAddress, int256 _minPrice, int256 _maxPrice, uint256 _numTicks, bytes32 _topic, string _description, string _extraInfo) public afterInitialized payable returns (IMarket _newMarket) {
+    function createScalarMarket(uint256 _endTime, uint256 _feePerEthInWei, address _designatedReporterAddress, int256 _minPrice, int256 _maxPrice, uint256 _numTicks, bytes32 _topic, string _description, string _extraInfo) public payable returns (IMarket _newMarket) {
         require(bytes(_description).length > 0);
         require(_minPrice < _maxPrice);
         require(_numTicks.isMultipleOf(2));
@@ -450,7 +448,7 @@ contract Universe is Controlled, ITyped, Initializable, IUniverse {
         return _newMarket;
     }
 
-    function createMarketInternal(uint256 _endTime, uint256 _feePerEthInWei, address _designatedReporterAddress, address _sender, uint256 _numOutcomes, uint256 _numTicks) private afterInitialized returns (IMarket _newMarket) {
+    function createMarketInternal(uint256 _endTime, uint256 _feePerEthInWei, address _designatedReporterAddress, address _sender, uint256 _numOutcomes, uint256 _numTicks) private returns (IMarket _newMarket) {
         MarketFactory _marketFactory = MarketFactory(controller.lookup("MarketFactory"));
         getReputationToken().trustedUniverseTransfer(_sender, _marketFactory, getOrCacheDesignatedReportNoShowBond());
         _newMarket = _marketFactory.createMarket.value(msg.value)(controller, this, _endTime, _feePerEthInWei, _designatedReporterAddress, _sender, _numOutcomes, _numTicks);
