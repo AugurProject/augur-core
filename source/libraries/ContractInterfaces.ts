@@ -2315,6 +2315,20 @@
             return <BN>result[0];
         }
 
+        public initialize = async(universe: string, reputationToken: string, options?: { sender?: string, gasPrice?: BN }): Promise<void> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_reputationToken","type":"address"}],"name":"initialize","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            await this.remoteCall(abi, [universe, reputationToken], "initialize", options.sender, options.gasPrice);
+            return;
+        }
+
+        public initialize_ = async(universe: string, reputationToken: string, options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_universe","type":"address"},{"name":"_reputationToken","type":"address"}],"name":"initialize","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
+            const result = await this.localCall(abi, [universe, reputationToken], options.sender);
+            return <boolean>result[0];
+        }
+
         public auctionTokenFactory_ = async( options?: { sender?: string }): Promise<string> => {
             options = options || {};
             const abi: AbiFunction = {"constant":true,"inputs":[],"name":"auctionTokenFactory","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"};
@@ -2536,6 +2550,13 @@
             options = options || {};
             const abi: AbiFunction = {"constant":false,"inputs":[{"name":"_priceFeeder","type":"address"}],"name":"addAuthorizedPriceFeeder","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"};
             const result = await this.localCall(abi, [priceFeeder], options.sender);
+            return <boolean>result[0];
+        }
+
+        public getInitialized_ = async( options?: { sender?: string }): Promise<boolean> => {
+            options = options || {};
+            const abi: AbiFunction = {"constant":true,"inputs":[],"name":"getInitialized","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"};
+            const result = await this.localCall(abi, [], options.sender);
             return <boolean>result[0];
         }
     }

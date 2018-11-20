@@ -328,7 +328,7 @@ class ContractsFixture:
                 if name == 'Augur': continue
                 if name == 'Time': continue # In testing and development we swap the Time library for a ControlledTime version which lets us manage block timestamp
                 if name == 'ReputationTokenFactory': continue # In testing adn development we use the TestNetReputationTokenFactory which lets us faucet
-                onlySignatures = ["Auction", "ReputationToken", "TestNetReputationToken", "Universe"]
+                onlySignatures = ["ReputationToken", "TestNetReputationToken", "Universe"]
                 if name in onlySignatures:
                     self.generateAndStoreSignature(path.join(directory, filename))
                 elif name == "TimeControlled":

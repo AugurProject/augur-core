@@ -5237,6 +5237,29 @@
 			"type": "function"
 		},
 		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_universe",
+					"type": "address"
+				},
+				{
+					"name": "_reputationToken",
+					"type": "address"
+				}
+			],
+			"name": "initialize",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
 			"constant": true,
 			"inputs": [],
 			"name": "auctionTokenFactory",
@@ -5617,23 +5640,18 @@
 			"type": "function"
 		},
 		{
-			"inputs": [
+			"constant": true,
+			"inputs": [],
+			"name": "getInitialized",
+			"outputs": [
 				{
-					"name": "_controller",
-					"type": "address"
-				},
-				{
-					"name": "_universe",
-					"type": "address"
-				},
-				{
-					"name": "_reputationToken",
-					"type": "address"
+					"name": "",
+					"type": "bool"
 				}
 			],
 			"payable": false,
-			"stateMutability": "nonpayable",
-			"type": "constructor"
+			"stateMutability": "view",
+			"type": "function"
 		}
 	],
 	"AuctionToken": [

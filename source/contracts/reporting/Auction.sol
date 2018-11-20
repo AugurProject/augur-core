@@ -3,6 +3,7 @@ pragma solidity 0.4.24;
 import 'Controlled.sol';
 import 'reporting/IAuction.sol';
 import 'reporting/IUniverse.sol';
+import 'libraries/Initializable.sol';
 import 'reporting/IV2ReputationToken.sol';
 import 'reporting/IReputationToken.sol';
 import 'libraries/math/SafeMathUint256.sol';
@@ -12,7 +13,7 @@ import 'reporting/IAuctionToken.sol';
 import 'factories/AuctionTokenFactory.sol';
 
 
-contract Auction is Controlled, IAuction {
+contract Auction is Controlled, Initializable, IAuction {
     using SafeMathUint256 for uint256;
 
     enum RoundType {
@@ -51,8 +52,8 @@ contract Auction is Controlled, IAuction {
         _;
     }
 
-    constructor(IController _controller, IUniverse _universe, IReputationToken _reputationToken) public {
-        controller = _controller;
+    function initialize(IUniverse _universe, IReputationToken _reputationToken) public beforeInitialized returns (bool) {
+        endInitialization();
         universe = _universe;
         reputationToken = IV2ReputationToken(_reputationToken);
         cash = ICash(controller.lookup("Cash"));
@@ -63,6 +64,7 @@ contract Auction is Controlled, IAuction {
         lastRepPrice = manualRepPriceInAttoEth;
         repPrice = manualRepPriceInAttoEth;
         bootstrapMode = true;
+        return true;
     }
 
     function initializeNewAuction() public returns (bool) {

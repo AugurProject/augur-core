@@ -98,9 +98,11 @@ Deploying to: ${networkConfiguration.networkName}
         for (let contract of this.contracts) {
             if (/^I[A-Z].*/.test(contract.contractName)) continue;
             if (contract.contractName === 'TimeControlled') continue;
-            if (contract.contractName === 'TestNetReputationTokenFactory') continue;
+            if (contract.contractName === 'Universe') continue;
+            if (contract.contractName === 'ReputationToken') continue;
+            if (contract.contractName === 'TestNetReputationToken') continue;
             if (contract.contractName === 'Time') contract = this.configuration.useNormalTime ? contract: this.contracts.get('TimeControlled');
-            if (contract.contractName === 'ReputationTokenFactory') contract = this.configuration.isProduction ? contract : this.contracts.get('TestNetReputationTokenFactory');
+            if (contract.contractName === 'ReputationTokenFactory') contract = this.configuration.useNormalTime ? contract: this.contracts.get('TestNetReputationTokenFactory');
             if (contract.relativeFilePath.startsWith('legacy_reputation/')) continue;
             if (contract.relativeFilePath.startsWith('external/')) continue;
             if (contract.contractName !== 'Map' && contract.relativeFilePath.startsWith('libraries/')) continue;
@@ -179,7 +181,6 @@ Deploying to: ${networkConfiguration.networkName}
         if (contractName === 'TestNetReputationTokenFactory') return;
         if (contractName === 'Augur') return;
         if (contractName === 'Universe') return;
-        if (contractName === 'Auction') return;
         if (contractName === 'ReputationToken') return;
         if (contractName === 'TestNetReputationToken') return;
         if (contractName === 'Time') contract = this.configuration.useNormalTime ? contract : this.contracts.get('TimeControlled');
