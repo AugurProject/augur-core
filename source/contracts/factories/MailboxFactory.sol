@@ -1,15 +1,16 @@
 pragma solidity 0.4.24;
 
-import 'libraries/Delegator.sol';
+import 'libraries/CloneFactory.sol';
 import 'IController.sol';
 import 'reporting/IMailbox.sol';
 import 'reporting/IMarket.sol';
+import 'IControlled.sol';
 
 
-contract MailboxFactory {
+contract MailboxFactory is CloneFactory {
     function createMailbox(IController _controller, address _owner, IMarket _market) public returns (IMailbox) {
-        Delegator _delegator = new Delegator(_controller, "Mailbox");
-        IMailbox _mailbox = IMailbox(_delegator);
+        IMailbox _mailbox = IMailbox(createClone(_controller.lookup("Mailbox")));
+        IControlled(_mailbox).setController(_controller);
         _mailbox.initialize(_owner, _market);
         return _mailbox;
     }

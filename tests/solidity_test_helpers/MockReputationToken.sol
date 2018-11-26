@@ -1,7 +1,7 @@
 pragma solidity ^0.4.24;
 
 import 'reporting/IReputationToken.sol';
-import 'libraries/DelegationTarget.sol';
+import 'Controlled.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'libraries/token/ERC20.sol';
@@ -12,7 +12,7 @@ import 'libraries/math/SafeMathUint256.sol';
 import 'TEST/MockVariableSupplyToken.sol';
 
 
-contract MockReputationToken is DelegationTarget, ITyped, Initializable, MockVariableSupplyToken, IReputationToken {
+contract MockReputationToken is Controlled, ITyped, Initializable, MockVariableSupplyToken, IReputationToken {
     using SafeMathUint256 for uint256;
 
     bool private setMigrateOutValue;

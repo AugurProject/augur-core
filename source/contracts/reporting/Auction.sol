@@ -1,9 +1,9 @@
 pragma solidity 0.4.24;
 
-import 'libraries/DelegationTarget.sol';
+import 'Controlled.sol';
 import 'reporting/IAuction.sol';
-import 'libraries/Initializable.sol';
 import 'reporting/IUniverse.sol';
+import 'libraries/Initializable.sol';
 import 'reporting/IV2ReputationToken.sol';
 import 'reporting/IReputationToken.sol';
 import 'libraries/math/SafeMathUint256.sol';
@@ -13,7 +13,7 @@ import 'reporting/IAuctionToken.sol';
 import 'factories/AuctionTokenFactory.sol';
 
 
-contract Auction is DelegationTarget, Initializable, IAuction {
+contract Auction is Controlled, Initializable, IAuction {
     using SafeMathUint256 for uint256;
 
     enum RoundType {
@@ -52,11 +52,10 @@ contract Auction is DelegationTarget, Initializable, IAuction {
         _;
     }
 
-    function initialize(IUniverse _universe) public beforeInitialized returns (bool) {
+    function initialize(IUniverse _universe, IReputationToken _reputationToken) public beforeInitialized returns (bool) {
         endInitialization();
-        require(_universe != address(0));
         universe = _universe;
-        reputationToken = IV2ReputationToken(universe.getReputationToken());
+        reputationToken = IV2ReputationToken(_reputationToken);
         cash = ICash(controller.lookup("Cash"));
         auctionTokenFactory = AuctionTokenFactory(controller.lookup("AuctionTokenFactory"));
         initializationTime = controller.getTimestamp();
@@ -264,25 +263,25 @@ contract Auction is DelegationTarget, Initializable, IAuction {
         return _weekStart.add(_addedTime.mul(Reporting.getAuctionDuration()));
     }
 
-    function getUniverse() public view afterInitialized returns (IUniverse) {
+    function getUniverse() public view returns (IUniverse) {
         return universe;
     }
 
-    function getReputationToken() public view afterInitialized returns (IReputationToken) {
+    function getReputationToken() public view returns (IReputationToken) {
         return IReputationToken(reputationToken);
     }
 
-    function setRepPriceInAttoEth(uint256 _repPriceInAttoEth) external afterInitialized onlyAuthorizedPriceFeeder returns (bool) {
+    function setRepPriceInAttoEth(uint256 _repPriceInAttoEth) external onlyAuthorizedPriceFeeder returns (bool) {
         manualRepPriceInAttoEth = _repPriceInAttoEth;
         return true;
     }
 
-    function addAuthorizedPriceFeeder(address _priceFeeder) public afterInitialized onlyKeyHolder returns (bool) {
+    function addAuthorizedPriceFeeder(address _priceFeeder) public onlyKeyHolder returns (bool) {
         authorizedPriceFeeders[_priceFeeder] = true;
         return true;
     }
 
-    function removeAuthorizedPriceFeeder(address _priceFeeder) public afterInitialized onlyKeyHolder returns (bool) {
+    function removeAuthorizedPriceFeeder(address _priceFeeder) public onlyKeyHolder returns (bool) {
         authorizedPriceFeeders[_priceFeeder] = false;
         return true;
     }

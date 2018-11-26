@@ -98,9 +98,11 @@ Deploying to: ${networkConfiguration.networkName}
         for (let contract of this.contracts) {
             if (/^I[A-Z].*/.test(contract.contractName)) continue;
             if (contract.contractName === 'TimeControlled') continue;
+            if (contract.contractName === 'Universe') continue;
+            if (contract.contractName === 'ReputationToken') continue;
             if (contract.contractName === 'TestNetReputationToken') continue;
             if (contract.contractName === 'Time') contract = this.configuration.useNormalTime ? contract: this.contracts.get('TimeControlled');
-            if (contract.contractName === 'ReputationToken') contract = this.configuration.isProduction ? contract : this.contracts.get('TestNetReputationToken');
+            if (contract.contractName === 'ReputationTokenFactory') contract = this.configuration.useNormalTime ? contract: this.contracts.get('TestNetReputationTokenFactory');
             if (contract.relativeFilePath.startsWith('legacy_reputation/')) continue;
             if (contract.relativeFilePath.startsWith('external/')) continue;
             if (contract.contractName !== 'Map' && contract.relativeFilePath.startsWith('libraries/')) continue;
@@ -172,29 +174,22 @@ Deploying to: ${networkConfiguration.networkName}
     }
 
     private async upload(contract: Contract): Promise<void> {
-        const contractsToDelegate: {[key:string]: boolean} = {"Orders": true, "TradingEscapeHatch": true, "Cash": true};
         const contractName = contract.contractName
         if (contractName === 'Controller') return;
         if (contractName === 'Delegator') return;
         if (contractName === 'TimeControlled') return;
-        if (contractName === 'TestNetReputationToken') return;
+        if (contractName === 'TestNetReputationTokenFactory') return;
         if (contractName === 'Augur') return;
+        if (contractName === 'Universe') return;
+        if (contractName === 'ReputationToken') return;
+        if (contractName === 'TestNetReputationToken') return;
         if (contractName === 'Time') contract = this.configuration.useNormalTime ? contract : this.contracts.get('TimeControlled');
-        if (contractName === 'ReputationToken') contract = this.configuration.isProduction ? contract : this.contracts.get('TestNetReputationToken');
+        if (contractName === 'ReputationTokenFactory') contract = this.configuration.isProduction ? contract : this.contracts.get('TestNetReputationTokenFactory');
         if (contract.relativeFilePath.startsWith('legacy_reputation/')) return;
         if (this.configuration.isProduction && contractName === 'LegacyReputationToken') return;
         if (contractName !== 'Map' && contract.relativeFilePath.startsWith('libraries/')) return;
         console.log(`Uploading new version of contract for ${contractName}`);
-        contract.address = contractsToDelegate[contractName]
-            ? await this.uploadAndAddDelegatedToController(contract)
-            : await this.uploadAndAddToController(contract, contractName);
-    }
-
-    private async uploadAndAddDelegatedToController(contract: Contract): Promise<string> {
-        const delegationTargetName = `${contract.contractName}Target`;
-        const delegatorConstructorArgs = [this.controller.address, stringTo32ByteHex(delegationTargetName)];
-        await this.uploadAndAddToController(contract, delegationTargetName);
-        return await this.uploadAndAddToController(this.contracts.get('Delegator'), contract.contractName, delegatorConstructorArgs);
+        contract.address = await this.uploadAndAddToController(contract, contractName);
     }
 
     private async uploadAndAddToController(contract: Contract, registrationContractName: string = contract.contractName, constructorArgs: Array<any> = []): Promise<string> {
@@ -240,7 +235,7 @@ Deploying to: ${networkConfiguration.networkName}
 
     private async initializeAllContracts(): Promise<void> {
         console.log('Initializing contracts...');
-        const contractsToInitialize = ["CompleteSets","CreateOrder","FillOrder","CancelOrder","Trade","ClaimTradingProceeds","OrdersFetcher","Time"];
+        const contractsToInitialize = ["CompleteSets","CreateOrder","FillOrder","CancelOrder","Trade","ClaimTradingProceeds","OrdersFetcher","Time","Cash","Orders"];
         const promises: Array<Promise<any>> = [];
         for (let contractName of contractsToInitialize) {
             promises.push(this.initializeContract(contractName));

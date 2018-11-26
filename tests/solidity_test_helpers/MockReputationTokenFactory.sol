@@ -18,7 +18,7 @@ contract MockReputationTokenFactory {
         createReputationTokenValue = _reputationTokenValue;
     }
 
-    function createReputationToken(IController _controller, IUniverse _universe) public returns (IReputationToken) {
+    function createReputationToken(IController _controller, IUniverse _universe, IUniverse _parentUniverse) public returns (IReputationToken) {
         createReputationTokenUniverseValue = _universe;
         return createReputationTokenValue;
     }

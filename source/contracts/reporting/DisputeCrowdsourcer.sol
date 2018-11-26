@@ -4,11 +4,11 @@ import 'reporting/IDisputeCrowdsourcer.sol';
 import 'libraries/token/VariableSupplyToken.sol';
 import 'reporting/BaseReportingParticipant.sol';
 import 'libraries/Initializable.sol';
-import 'libraries/DelegationTarget.sol';
+import 'Controlled.sol';
 import 'reporting/IUniverse.sol';
 
 
-contract DisputeCrowdsourcer is DelegationTarget, VariableSupplyToken, BaseReportingParticipant, IDisputeCrowdsourcer, Initializable {
+contract DisputeCrowdsourcer is Controlled, VariableSupplyToken, BaseReportingParticipant, IDisputeCrowdsourcer, Initializable {
     IUniverse internal universe;
 
     function initialize(IMarket _market, uint256 _size, bytes32 _payoutDistributionHash, uint256[] _payoutNumerators) public beforeInitialized returns (bool) {

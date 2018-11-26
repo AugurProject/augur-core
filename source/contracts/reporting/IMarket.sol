@@ -10,7 +10,6 @@ import 'reporting/IDisputeWindow.sol';
 import 'trading/IShareToken.sol';
 import 'reporting/IReportingParticipant.sol';
 import 'reporting/IReputationToken.sol';
-//import 'reporting/IInitialReporter.sol';
 import 'reporting/IMailbox.sol';
 
 

@@ -4,7 +4,7 @@ pragma solidity 0.4.24;
 
 
 import 'reporting/IDisputeWindow.sol';
-import 'libraries/DelegationTarget.sol';
+import 'Controlled.sol';
 import 'libraries/Initializable.sol';
 import 'reporting/IUniverse.sol';
 import 'reporting/IReputationToken.sol';
@@ -16,7 +16,7 @@ import 'libraries/math/SafeMathUint256.sol';
 import 'reporting/IDisputeWindow.sol';
 
 
-contract DisputeWindow is DelegationTarget, Initializable, IDisputeWindow {
+contract DisputeWindow is Controlled, Initializable, IDisputeWindow {
     using SafeMathUint256 for uint256;
 
     IUniverse private universe;

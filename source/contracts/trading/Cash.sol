@@ -4,14 +4,13 @@ import 'trading/ICash.sol';
 import 'Controlled.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/token/VariableSupplyToken.sol';
-import 'libraries/DelegationTarget.sol';
 
 
 /**
  * @title Cash
  * @dev ETH wrapper contract to make it look like an ERC20 token.
  */
-contract Cash is DelegationTarget, ITyped, VariableSupplyToken, ICash {
+contract Cash is Controlled, ITyped, VariableSupplyToken, ICash {
 
     string constant public name = "Cash";
     string constant public symbol = "CASH";

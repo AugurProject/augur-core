@@ -1,16 +1,11 @@
 pragma solidity 0.4.24;
 
-
-import 'libraries/Delegator.sol';
 import 'IController.sol';
-import 'reporting/IUniverse.sol';
+import 'reporting/Universe.sol';
 
 
 contract UniverseFactory {
     function createUniverse(IController _controller, IUniverse _parentUniverse, bytes32 _parentPayoutDistributionHash) public returns (IUniverse) {
-        Delegator _delegator = new Delegator(_controller, "Universe");
-        IUniverse _universe = IUniverse(_delegator);
-        _universe.initialize(_parentUniverse, _parentPayoutDistributionHash);
-        return _universe;
+        return IUniverse(new Universe(_controller, _parentUniverse, _parentPayoutDistributionHash));
     }
 }

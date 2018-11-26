@@ -2,14 +2,14 @@ pragma solidity 0.4.24;
 
 
 import 'trading/IShareToken.sol';
-import 'libraries/DelegationTarget.sol';
+import 'Controlled.sol';
 import 'libraries/token/VariableSupplyToken.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'reporting/IMarket.sol';
 
 
-contract ShareToken is DelegationTarget, ITyped, Initializable, VariableSupplyToken, IShareToken {
+contract ShareToken is Controlled, ITyped, Initializable, VariableSupplyToken, IShareToken {
 
     string constant public name = "Shares";
     uint8 constant public decimals = 0;

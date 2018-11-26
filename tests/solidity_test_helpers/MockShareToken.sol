@@ -2,14 +2,14 @@ pragma solidity 0.4.24;
 
 
 import 'trading/IShareToken.sol';
-import 'libraries/DelegationTarget.sol';
+import 'Controlled.sol';
 import 'libraries/ITyped.sol';
 import 'libraries/Initializable.sol';
 import 'reporting/IMarket.sol';
 import 'TEST/MockVariableSupplyToken.sol';
 
 
-contract MockShareToken is DelegationTarget, ITyped, Initializable, MockVariableSupplyToken, IShareToken {
+contract MockShareToken is Controlled, ITyped, Initializable, MockVariableSupplyToken, IShareToken {
 
     string constant public name = "Shares";
     uint256 constant public decimals = 0;
