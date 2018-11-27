@@ -192,7 +192,7 @@ contract MockMarket is IMarket {
         setMigrateDueToNoReportsNextStateValue = _disputeWindow;
     }
 
-    function callTrustedMarketTransfer(IReputationToken _reputationToken, address _source, address _destination, uint256 _attotokens) public returns (bool) {
+    function callTrustedMarketTransfer(IV2ReputationToken _reputationToken, address _source, address _destination, uint256 _attotokens) public returns (bool) {
         return _reputationToken.trustedMarketTransfer(_source, _destination, _attotokens);
     }
 
@@ -353,8 +353,8 @@ contract MockMarket is IMarket {
         return 0;
     }
 
-    function getReputationToken() public view returns (IReputationToken) {
-        return IReputationToken(0);
+    function getReputationToken() public view returns (IV2ReputationToken) {
+        return IV2ReputationToken(0);
     }
 
     function isContainerForReportingParticipant(IReportingParticipant _reportingParticipant) public view returns (bool) {

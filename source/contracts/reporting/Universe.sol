@@ -9,7 +9,7 @@ import 'factories/DisputeWindowFactory.sol';
 import 'factories/MarketFactory.sol';
 import 'factories/IAuctionFactory.sol';
 import 'reporting/IMarket.sol';
-import 'reporting/IReputationToken.sol';
+import 'reporting/IV2ReputationToken.sol';
 import 'reporting/IAuction.sol';
 import 'reporting/IDisputeWindow.sol';
 import 'reporting/Reporting.sol';
@@ -23,7 +23,7 @@ contract Universe is Controlled, ITyped, IUniverse {
 
     IUniverse private parentUniverse;
     bytes32 private parentPayoutDistributionHash;
-    IReputationToken private reputationToken;
+    IV2ReputationToken private reputationToken;
     IAuction private auction;
     IMarket private forkingMarket;
     bytes32 private tentativeWinningChildUniversePayoutDistributionHash;
@@ -47,7 +47,7 @@ contract Universe is Controlled, ITyped, IUniverse {
         controller = _controller;
         parentUniverse = _parentUniverse;
         parentPayoutDistributionHash = _parentPayoutDistributionHash;
-        reputationToken = IReputationTokenFactory(controller.lookup("ReputationTokenFactory")).createReputationToken(controller, this, parentUniverse);
+        reputationToken = IV2ReputationToken(IReputationTokenFactory(controller.lookup("ReputationTokenFactory")).createReputationToken(controller, this, parentUniverse));
         auction = IAuctionFactory(controller.lookup("AuctionFactory")).createAuction(controller, this, reputationToken);
         updateForkValues();
         require(reputationToken != address(0));
@@ -83,7 +83,7 @@ contract Universe is Controlled, ITyped, IUniverse {
         return parentPayoutDistributionHash;
     }
 
-    function getReputationToken() public view returns (IReputationToken) {
+    function getReputationToken() public view returns (IV2ReputationToken) {
         return reputationToken;
     }
 

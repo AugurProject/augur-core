@@ -2,7 +2,7 @@ pragma solidity 0.4.24;
 
 
 import 'libraries/ITyped.sol';
-import 'reporting/IReputationToken.sol';
+import 'reporting/IV2ReputationToken.sol';
 import 'reporting/IDisputeWindow.sol';
 import 'reporting/IMarket.sol';
 import 'reporting/IDisputeWindow.sol';
@@ -16,7 +16,7 @@ contract IUniverse is ITyped {
     function getParentUniverse() public view returns (IUniverse);
     function createChildUniverse(uint256[] _parentPayoutNumerators) public returns (IUniverse);
     function getChildUniverse(bytes32 _parentPayoutDistributionHash) public view returns (IUniverse);
-    function getReputationToken() public view returns (IReputationToken);
+    function getReputationToken() public view returns (IV2ReputationToken);
     function getAuction() public view returns (IAuction);
     function getForkingMarket() public view returns (IMarket);
     function getForkEndTime() public view returns (uint256);
