@@ -47,7 +47,7 @@ contract Universe is Controlled, ITyped, IUniverse {
         controller = _controller;
         parentUniverse = _parentUniverse;
         parentPayoutDistributionHash = _parentPayoutDistributionHash;
-        reputationToken = IReputationTokenFactory(controller.lookup("ReputationTokenFactory")).createReputationToken(controller, this, parentUniverse);
+        reputationToken = IV2ReputationToken(IReputationTokenFactory(controller.lookup("ReputationTokenFactory")).createReputationToken(controller, this, parentUniverse));
         auction = IAuctionFactory(controller.lookup("AuctionFactory")).createAuction(controller, this, reputationToken);
         updateForkValues();
         require(reputationToken != address(0));

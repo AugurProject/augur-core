@@ -82,7 +82,7 @@ contract ReputationToken is Controlled, ITyped, VariableSupplyToken, IV2Reputati
         return true;
     }
 
-    function burnForMarket(uint256 _amountToBurn) public afterInitialized returns (bool) {
+    function burnForMarket(uint256 _amountToBurn) public returns (bool) {
         require(universe.isContainerForMarket(IMarket(msg.sender)));
         burn(msg.sender, _amountToBurn);
         return true;
