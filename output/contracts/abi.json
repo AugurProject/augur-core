@@ -3844,6 +3844,25 @@
 			"constant": false,
 			"inputs": [
 				{
+					"name": "_amountToBurn",
+					"type": "uint256"
+				}
+			],
+			"name": "burnForMarket",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
 					"name": "_source",
 					"type": "address"
 				},
@@ -8733,6 +8752,25 @@
 				}
 			],
 			"name": "transfer",
+			"outputs": [
+				{
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "_amountToBurn",
+					"type": "uint256"
+				}
+			],
+			"name": "burnForMarket",
 			"outputs": [
 				{
 					"name": "",
