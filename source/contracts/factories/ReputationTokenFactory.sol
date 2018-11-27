@@ -9,6 +9,6 @@ import 'reporting/ReputationToken.sol';
 
 contract ReputationTokenFactory {
     function createReputationToken(IController _controller, IUniverse _universe, IUniverse _parentUniverse) public returns (IV2ReputationToken) {
-        return IReputationToken(new ReputationToken(_controller, _universe, _parentUniverse));
+        return IV2ReputationToken(new ReputationToken(_controller, _universe, _parentUniverse));
     }
 }
