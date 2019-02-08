@@ -2,6 +2,13 @@
 
 [![Build Status](https://travis-ci.com/AugurProject/augur-core.svg)](https://travis-ci.com/AugurProject/augur-core)
 
+
+# Important: V2 Development Moved to New Location
+
+**_This repo contains the current Augur V1 contract code. All new contract development is available [in our new monorepo](https://github.com/AugurProject/augur/tree/master/packages/augur-core)._**
+
+## About
+
 Smart contracts for [Augur](https://augur.net), a decentralized prediction market platform on the [Ethereum](https://ethereum.org) blockchain.
 
 ## Quick Setup
