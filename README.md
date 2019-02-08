@@ -5,7 +5,7 @@
 
 # Important: V2 Development Moved to New Location
 
-**_This repo contains the current Augur V1 contract code. All new contract development is available [in our new monorepo](https://github.com/AugurProject/augur/tree/master/packages/augur-core)._**
+**_This repo contains the current Augur V1 contract code. All new contract development is available [in the new Augur monorepo](https://github.com/AugurProject/augur/tree/master/packages/augur-core)._**
 
 ## About
 
